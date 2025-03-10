@@ -114,34 +114,38 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
-    # Extract time first
-    time_match = re.search(r" in ([\d.]+)s", output)
-    if time_match:
+    # Check for multiple output patterns
+    patterns = [
+        (r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped", 4),
+        (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors", 3),
+        (r"(\d+) passed.*?(\d+) skipped", 2),
+        (r"(\d+) passed", 1)
+    ]
+    
+    # Normalize output for matching
+    normalized_output = output.replace("\n", " ")
+    
+    # Extract time first if present
+    if time_match := re.search(r" in ([\d.]+)s", normalized_output):
         result["time"] = float(time_match.group(1))
 
-    # Check for test counts using single pattern
-    count_match = re.search(
-        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped",
-        output.replace("\n", " "),
-    )
-    if count_match:
-        result["passed"] = int(count_match.group(1))
-        result["failed"] = int(count_match.group(2))
-        result["warnings"] = int(count_match.group(3))
-        result["skipped"] = int(count_match.group(4))
-        return True
-
-    # Fallback for basic passed count
-    if passed_match := re.search(r"(\d+) passed", output):
-        result["passed"] = int(passed_match.group(1))
-        return True
+    for pattern, groups in patterns:
+        if match := re.search(pattern, normalized_output):
+            result["passed"] = int(match.group(1))
+            if groups >= 2:
+                result["failed"] = int(match.group(2))
+            if groups >= 3:
+                result["warnings"] = int(match.group(3)) if groups == 4 else 0
+            if groups >= 4: 
+                result["skipped"] = int(match.group(4))
+            return True
 
     # Check for empty results
-    if "no tests ran" in output.lower():
-        result["error"] = "No tests executed"
+    if "no tests ran" in normalized_output.lower():
+        result.update({"error": "No tests executed", "passed": 0, "failed": 0})
         return True
 
-    return found
+    return False
 
 
 def get_pytest_results() -> dict:
@@ -194,17 +198,10 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     if sys.platform != "win32":
         return False
 
-    # Check base name without extensions or numeric suffixes
-    stem = real_path.stem.split(".")[0].lower()
-    reserved_names = {
-        "con",
-        "prn",
-        "aux",
-        "nul",
-        *{f"com{i}" for i in range(1, 10)},
-        *{f"lpt{i}" for i in range(1, 10)},
-    }
-    return stem in reserved_names
+    # Use regex to match entire name with possible extension
+    name = real_path.name
+    pattern = r"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$"
+    return re.fullmatch(pattern, name, re.IGNORECASE) is not None
 
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
