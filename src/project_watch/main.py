@@ -80,13 +80,15 @@ def get_pytest_results() -> dict:
             return {"error": "pytest internal error", "output": output}
 
         time_match = re.search(r" in ([\d.]+)s", result.stdout)
-        return {
+        result_data = {
             "passed": passed,
             "failed": failed,
             "time": float(time_match.group(1)) if time_match else 0.0,
-            "output": output,
-            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {}),
+            "output": output
         }
+        if "INTERNALERROR" in output:
+            result_data["error"] = "pytest internal error"
+        return result_data
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
     except (subprocess.SubprocessError, OSError) as e:  # Specific exceptions
@@ -114,11 +116,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             path.suffix != ".py",
             not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
             # Add Windows reserved name check
-            (sys.platform == "win32" and 
-             path.stem.upper() in _WINDOWS_RESERVED_NAMES),
             # Check for binary files using context manager
-            (path.is_file() and any(b"\0" in open(real_path, "rb").read(1024))),
-            # Windows reserved filename check using existing set
+            (path.is_file() and any(b"\0" in (open(real_path, "rb").read(1024)))),
+            # Windows reserved filename check
             (sys.platform == "win32" and path.stem.upper() in _windows_reserved_names),
         ]
 
@@ -136,8 +136,7 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         except UnicodeDecodeError:
             return 0  # Binary file
         except (PermissionError, FileNotFoundError, OSError) as e:
-            if isinstance(e, PermissionError):
-                print(f"Permission denied: {path}")
+            print(f"Error reading {path}: {str(e)}") if isinstance(e, PermissionError) else None
             return 0
 
     total = 0
