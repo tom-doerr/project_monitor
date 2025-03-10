@@ -1,6 +1,6 @@
 from pathlib import PureWindowsPath
 import pytest
-from src.project_watch.main import count_lines_of_code
+from src.project_watch.main import count_lines_of_code  # pylint: disable=import-error,no-name-in-module
 
 @pytest.mark.windows
 def test_windows_path_handling(tmp_path):
