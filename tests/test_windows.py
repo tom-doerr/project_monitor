@@ -12,11 +12,13 @@ def test_windows_path_handling(tmp_path):
     d = tmp_path / "sub"
     d.mkdir()
     (d / "normal.py").write_text("# Valid Python file\nprint('hello')\n")
-    
+
     # Windows-specific tests
     if sys.platform.startswith("win"):
         try:
-            (d / "con.py").write_text("# Reserved name\n")  # pylint: disable=unspecified-encoding
+            (d / "con.py").write_text(
+                "# Reserved name\n"
+            )  # pylint: disable=unspecified-encoding
             assert count_lines_of_code(d) == 2
             with pytest.raises(OSError):
                 (d / "COM4.py").write_text("# Should fail in Windows")
