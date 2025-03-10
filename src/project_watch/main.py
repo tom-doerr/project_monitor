@@ -19,21 +19,24 @@ def get_pylint_score() -> float:
         timeout=30,
     )
 
-    # Improved score extraction with multiple fallbacks
-    try:
-        # First try regex pattern matching
-        if match := re.search(r"rated at (\d+\.?\d*)/10", result.stdout):
-            return float(match.group(1))
-
-        # Fallback to splitting output
-        parts = result.stdout.split()
-        if "/10" in parts:
-            return float(parts[parts.index("/10") - 1])
-
-    except (IndexError, ValueError, AttributeError):
-        pass
-
-    return 0.0  # Explicit default on failure
+    # Extract score using combined pattern matching
+    patterns = (
+        r"rated at (\d+\.?\d*)/10",  # Primary pattern
+        r"([\d\.]+)/10",  # Fallback pattern
+        r"\s(\d+\.\d+)\s+\(.*\)"  # Alternative format
+    )
+    
+    for pattern in patterns:
+        if match := re.search(pattern, result.stdout):
+            try:
+                return float(match.group(1))
+            except (ValueError, IndexError):
+                continue
+    
+    # Final fallback to split-based extraction
+    parts = result.stdout.replace(",", "").split()
+    scores = [float(s) for s in parts if s.replace(".", "").isdigit()]
+    return max(scores) if scores else 0.0
 
 
 def get_pytest_results() -> dict:
@@ -57,19 +60,16 @@ def get_pytest_results() -> dict:
         if "INTERNALERROR" in output:
             return {"error": "pytest internal error", "output": output}
 
-        try:
-            return {
-                "passed": passed,
-                "failed": failed,
-                "output": output,
-            }
-        except json.JSONDecodeError:
-            return {
-                "passed": 0,
-                "failed": 0,
-                "error": "Invalid JSON output",
-                "output": output,
-            }
+        result_data = {
+            "passed": passed,
+            "failed": failed,
+            "output": output
+        }
+        
+        if "INTERNALERROR" in output:
+            result_data["error"] = "pytest internal error"
+            
+        return result_data
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
     except subprocess.SubprocessError as e:  # More specific exception
@@ -91,11 +91,12 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             real_path in counted,  # Check cache before other ops
             path.suffix != ".py",
             not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
-            any(
+            any(  # Check for binary files
                 b"\0" in f.read(1024)
-                for f in (  # type: ignore
+                for f in (
                     [open(real_path, "rb")] if path.is_file() else []
-                )  # Prevent opening directories
+                )
+                if hasattr(f, "read")  # Handle empty case safely
             ),
             # Windows reserved filename check
             (
