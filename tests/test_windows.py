@@ -15,7 +15,7 @@ def test_windows_path_handling(tmp_path):
     (d / "con.py").write_text("# Reserved name\n")  # CON is reserved in Windows
 
     # Test path normalization with Windows-style paths
-    assert count_lines_of_code() == 2  # normal.py has 2 lines of code
+    assert count_lines_of_code(d) == 2  # normal.py has 2 lines of code
 
     # Test reserved filename handling
     with pytest.raises(OSError):
@@ -26,7 +26,7 @@ def test_windows_path_handling(tmp_path):
 def test_windows_case_insensitivity(tmp_path):
     """Test case-insensitive file handling"""
     (tmp_path / "MiXeDcAsE.py").write_text("x = 1\nx = 2\n")
-    assert count_lines_of_code() == 2
+    assert count_lines_of_code(tmp_path) == 2
 
 
 def test_windows_spaces_in_path(tmp_path):
@@ -34,7 +34,7 @@ def test_windows_spaces_in_path(tmp_path):
     dir_with_spaces = tmp_path / "dir with spaces"
     dir_with_spaces.mkdir()
     (dir_with_spaces / "file with spaces.py").write_text("print('test')\n")
-    assert count_lines_of_code() == 1
+    assert count_lines_of_code(dir_with_spaces) == 1
 
 
 def test_long_path_handling(tmp_path):
@@ -43,7 +43,7 @@ def test_long_path_handling(tmp_path):
     long_path.mkdir(parents=True)
     test_file = long_path / "test.py"
     test_file.write_text("# Valid Python file\nprint('hello')")
-    assert count_lines_of_code() == 2
+    assert count_lines_of_code(long_path) == 2
 
 
 def test_windows_unc_paths(tmp_path):
@@ -55,7 +55,7 @@ def test_windows_unc_paths(tmp_path):
     test_file.write_text("# UNC path test\nx = 1\n")
 
     # Then verify Windows path handling
-    assert count_lines_of_code() == 2
+    assert count_lines_of_code(share_path) == 2
 
 
 def test_windows_mixed_slashes(tmp_path):
@@ -66,4 +66,4 @@ def test_windows_mixed_slashes(tmp_path):
     file_path.write_text("a = 1\nb = 2\n")
 
     # Test Windows path representation
-    assert count_lines_of_code() == 2
+    assert count_lines_of_code(file_path.parent) == 2

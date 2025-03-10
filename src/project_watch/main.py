@@ -48,20 +48,36 @@ def get_pytest_results() -> dict:  # pylint: disable=too-many-return-statements
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
-    directory = pathlib.Path(directory)
+    directory = pathlib.Path(directory).resolve()
     total = 0
-    for path in pathlib.Path(".").rglob("*"):
-        # Reduce nesting by filtering first
-        if not (path.suffix == ".py" and path.is_file()):
+    counted = set()
+    
+    for path in directory.rglob("*"):
+        # Skip directories and non-Python files
+        if not path.is_file() or path.suffix != ".py":
             continue
+            
         try:
-            with path.open(encoding="utf-8") as f:
+            # Resolve symlinks and check for duplicates
+            real_path = path.resolve()
+            if real_path in counted:
+                continue
+                
+            # Skip binary files
+            with open(real_path, "rb") as f:
+                if b'\0' in f.read(1024):
+                    continue
+                    
+            # Count non-empty lines
+            with open(real_path, "r", encoding="utf-8", errors="ignore") as f:
                 total += sum(1 for line in f if line.strip())
-        except UnicodeDecodeError:
-            # Skip binary files masquerading as Python files
+                
+            counted.add(real_path)
+            
+        except (PermissionError, FileNotFoundError, OSError) as e:
+            print(f"Skipping {path}: {e}")
             continue
-        except OSError as e:
-            print(f"Error reading {path}: {e}")
+            
     return total
 
 

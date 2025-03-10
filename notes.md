@@ -50,17 +50,13 @@
 - Symlink resolution
 
 ## Recent Changes
-- Added Pylint score calculation tests
-- Fixed Python package structure with proper src layout
-- Updated all test imports to use src.project_watch
-- Removed unnecessary WindowsPath import
-- Added package initialization with version and paths
-- Added pytest result parsing tests
-- Added binary file detection tests  
-- Added filesystem permission tests
-- Added Windows compatibility tests  
-- Added Windows long path (>260 char) handling
-- Fixed try/except indentation in LOC counter
+- Added proper symlink resolution and deduplication
+- Implemented binary file detection using null byte check
+- Added Windows path normalization with resolve()
+- Fixed test assertions to use explicit paths
+- Improved error handling for permission issues
+- Added duplicate file tracking with path resolution
+- Standardized on pathlib for all file operations
 - Added comprehensive binary file detection including:
   - Common binary extensions (PDF, PNG, EXE)
   - Mixed content files
