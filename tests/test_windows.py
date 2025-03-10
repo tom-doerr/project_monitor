@@ -1,7 +1,10 @@
 import sys
 import pytest
 
-from project_watch.main import count_lines_of_code, _parse_pytest_output  # pylint: disable=no-name-in-module
+from project_watch.main import (
+    count_lines_of_code,
+    _parse_pytest_output,
+)  # pylint: disable=no-name-in-module
 
 
 def _create_test_directory(tmp_path):
@@ -125,6 +128,7 @@ def test_windows_mixed_slashes(tmp_path):
     # Test path normalization
     assert count_lines_of_code(file_path.parent) == 2
 
+
 def test_pytest_output_parsing_edge_cases():
     """Test edge cases in pytest output parsing"""
     # Test empty output
@@ -133,13 +137,13 @@ def test_pytest_output_parsing_edge_cases():
         "failed": 0,
         "time": 0.0,
         "output": "",
-        "error": None
+        "error": None,
     }
-    
+
     # Test malformed JSON
     malformed_json = '{"passed": 5, "failed": 1'
     assert _parse_pytest_output(malformed_json)["passed"] == 0
-    
+
     # Test truncated output
     truncated = "3 passed in 12.34s"
     assert _parse_pytest_output(truncated) == {
@@ -147,5 +151,5 @@ def test_pytest_output_parsing_edge_cases():
         "failed": 0,
         "time": 12.34,
         "output": truncated,
-        "error": None
+        "error": None,
     }
