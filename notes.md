@@ -127,11 +127,22 @@
 
 ## Fixed in This Batch
 - Windows reserved filename handling
-- Symlink resolution across platforms
+- Symlink resolution across platforms  
 - Pytest JSON/text output parsing
 - Pylint subprocess error handling
 - Path normalization edge cases
 - Permission error propagation
+- Symlink directory processing
+- Pytest text output pattern matching
+- Windows case normalization
+- Path resolution error handling
+
+## New Test Coverage
+- Nested symlink chains
+- Mixed case Windows paths  
+- Alternative pytest output formats
+- Directory symlink handling
+- Network filesystem timeout retries
 
 ## Pending Test Cases
 - [x] Unicode normalization edge cases (added test_unicode_paths.py)

@@ -53,7 +53,7 @@ def test_windows_spaces_in_path(tmp_path):
     dir_with_spaces = tmp_path / "dir with spaces"
     dir_with_spaces.mkdir()
     (dir_with_spaces / "file with spaces.py").write_text("print('test')\n")
-    assert count_lines_of_code(dir_with_spaces) == 1
+    assert count_lines_of_code(dir_with_spaces) == 1  # Should count 1 non-empty line
 
 
 def test_long_path_handling(tmp_path):
