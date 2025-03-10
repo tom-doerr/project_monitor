@@ -1,4 +1,3 @@
-import time
 import pytest
 from project_watch.main import count_lines_of_code, get_pylint_score, get_pytest_results
 
@@ -9,8 +8,8 @@ PERF_THRESHOLDS = {
     'pytest_results': 2.0
 }
 
-@pytest.fixture
-def large_project(tmp_path):
+@pytest.fixture(name="large_project_fixture")
+def large_project_fixture(tmp_path):
     # Create 1000 Python files with 10 lines each
     for i in range(1000):
         file = tmp_path / f"file_{i}.py"
@@ -23,9 +22,9 @@ def test_count_lines_performance_small(benchmark):
     assert result >= 0
     assert benchmark.stats.stats.mean < PERF_THRESHOLDS['count_lines_small']
 
-def test_count_lines_performance_large(benchmark, large_project):
+def test_count_lines_performance_large(benchmark, large_project_fixture):
     # Test large project performance
-    result = benchmark(count_lines_of_code, large_project)
+    result = benchmark(count_lines_of_code, large_project_fixture)
     assert result == 10000  # 1000 files * 10 lines
     assert benchmark.stats.stats.mean < PERF_THRESHOLDS['count_lines_large']
 
