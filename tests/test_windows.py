@@ -85,4 +85,6 @@ def test_windows_mixed_slashes(tmp_path):
     file_path.write_text("a = 1\nb = 2\n")
 
     # Test Windows path representation
-    assert count_lines_of_code(file_path.parent) == 2  # Mixed slashes shouldn't affect count
+    assert (
+        count_lines_of_code(file_path.parent) == 2
+    )  # Mixed slashes shouldn't affect count
