@@ -18,9 +18,17 @@ def _create_test_directory(tmp_path):
 def _test_reserved_names(test_dir):
     """Verify handling of Windows reserved filenames"""
     reserved_names = [
-        "COM1", "LPT2", "CON", "PRN",
-        "AUX", "NUL", "COM9", "LPT9",
-        "CON.txt", "com1", "lPt9.md"  # Mixed case variants
+        "COM1",
+        "LPT2",
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        "COM9",
+        "LPT9",
+        "CON.txt",
+        "com1",
+        "lPt9.md",  # Mixed case variants
     ]
     valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
 
@@ -30,6 +38,7 @@ def _test_reserved_names(test_dir):
     _verify_line_count(test_dir, len(valid_names))
     _verify_windows_specific_behavior(test_dir)
 
+
 def _create_nested_reserved_dirs(test_dir, reserved_names):
     """Create nested directories with reserved names"""
     for name in reserved_names:
@@ -37,15 +46,18 @@ def _create_nested_reserved_dirs(test_dir, reserved_names):
         nested_dir.mkdir(parents=True)
         (nested_dir / "test.py").write_text("# Reserved name test\n")
 
+
 def _create_test_files(test_dir, names):
     """Create both reserved and valid test files"""
     reserved_names, valid_names = names
     _create_reserved_files(test_dir, reserved_names)
     _create_valid_files(test_dir, valid_names)
 
+
 def _verify_line_count(test_dir, expected):
     """Verify the line count matches expected value"""
     assert count_lines_of_code(test_dir) == expected, "Should only count valid files"
+
 
 def _verify_windows_specific_behavior(test_dir):
     """Verify Windows-specific file system behavior"""
