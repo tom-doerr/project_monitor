@@ -80,7 +80,9 @@ def test_file_scanning_edge_cases(tmp_path):
     (tmp_path / "ignore.txt").touch()  # Non-Python file
 
     # Verify counts while ignoring non-Python files
-    assert count_lines_of_code(tmp_path) == 10000, "Should count lines in Python files only"
+    assert (
+        count_lines_of_code(tmp_path) == 10000
+    ), "Should count lines in Python files only"
 
 
 def test_handles_invalid_pytest_json():
