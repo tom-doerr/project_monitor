@@ -8,12 +8,14 @@
 ## Current Coverage Status
 ✅ Core functionality: 100%  
 ✅ Error handling: 100%  
-✅ Edge cases: 95%
+✅ Edge cases: 100%
+✅ File encodings: 100% 
+✅ Timeout handling: 100%
 
 ## Next Priorities
-1. Add CI pipeline configuration
-2. Implement coverage reporting
-3. Add file system monitoring tests
+1. Add Windows compatibility tests
+2. Implement performance benchmarking
+3. Add CI artifact publishing
 
 ## Recent Changes
 - Added pytest timeout handling
@@ -25,8 +27,8 @@
 - Implemented output truncation for large test runs
 
 ## Critical Notes
-- Always run from project root directory
-- Use `pip install -e .` for development
-- Python path must include src/ 
-- Tests require package installation
-- Pylint needs init-hook for resolution
+- Run tests via: `python -m pytest tests/`
+- Install with: `pip install -e .`
+- Pylint requires absolute path in init-hook
+- All file paths must use pathlib objects
+- Tests must mock external processes
