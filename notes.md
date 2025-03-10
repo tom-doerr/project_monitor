@@ -51,7 +51,7 @@
 
 ## New Test Coverage
 - Windows reserved filename handling (including subdirectory validation)
-- UNC path normalization edge cases
+- UNC path normalization edge cases  
 - Long path handling with pathlib normalization
 - Mixed slash/path separator handling
 - UNC path normalization  
@@ -62,6 +62,11 @@
 - Path normalization edge cases
 - Empty directory handling
 - Symlink resolution
+- Non-UTF8 file encodings (ISO-8859-1, Windows-1252)
+- Mixed line endings (LF/CRLF)
+- Invalid UTF-8 byte sequences
+- Permission error propagation
+- Partial file read failures
 
 ## Recent Changes
 - Fixed Windows reserved filename test handling  
@@ -71,6 +76,10 @@
 - Fixed binary file detection TypeError by removing redundant any()
 - Fixed critical indentation issues in core functions
 - Added safety limits for extreme file sizes
+- Added encoding validation tests
+- Implemented line ending normalization
+- Added partial read failure simulation
+- Improved permission error testing
 - Removed duplicate Windows reserved names check
 - Simplified path validation logic using pathlib stem
 - Fixed function signature mismatch in path validation
