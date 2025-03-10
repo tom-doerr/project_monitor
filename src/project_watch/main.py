@@ -89,23 +89,33 @@ def _update_results_from_json(json_data: dict, result: dict) -> None:
 def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
     """Match pytest output patterns and update results."""
     patterns = (
-        (r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s", 5),
+        (
+            r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
+            5,
+        ),
         (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s", 4),
         (r"(\d+) passed.*?(\d+) skipped.*? in ([\d.]+)s", 3),
-        (r"(\d+) failed.*? in ([\d.]+)s", 2)
+        (r"(\d+) failed.*? in ([\d.]+)s", 2),
     )
 
     for pattern, _ in patterns:
         if match := re.search(pattern, normalized_output):
             groups = [int(g) if str(g).isdigit() else float(g) for g in match.groups()]
-            result.update({
-                "passed": groups[0] if "passed" in pattern else result["passed"],
-                "failed": groups[1] if "failed" in pattern else result["failed"],
-                "warnings": groups[2] if "warnings" in pattern else result.get("warnings", 0),
-                "skipped": groups[3] if "skipped" in pattern else result["skipped"],
-                "time": groups[-1],
-            })
+            result.update(
+                {
+                    "passed": groups[0] if "passed" in pattern else result["passed"],
+                    "failed": groups[1] if "failed" in pattern else result["failed"],
+                    "warnings": (
+                        groups[2]
+                        if "warnings" in pattern
+                        else result.get("warnings", 0)
+                    ),
+                    "skipped": groups[3] if "skipped" in pattern else result["skipped"],
+                    "time": groups[-1],
+                }
+            )
             break
+
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
@@ -149,15 +159,19 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     try:
         real_path = path.resolve().absolute()
 
-        if sys.platform == "win32" and _is_windows_reserved_name(real_path.resolve().lower()):
+        if sys.platform == "win32" and _is_windows_reserved_name(
+            real_path.resolve().lower()
+        ):
             return True
 
-        return any((
-            real_path in counted,
-            real_path.suffix != ".py",
-            not real_path.is_file(),
-            any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-        ))
+        return any(
+            (
+                real_path in counted,
+                real_path.suffix != ".py",
+                not real_path.is_file(),
+                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+            )
+        )
     except OSError:
         return True
 
