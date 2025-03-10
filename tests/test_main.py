@@ -8,6 +8,8 @@ from src.project_watch.main import (
     get_pytest_results,
 )
 
+# Test configuration and fixtures
+
 
 @pytest.fixture(name="_mock_stats")
 def mock_stats_fixture() -> dict:
@@ -20,6 +22,7 @@ def mock_stats_fixture() -> dict:
 
 
 def test_stats_structure_validation(_mock_stats):
+    """Validate structure of project stats dictionary"""
     with patch("src.project_watch.main.get_project_stats") as mock_get:
         mock_get.return_value = _mock_stats
         stats = get_project_stats()
@@ -38,7 +41,7 @@ def test_pylint_returns_valid_score_range(_mock_stats):
 
 def test_loc_returns_non_negative_count(_mock_stats):
     # Should never return negative lines of code
-    with patch("src.project_watch.main.count_lines_of_code", 
+    with patch("src.project_watch.main.count_lines_of_code",
               return_value=_mock_stats["loc"]):
         assert count_lines_of_code() >= 0
 
@@ -79,6 +82,7 @@ def test_file_scanning_edge_cases(tmp_path):
 
 
 def test_handles_invalid_pytest_json():
+    """Verify JSON parsing error handling"""
     # Should catch JSON parsing errors
     with patch("subprocess.run") as mock_run:
         mock_run.return_value.stdout = '{"invalid": "json"'

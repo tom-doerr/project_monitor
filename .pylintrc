@@ -1,9 +1,9 @@
 [MASTER]
 # Maximum number of lines in a module
 max-module-lines=200
-
 # Files to ignore
 ignore=pyproject.toml
+init-hook="import sys; sys.path.append('src')"
 
 [MESSAGES CONTROL]
 # Disable missing docstring warnings
@@ -23,9 +23,3 @@ max-complexity=5
 min-public-methods=1
 min-similarity-lines=8
 max-nested-blocks=2     # Maximum nesting depth of blocks (if, for, etc.)
-
-# Maintainability settings (using valid pylint options)
-# These will be checked by radon instead of pylint
-
-[MASTER]
-init-hook="import sys; sys.path.append('src')"
