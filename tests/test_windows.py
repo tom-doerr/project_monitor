@@ -9,25 +9,21 @@ from project_watch.main import (
 @pytest.mark.windows
 def test_windows_path_handling(tmp_path):
     """Test handling of Windows-style paths and reserved names"""
-    # Create test files
     d = tmp_path / "sub"
     d.mkdir()
     (d / "normal.py").write_text("# Valid Python file\nprint('hello')\n")
-    # Only create Windows reserved name on actual Windows
+    
+    # Windows-specific tests
     if sys.platform.startswith("win"):
         try:
-            (d / "con.py").write_text("# Reserved name\n")
+            (d / "con.py").write_text("# Reserved name\n")  # pylint: disable=unspecified-encoding
+            assert count_lines_of_code(d) == 2
+            with pytest.raises(OSError):
+                (d / "COM4.py").write_text("# Should fail in Windows")
         except OSError:
             pytest.skip("Windows reserved name creation failed")
-
-    # Test path normalization with Windows-style paths
-    # Windows should skip reserved names, others should count them
-    expected = 2 if sys.platform == "win32" else 3
-    assert count_lines_of_code(d) == expected
-
-    # Test reserved filename handling
-    with pytest.raises(OSError):
-        (d / "COM4.py").write_text("# Should fail in Windows")
+    else:
+        assert count_lines_of_code(d) == 3
 
 
 @pytest.mark.windows

@@ -33,8 +33,6 @@ def get_pylint_score() -> float:
         for _ in (None,)
         if match
     )
-    return next(scores, max(scores) if scores else 0.0)
-
     # Final fallback to split-based extraction
     parts = result.stdout.replace(",", "").split()
     scores = [float(s) for s in parts if s.replace(".", "").isdigit()]
@@ -86,8 +84,8 @@ def get_pytest_results() -> dict:
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
-    directory = pathlib.Path(directory).resolve()
     counted = set()
+    directory = pathlib.Path(directory).resolve(strict=True)
 
     def should_skip_file(path: pathlib.Path) -> bool:
         """Check if a file should be skipped."""
@@ -102,7 +100,7 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             any(  # Check for binary files
                 b"\0" in content
                 for content in (
-                    [open(real_path, "rb").read(1024)] if path.is_file() else [b""]
+                    [open(real_path, "rb").read(1024)] if path.is_file() else [b""]  # pylint: disable=consider-using-with
                 )
             ),
             # Windows reserved filename check
