@@ -7,7 +7,7 @@ from project_watch.main import (
     get_project_stats,
     get_pylint_score,
     count_lines_of_code,
-    get_pytest_results
+    get_pytest_results,
 )
 
 
@@ -57,31 +57,36 @@ def test_pytest_results_structure(_mock_stats):
         assert "failed" in pytest_results
         assert "skipped" in pytest_results
 
+
 def test_subprocess_failure_handling():
     """Test error handling for failed subprocess calls"""
-    with patch('subprocess.run') as mock_run:
+    with patch("subprocess.run") as mock_run:
         mock_run.side_effect = Exception("Subprocess failed")
         # Test both functions that use subprocess
         assert get_pylint_score() == 0.0
         assert get_pytest_results() == {"error": "Subprocess failed"}
         assert count_lines_of_code() == 0
 
+
 def test_file_scanning_edge_cases(tmp_path):
     """Test LOC counting with edge case files"""
     # Create test files
     (tmp_path / "empty.py").touch()
-    
+
     huge_file = tmp_path / "huge.py"
     huge_file.write_text("\n".join(["pass"] * 10000))
-    
+
     (tmp_path / "ignore.txt").touch()  # Non-Python file
-    
+
     # Verify counts while ignoring non-Python files
-    assert count_lines_of_code(tmp_path) == 10000, "Should count lines in Python files only"
+    assert (
+        count_lines_of_code(tmp_path) == 10000
+    ), "Should count lines in Python files only"
+
 
 def test_malformed_pytest_output():
     """Test handling of invalid pytest JSON output"""
-    with patch('subprocess.run') as mock_run:
+    with patch("subprocess.run") as mock_run:
         mock_run.return_value.stdout = '{"invalid": "json"'
         results = get_pytest_results()
         assert "error" in results
