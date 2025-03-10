@@ -67,9 +67,11 @@
 - Simplified path validation logic using pathlib stem
 
 ## New Todos
-- [ ] Add more robust binary file detection using mimetypes
-- [ ] Implement context manager for file handles
-- [ ] Add test for null bytes in non-binary files
+- [x] Added mimetype-based binary detection 
+- [x] Implemented context manager for file handles
+- [x] Added null byte test cases
+- [ ] Add fuzzing tests for edge cases
+- [ ] Implement probabilistic file sampling
 - Improved binary file handler cleanup
 - Improved error handling for permissions/filesystem errors
 - Standardized on pathlib for all file operations
