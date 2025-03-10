@@ -1,6 +1,7 @@
-import pytest
 import pathlib
-from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
+import pytest  # pylint: disable=unused-import
+from project_watch import main
+from project_watch.main import count_lines_of_code
 
 def test_mixed_line_endings(tmp_path: pathlib.Path):
     test_file = tmp_path / "mixed.txt"
@@ -30,7 +31,6 @@ def test_partial_read_failure(tmp_path: pathlib.Path, monkeypatch):
     test_file = tmp_path / "partial.txt"
     test_file.write_text("Valid\nContent")
     
-    from project_watch import main
     def mock_read(*args, **kwargs):
         raise IOError("Simulated partial read failure")
     
