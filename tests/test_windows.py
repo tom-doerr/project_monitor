@@ -6,27 +6,34 @@ from project_watch.main import (
 )  # pylint: disable=import-error,no-name-in-module
 
 
+def _create_test_directory(tmp_path):
+    """Create test directory structure with sample file"""
+    test_dir = tmp_path / "sub"
+    test_dir.mkdir()
+    (test_dir / "normal.py").write_text("# Valid Python file\nprint('hello')\n")
+    return test_dir
+
+def _test_reserved_names(test_dir):
+    """Verify handling of Windows reserved filenames"""
+    try:
+        (test_dir / "con.py").write_text("# Reserved name\n")  # pylint: disable=unspecified-encoding
+        assert count_lines_of_code(test_dir) == 2
+        with pytest.raises(OSError):
+            (test_dir / "COM4.py").write_text("# Should fail in Windows")
+    except OSError:
+        pytest.skip("Windows reserved name creation failed")
+
 def test_windows_path_handling(tmp_path):
     """Test handling of Windows-style paths and reserved names"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-    d = tmp_path / "sub"
-    d.mkdir()
-    (d / "normal.py").write_text("# Valid Python file\nprint('hello')\n")
-
-    # Windows-specific tests
+    
+    test_dir = _create_test_directory(tmp_path)
+    
     if sys.platform.startswith("win"):
-        try:
-            (d / "con.py").write_text(
-                "# Reserved name\n"
-            )  # pylint: disable=unspecified-encoding
-            assert count_lines_of_code(d) == 2
-            with pytest.raises(OSError):
-                (d / "COM4.py").write_text("# Should fail in Windows")
-        except OSError:
-            pytest.skip("Windows reserved name creation failed")
-    else:
-        assert count_lines_of_code(d) == 3
+        _test_reserved_names(test_dir)
+    else:  # Fallback for non-Windows platforms
+        assert count_lines_of_code(test_dir) == 3
 
 
 def test_windows_case_insensitivity(tmp_path):
