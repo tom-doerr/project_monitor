@@ -1,9 +1,7 @@
 import sys
 import pytest
 
-from project_watch.main import (
-    count_lines_of_code,
-)  # pylint: disable=import-error,no-name-in-module
+from project_watch.main import count_lines_of_code  # pylint: disable=import-error
 
 
 def _create_test_directory(tmp_path):
@@ -20,26 +18,33 @@ def _test_reserved_names(test_dir):
         "COM1", "COM9", "LPT1", "LPT9", "CON", "PRN", 
         "AUX", "NUL", "CON.txt", "com1", "lPt9.md"
     ]
+    valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
     
-    # Test reserved names
-    for name in reserved_names:
+    _create_reserved_files(test_dir, reserved_names)
+    _create_valid_files(test_dir, valid_names)
+    
+    if sys.platform == "win32":
+        assert count_lines_of_code(test_dir) == 0, "Reserved files should be skipped"
+        _validate_normal_files(test_dir, valid_names)
+
+def _create_reserved_files(test_dir, names):
+    """Create files with reserved names"""
+    for name in names:
         path = test_dir / name
         try:
             path.write_text(f"# Reserved: {name}\n", encoding="utf-8")
         except OSError:
-            continue  # Expected on Windows
-            
-        if sys.platform == "win32":
-            assert count_lines_of_code(test_dir) == 0  # Should skip reserved names
+            continue
 
-    # Test valid similar names that should be counted
-    valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
-    for name in valid_names:
+def _create_valid_files(test_dir, names):
+    """Create files with valid names"""
+    for name in names:
         path = test_dir / name
         path.write_text(f"# Valid: {name}\n", encoding="utf-8")
-    
-    if sys.platform == "win32":
-        assert count_lines_of_code(test_dir) == len(valid_names)  # Should count all valid files
+
+def _validate_normal_files(test_dir, valid_names):
+    """Validate counting of normal files"""
+    assert count_lines_of_code(test_dir) == len(valid_names), "Valid files should be counted"
 
 
 def test_windows_path_handling(tmp_path):
