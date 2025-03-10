@@ -55,6 +55,9 @@
 - Added proper symlink resolution and deduplication
 - Implemented binary file detection using null byte check  
 - Added Windows path normalization with resolve()
+- Fixed ternary operator syntax in binary file detection
+- Added proper parentheses around conditional file handling
+- Improved binary file handler cleanup
 - Improved error handling for permissions/filesystem errors
 - Standardized on pathlib for all file operations
 - Added comprehensive binary file detection
