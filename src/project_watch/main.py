@@ -50,6 +50,7 @@ def _parse_pytest_output(output: str) -> dict:
         "output": output[-2000:],
     }
 
+
 def get_pytest_results() -> dict:
     """Run pytest and return results summary with error handling."""
     try:
@@ -73,7 +74,7 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     directory = pathlib.Path(directory).resolve(strict=True)
 
     _windows_reserved_names = {"con", "prn", "aux", "nul", "com1", "lpt1"}
-    
+
     def should_skip_file(path: pathlib.Path) -> bool:
         """Check if a file should be skipped."""
         try:
