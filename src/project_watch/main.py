@@ -4,7 +4,6 @@ import subprocess
 import pathlib
 import re
 import sys
-import os
 from datetime import datetime
 from watchdog.events import FileSystemEventHandler  # Import kept for type hints
 
