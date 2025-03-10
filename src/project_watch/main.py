@@ -76,19 +76,16 @@ def _should_skip_file(path: pathlib.Path, counted: set, windows_reserved_names: 
 
     # Combined skip conditions (order matters for performance)
     skip_conditions = [
-            not path.exists(),  # Handle broken symlinks first
-            real_path in counted,  # Check cache before other ops
-            path.suffix != ".py",
-            not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
-            # Add Windows reserved name check
-            # Check for binary files using context manager
-            (path.is_file() and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))),
-            # Windows reserved filename check
-            (sys.platform == "win32" and path.stem.upper() in windows_reserved_names),
-        ]
+        not path.exists(),  # Handle broken symlinks first
+        real_path in counted,  # Check cache before other ops
+        path.suffix != ".py",
+        not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
+        (path.is_file() and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))),
+        (sys.platform == "win32" and path.stem.upper() in windows_reserved_names),
+    ]
 
-        # Check all conditions with proper error handling
-        return any(skip_conditions)
+    # Check all conditions with proper error handling
+    return any(skip_conditions)
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
     """Read file in chunks using context manager."""
