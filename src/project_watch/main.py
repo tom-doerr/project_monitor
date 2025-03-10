@@ -35,7 +35,7 @@ def get_pylint_score() -> float:
         )
 
         # Check if returncode exists before comparison
-        if hasattr(result, 'returncode') and 0 <= result.returncode <= 31:
+        if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
             score = max(extract_score(result.stdout), extract_score(result.stderr))
     except (subprocess.SubprocessError, ValueError, AttributeError) as e:
         logger.debug("Pylint error: %s", str(e))
@@ -212,7 +212,7 @@ def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
 def _count_file_lines(path: pathlib.Path) -> int:
     """Count non-empty lines in a file."""
     try:
-        with path.open(encoding='utf-8', errors='ignore') as f:
+        with path.open(encoding="utf-8", errors="ignore") as f:
             return sum(1 for line in f if line.strip())
     except PermissionError as e:
         logger.warning("Permission denied reading %s: %s", path, str(e))
