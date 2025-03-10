@@ -34,6 +34,7 @@
 ## Critical Notes
 - Run tests via: `python -m pytest tests/`
 - Install with: `pip install -e .`
-- Pylint requires absolute path in init-hook
+- Pylint requires absolute path in init-hook:
+  `init-hook='import sys; sys.path.append("src")'`
 - All file paths must use pathlib objects
 - Tests must mock external processes
