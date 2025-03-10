@@ -1,8 +1,8 @@
 """Project monitoring core functionality with file system watching."""
 import subprocess
 import pathlib
-import datetime
-from watchdog.events import FileSystemEventHandler
+from datetime import datetime
+from watchdog.events import FileSystemEventHandler  # Import kept for type hints
 
 
 def get_pylint_score() -> float:
@@ -56,5 +56,5 @@ def get_project_stats() -> dict:
         "pylint": get_pylint_score(),
         "pytest": get_pytest_results(),
         "loc": count_lines_of_code(),
-        "last_updated": datetime.datetime.now(),
+        "last_updated": datetime.now(),
     }

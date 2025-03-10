@@ -17,6 +17,20 @@ pylint = "*"
 project-watch = "project_watch.cli:main"
 project-watch-tui = "project_watch.tui:main"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=project_watch --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["project_watch"]
+branch = true
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
