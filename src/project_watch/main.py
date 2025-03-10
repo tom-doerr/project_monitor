@@ -2,6 +2,7 @@
 
 import subprocess
 import pathlib
+import re
 from datetime import datetime
 from watchdog.events import FileSystemEventHandler  # Import kept for type hints
 
@@ -22,21 +23,42 @@ def get_pylint_score() -> float:
 
 def get_pytest_results() -> dict:
     """Run pytest and return results summary."""
-    result = subprocess.run(
-        ["pytest", "--tb=no", "."], capture_output=True, text=True, check=False
-    )
-    return {
-        "passed": result.returncode == 0,
-        "summary": "\n".join(result.stdout.splitlines()[-3:-1]),
-    }
+    try:
+        result = subprocess.run(
+            ["pytest", "--tb=no", "."], 
+            capture_output=True, 
+            text=True, 
+            check=False,
+            timeout=30  # Add timeout protection
+        )
+        # Parse test counts from output
+        passed = len(re.findall(r'^PASSED\b', result.stdout, flags=re.M))
+        failed = len(re.findall(r'^FAILED\b', result.stdout, flags=re.M))
+        
+        return {
+            "passed": passed,
+            "failed": failed,
+            "output": result.stdout[-2000:]  # Truncate long output
+        }
+    except subprocess.TimeoutExpired:
+        return {"error": "pytest timed out after 30 seconds"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def count_lines_of_code() -> int:
     """Count total lines of Python code in the project."""
     total = 0
-    for path in pathlib.Path(".").rglob("*.py"):
-        with path.open() as f:
-            total += sum(1 for _ in f)
+    for path in pathlib.Path(".").rglob("*"):
+        if path.suffix == ".py" and path.is_file():
+            try:
+                with path.open(encoding='utf-8') as f:
+                    total += sum(1 for line in f if line.strip())
+            except UnicodeDecodeError:
+                # Skip binary files masquerading as Python files
+                continue
+            except OSError as e:
+                print(f"Error reading {path}: {e}")
     return total
 
 

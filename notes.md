@@ -16,10 +16,13 @@
 3. Add file system monitoring tests
 
 ## Recent Changes
-- Added .pylintrc with init-hook
-- Created package installation setup
-- Updated test imports to src package
-- Fixed mock patching paths
+- Added pytest timeout handling
+- Improved LOC counting with:
+  - UTF-8 encoding support
+  - Binary file detection
+  - Error logging
+- Added detailed test result parsing
+- Implemented output truncation for large test runs
 
 ## Critical Notes
 - Always run from project root directory
