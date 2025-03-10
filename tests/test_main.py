@@ -55,3 +55,42 @@ def test_pytest_results_structure(_mock_stats):
         assert "passed" in pytest_results
         assert "failed" in pytest_results
         assert "skipped" in pytest_results
+
+def test_subprocess_failure_handling():
+    """Test error handling for failed subprocess calls"""
+    with patch('subprocess.run') as mock_run:
+        mock_run.side_effect = Exception("Subprocess failed")
+        # Test both functions that use subprocess
+        assert get_pylint_score() == 0.0
+        assert get_pytest_results() == {"error": "Subprocess failed"}
+        assert count_lines_of_code() == 0
+
+def test_file_scanning_edge_cases(tmp_path):
+    """Test LOC counting with edge case files"""
+    # Empty file
+    empty_file = tmp_path / "empty.py"
+    empty_file.touch()
+    
+    # Huge file
+    huge_file = tmp_path / "huge.py"
+    with huge_file.open("w") as f:
+        f.write("\n".join(["pass"] * 10000))
+    
+    # Non-Python file
+    txt_file = tmp_path / "ignore.txt"
+    txt_file.touch()
+    
+    # Test with explicit path
+    result = count_lines_of_code(tmp_path)
+    
+    # Verify counts while ignoring non-Python files
+    assert result == 10000, "Should count lines in Python files only"
+    assert not (tmp_path / "ignore.txt").exists(), "Temp files should be cleaned up"
+
+def test_malformed_pytest_output():
+    """Test handling of invalid pytest JSON output"""
+    with patch('subprocess.run') as mock_run:
+        mock_run.return_value.stdout = '{"invalid": "json"'
+        results = get_pytest_results()
+        assert "error" in results
+        assert "JSON" in results["error"], "Should detect JSON parsing error"
