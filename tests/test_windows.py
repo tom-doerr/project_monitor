@@ -16,7 +16,7 @@ def test_windows_path_handling(tmp_path):
 
     # Test path normalization
     win_path = PureWindowsPath(str(d))
-    assert count_lines_of_code(root=win_path) == 3  # Test WindowsPath handling
+    assert count_lines_of_code(str(win_path)) == 3  # Test WindowsPath handling
 
     # Test reserved filename handling
     with pytest.raises(OSError):
@@ -27,4 +27,4 @@ def test_windows_path_handling(tmp_path):
 def test_windows_case_insensitivity(tmp_path):
     """Test case-insensitive file handling"""
     (tmp_path / "MiXeDcAsE.py").write_text("x = 1\nx = 2\n")
-    assert count_lines_of_code(root=tmp_path) == 2
+    assert count_lines_of_code(str(tmp_path)) == 2

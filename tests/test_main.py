@@ -78,7 +78,7 @@ def test_file_scanning_edge_cases(tmp_path):
 
     # Verify counts while ignoring non-Python files
     assert (
-        count_lines_of_code(tmp_path) == 10000
+        count_lines_of_code(str(tmp_path)) == 10000
     ), "Should count lines in Python files only"
 
 
