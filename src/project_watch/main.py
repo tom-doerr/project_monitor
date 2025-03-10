@@ -43,10 +43,20 @@ def _parse_pytest_output(output: str) -> dict:
     }
 
     # Try to get precise numbers from summary line
-    summary_match = re.search(r"(\d+) passed.*?(\d+) failed", output)
+    summary_match = re.search(
+        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped", 
+        output.replace("\n", " ")
+    )
     if summary_match:
         result["passed"] = int(summary_match.group(1))
         result["failed"] = int(summary_match.group(2))
+        result["warnings"] = int(summary_match.group(3))
+        result["skipped"] = int(summary_match.group(4))
+    else:  # Fallback for older pytest versions
+        result["passed"] = len(re.findall(r"PASSED", output))
+        result["failed"] = len(re.findall(r"FAILED", output))
+        result["warnings"] = len(re.findall(r"WARNING", output))
+        result["skipped"] = len(re.findall(r"SKIPPED", output))
 
     # Try to get duration from output
     time_match = re.search(r" in ([\d.]+)s", output)
@@ -138,16 +148,31 @@ def _count_file_lines(path: pathlib.Path) -> int:
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
-    base_dir = pathlib.Path(directory).resolve(strict=True)
+    total = 0
     counted = set()
+    base_path = pathlib.Path(directory).resolve()
 
-    return sum(
-        _count_file_lines(real_path)
-        for path in base_dir.rglob("*")
-        if (real_path := path.resolve()) not in counted
-        and not _should_skip_file(path, counted)
-        and counted.add(real_path) is None
-    )
+    for path in base_path.rglob("*"):
+        # Handle symlinks to directories
+        if path.is_symlink() and path.is_dir():
+            continue
+            
+        # Normalize Windows paths
+        if sys.platform == "win32":
+            path = pathlib.Path(str(path).lower())
+
+        if _should_skip_file(path, counted):
+            continue
+            
+        try:
+            line_count = _count_file_lines(path)
+            total += line_count
+        except PermissionError:
+            continue  # Already logged in _should_skip_file
+        except Exception as e:
+            logging.warning(f"Error counting {path}: {e}", exc_info=True)
+
+    return total
 
 
 class ProjectWatcher(FileSystemEventHandler):

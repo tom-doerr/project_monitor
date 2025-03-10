@@ -77,9 +77,11 @@
 - Implemented resolved path deduplication
 - Added proper subprocess error handling
 - Improved test coverage for edge cases
-- Added detailed pytest output parsing
+- Added detailed pytest output parsing (passed/failed/warnings/skipped)
 - Fixed malformed JSON handling
 - Improved error reporting structure
+- Added Windows reserved name validation (COM1-COM9, LPT1-LPT9)
+- Implemented case-insensitive path normalization
 
 ## New Todos
 - [x] Add mimetype-based binary detection
