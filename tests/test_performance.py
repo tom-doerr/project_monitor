@@ -8,7 +8,7 @@ PERF_THRESHOLDS = {
     'pytest_results': 2.0
 }
 
-@pytest.fixture(name="large_project_fixture")
+@pytest.fixture(name="large_project")
 def large_project_fixture(tmp_path):
     # Create 1000 Python files with 10 lines each
     for i in range(1000):
@@ -22,9 +22,9 @@ def test_count_lines_performance_small(benchmark):
     assert result >= 0
     assert benchmark.stats.stats.mean < PERF_THRESHOLDS['count_lines_small']
 
-def test_count_lines_performance_large(benchmark, large_project_fixture):
+def test_count_lines_performance_large(benchmark, large_project):
     # Test large project performance
-    result = benchmark(count_lines_of_code, large_project_fixture)
+    result = benchmark(count_lines_of_code, large_project)
     assert result == 10000  # 1000 files * 10 lines
     assert benchmark.stats.stats.mean < PERF_THRESHOLDS['count_lines_large']
 
