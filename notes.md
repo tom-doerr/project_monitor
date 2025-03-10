@@ -18,10 +18,11 @@
 3. Add CI artifact publishing
 
 ## Recent Changes
-- Fixed Python import paths in tests
-- Fixed indentation error in file handling
+- Fixed try/except indentation in LOC counter
+- Added binary file detection in line counting
+- Improved error handling for file system operations
 - Added pytest timeout handling
-- Improved LOC counting with:
+- Improved test coverage for:
   - UTF-8 encoding support
   - Binary file detection
   - Error logging
