@@ -136,6 +136,9 @@
 - Pytest text output pattern matching
 - Windows case normalization
 - Path resolution error handling
+- Fixed Windows path normalization syntax error
+- Improved pytest text parsing with multiple patterns
+- Added default values for missing test result fields
 
 ## New Test Coverage
 - Nested symlink chains
