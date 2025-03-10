@@ -87,9 +87,12 @@
 - Implemented case-insensitive path normalization
 
 ## New Todos
-- [x] Add mimetype-based binary detection
-- [x] Implement file handle context managers
-- [x] Create null byte test cases
+- [x] Fix test import paths
+- [x] Add Windows path resolution safety  
+- [x] Handle MagicMock configuration errors
+- [x] Improve pytest output parsing reliability
+- [ ] Add network filesystem timeout tests
+- [ ] Implement binary file detection improvements
 - [x] Add fuzzing tests for edge cases
 - [ ] Implement probabilistic file sampling
 - [ ] Improve binary handler cleanup
