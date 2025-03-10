@@ -4,7 +4,7 @@ import pytest
 from project_watch.main import (
     get_project_stats,
     get_pylint_score,
-    count_lines_of_code, 
+    count_lines_of_code,
     get_pytest_results,
 )
 
