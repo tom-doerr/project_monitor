@@ -23,7 +23,7 @@ def test_handles_invalid_pytest_json():
         assert results["passed"] == 3
         assert results["failed"] == 1
         assert "error" not in results
-        
+
         # Test with completely invalid output
         mock_run.return_value.stdout = "{invalid: json}"
         results = get_pytest_results()
