@@ -15,9 +15,9 @@
 ## Next Priorities
 1. Implement performance benchmarking
 2. Add CI artifact publishing
-3. Add filesystem permission tests
 
 ## Recent Changes
+- Added filesystem permission tests
 - Added Windows compatibility tests
 - Fixed try/except indentation in LOC counter  
 - Added binary file detection in line counting
