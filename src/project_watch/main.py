@@ -1,5 +1,7 @@
 """Project monitoring core functionality with file system watching."""
 
+import json
+import logging
 import subprocess
 import pathlib
 import re
@@ -10,6 +12,11 @@ from watchdog.events import FileSystemEventHandler  # Import kept for type hints
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+    def extract_score(text: str) -> float:
+        """Extract score from pylint output text."""
+        match = re.search(r"rated at (\d+\.?\d*)/10", text)
+        return float(match.group(1)) if match else 0.0
+
     try:
         result = subprocess.run(
             ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
@@ -20,22 +27,10 @@ def get_pylint_score() -> float:
             cwd=pathlib.Path(__file__).parent.parent,
         )
 
-        # Handle valid pylint exit codes (0-31)
-        if result.returncode not in range(0, 32):
+        if result.returncode not in range(0, 32):  # Valid pylint exit codes
             return 0.0
 
-        # Search stdout and stderr for score
-        for output in [result.stdout, result.stderr]:
-            match = re.search(r"rated at (\d+\.?\d*)/10", output)
-            if match:
-                return float(match.group(1))
-            
-            # Fallback pattern
-            match = re.search(r"([\d\.]+)/10", output)
-            if match:
-                return float(match.group(1))
-
-        return 0.0
+        return max(extract_score(result.stdout), extract_score(result.stderr))
     except (subprocess.SubprocessError, ValueError, AttributeError):
         return 0.0
 
@@ -63,7 +58,7 @@ def _parse_pytest_output(output: str) -> dict:
                 "time": json_data.get("duration", 0.0)
             })
             return result
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # pylint: disable=no-member
             pass
 
     # Fallback to text parsing
@@ -190,8 +185,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             total += line_count
         except PermissionError:
             continue  # Already logged in _should_skip_file
-        except Exception as e:
-            logging.warning(f"Error counting {path}: {e}", exc_info=True)
+        except (OSError, UnicodeDecodeError) as e:  # Narrow exception scope
+            logger = logging.getLogger(__name__)
+            logger.warning("Error counting %s: %s", path, e, exc_info=True)
 
     return total
 
