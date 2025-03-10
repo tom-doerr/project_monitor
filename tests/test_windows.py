@@ -38,6 +38,7 @@ def test_windows_spaces_in_path(tmp_path):
     (dir_with_spaces / "file with spaces.py").write_text("print('test')\n")
     assert count_lines_of_code() == 1
 
+
 def test_long_path_handling(tmp_path):
     """Test paths exceeding 260 character limit"""
     long_path = tmp_path / ("a" * 40) / ("b" * 40) / ("c" * 40) / ("d" * 40)
@@ -45,6 +46,7 @@ def test_long_path_handling(tmp_path):
     test_file = long_path / "test.py"
     test_file.write_text("# Valid Python file\nprint('hello')")
     assert count_lines_of_code() == 2
+
 
 def test_windows_unc_paths(tmp_path):
     """Test UNC path handling"""
