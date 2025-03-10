@@ -46,6 +46,8 @@
 - Spaces in paths
 - Case insensitivity
 - Path normalization edge cases
+- Empty directory handling
+- Symlink resolution
 
 ## Recent Changes
 - Added Pylint score calculation tests
