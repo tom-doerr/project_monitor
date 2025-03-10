@@ -126,14 +126,12 @@
 | Performance           | 100%     | 100%           |
 
 ## Fixed in This Batch
-- Windows reserved filename handling
-- Symlink resolution across platforms  
-- Pytest JSON/text output parsing
-- Pylint subprocess error handling
-- Path normalization edge cases
-- Permission error propagation
-- Fixed pytest output parsing syntax error
-- Added edge case tests for pytest parsing
+- Fixed NameError in line counting by implementing proper path processing
+- Improved pytest text output pattern matching with multiple fallbacks
+- Added Windows reserved name checks during file scanning
+- Added symlink resolution and deduplication
+- Improved error handling for file system operations
+- Added regex patterns for different pytest output formats
 - Symlink directory processing
 - Pytest text output pattern matching
 - Windows case normalization

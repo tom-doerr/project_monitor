@@ -114,19 +114,37 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
-    normalized_output = output.replace("\n", " ").lower()
-    _parse_pytest_patterns(normalized_output, result)
-
-    # Fallback duration extraction
+    # Add more robust pattern matching for text output
+    text_patterns = [
+        (r"(\d+) passed", "passed"),
+        (r"(\d+) failed", "failed"),
+        (r"(\d+) warnings", "warnings"),
+        (r"(\d+) skipped", "skipped")
+    ]
+    
+    # Try to extract time first
     time_match = re.search(r" in ([\d.]+)s", output)
     if time_match:
         result["time"] = float(time_match.group(1))
+    
+    # Extract test counts from text patterns
+    found = False
+    for pattern, key in text_patterns:
+        match = re.search(pattern, output)
+        if match:
+            result[key] = int(match.group(1))
+            found = True
+
+    # Fallback for basic passed count
+    if not found and (passed_match := re.search(r"(\d+) passed", output)):
+        result["passed"] = int(passed_match.group(1))
+        found = True
 
     # Check for empty test results
-    if "no tests ran" in output:
+    if "no tests ran" in output.lower():
         result["error"] = "No tests executed"
 
-    return result
+    return found
 
 
 def get_pytest_results() -> dict:
@@ -217,7 +235,24 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     base_path = pathlib.Path(directory).resolve()
 
     for path in base_path.rglob("*"):
-        total += _process_path(path, counted)
+        try:
+            if _should_skip_file(path, counted):
+                continue
+
+            # Resolve symlinks and check Windows reserved names
+            real_path = path.resolve()
+            if _is_windows_reserved_name(real_path):
+                continue
+
+            # Skip already counted files (via symlinks)
+            if real_path in counted:
+                continue
+            counted.add(real_path)
+
+            if real_path.is_file() and real_path.suffix == ".py":
+                total += _count_file_lines(real_path)
+        except (OSError, UnicodeDecodeError):
+            continue
 
     return total
 
