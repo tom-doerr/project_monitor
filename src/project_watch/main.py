@@ -75,7 +75,7 @@ def _should_skip_file(path: pathlib.Path, counted: set, windows_reserved_names: 
         return True
 
     # Combined skip conditions (order matters for performance)
-        skip_conditions = [
+    skip_conditions = [
             not path.exists(),  # Handle broken symlinks first
             real_path in counted,  # Check cache before other ops
             path.suffix != ".py",
@@ -98,14 +98,23 @@ def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
 
 def _count_file_lines(path: pathlib.Path) -> int:
     """Count non-empty lines in a file."""
-        try:
-            with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                return sum(1 for line in f if line.strip())
-        except (UnicodeDecodeError, PermissionError, FileNotFoundError, OSError) as e:
-            is_permission_error = isinstance(e, PermissionError)
-            if is_permission_error:
-                print(f"Permission error reading {path}: {str(e)}")
-            return 0
+    line_count = 0
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                if line.strip():
+                    line_count += 1
+                # Safety limits
+                if len(line) > 1000000:  # 1MB line length protection
+                    break
+                if line_count > 10000000:  # 10M line sanity check
+                    break
+            return line_count
+    except (UnicodeDecodeError, PermissionError, FileNotFoundError, OSError) as e:
+        is_permission_error = isinstance(e, PermissionError)
+        if is_permission_error:
+            print(f"Permission error reading {path}: {str(e)}")
+        return 0
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""

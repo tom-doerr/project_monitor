@@ -64,11 +64,13 @@
 - Symlink resolution
 
 ## Recent Changes
-- Fixed Windows reserved filename test handling
-- Added proper pytest time metric extraction 
+- Fixed Windows reserved filename test handling  
+- Added proper pytest time metric extraction
 - Improved test error handling for OS-specific behaviors
-- Added pytest.skip() for Windows-specific test cases
+- Added pytest.skip() for Windows-specific test cases  
 - Fixed binary file detection TypeError by removing redundant any()
+- Fixed critical indentation issues in core functions
+- Added safety limits for extreme file sizes
 - Removed duplicate Windows reserved names check
 - Simplified path validation logic using pathlib stem
 - Fixed function signature mismatch in path validation
