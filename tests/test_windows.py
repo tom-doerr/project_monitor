@@ -25,7 +25,7 @@ def _test_reserved_names(test_dir):
     valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
 
     _create_nested_reserved_dirs(test_dir, reserved_names)
-    _create_test_files(test_dir, reserved_names, valid_names)
+    _create_test_files(test_dir, (reserved_names, valid_names))
 
     _verify_line_count(test_dir, len(valid_names))
     _verify_windows_specific_behavior(test_dir)
@@ -37,8 +37,9 @@ def _create_nested_reserved_dirs(test_dir, reserved_names):
         nested_dir.mkdir(parents=True)
         (nested_dir / "test.py").write_text("# Reserved name test\n")
 
-def _create_test_files(test_dir, reserved_names, valid_names):
+def _create_test_files(test_dir, names):
     """Create both reserved and valid test files"""
+    reserved_names, valid_names = names
     _create_reserved_files(test_dir, reserved_names)
     _create_valid_files(test_dir, valid_names)
 
