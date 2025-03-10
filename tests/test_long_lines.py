@@ -1,5 +1,5 @@
+import pytest  # pylint: disable=unused-import
 from project_watch.main import count_lines_of_code
-import pytest
 
 def test_long_lines(tmp_path):
     test_file = tmp_path / "long.py"
