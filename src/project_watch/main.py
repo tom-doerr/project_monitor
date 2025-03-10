@@ -61,12 +61,13 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    try:
-        json_match = re.search(r'{"\w+": \d+.*}', output)
-        if not json_match:
-            return False
+    json_match = re.search(r'{"\w+": \d+.*}', output)
+    if not json_match:
+        return False
 
-        _update_results_from_json(json.loads(json_match.group(0)), result)
+    try:
+        data = json.loads(json_match.group(0))
+        _update_results_from_json(data, result)
         return True
     except (json.JSONDecodeError, AttributeError):
         return False
@@ -114,37 +115,45 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
-    # Check for multiple output patterns
-    patterns = [
+    patterns = (
         (r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped", 4),
         (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors", 3),
         (r"(\d+) passed.*?(\d+) skipped", 2),
         (r"(\d+) passed", 1)
-    ]
+    )
     
-    # Normalize output for matching
     normalized_output = output.replace("\n", " ")
+    result["time"] = _extract_pytest_time(normalized_output)
     
-    # Extract time first if present
-    if time_match := re.search(r" in ([\d.]+)s", normalized_output):
-        result["time"] = float(time_match.group(1))
+    return any(
+        _match_pattern(pattern, groups, normalized_output, result)
+        for pattern, groups in patterns
+    ) or _handle_empty_results(normalized_output, result)
 
-    for pattern, groups in patterns:
-        if match := re.search(pattern, normalized_output):
-            result["passed"] = int(match.group(1))
-            if groups >= 2:
-                result["failed"] = int(match.group(2))
-            if groups >= 3:
-                result["warnings"] = int(match.group(3)) if groups == 4 else 0
-            if groups >= 4: 
-                result["skipped"] = int(match.group(4))
-            return True
+def _extract_pytest_time(output: str) -> float:
+    """Extract test execution time from output."""
+    if match := re.search(r" in ([\d.]+)s", output):
+        return float(match.group(1))
+    return 0.0
 
-    # Check for empty results
-    if "no tests ran" in normalized_output.lower():
+def _match_pattern(pattern: str, groups: int, output: str, result: dict) -> bool:
+    """Match a single output pattern and update results."""
+    if match := re.search(pattern, output):
+        result["passed"] = int(match.group(1))
+        if groups >= 2:
+            result["failed"] = int(match.group(2))
+        if groups >= 3:
+            result["warnings"] = int(match.group(3)) if groups == 4 else 0
+        if groups >= 4: 
+            result["skipped"] = int(match.group(4))
+        return True
+    return False
+
+def _handle_empty_results(output: str, result: dict) -> bool:
+    """Check for empty test results."""
+    if "no tests ran" in output.lower():
         result.update({"error": "No tests executed", "passed": 0, "failed": 0})
         return True
-
     return False
 
 
@@ -226,49 +235,57 @@ def _count_file_lines(path: pathlib.Path) -> int:
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
-    total = 0
+    total_lines = 0
     counted = set()
     base_path = pathlib.Path(directory).resolve()
 
-    def _process_path(path: pathlib.Path) -> None:
-        """Process individual path and accumulate line count."""
-        nonlocal total
+    def _should_count(path: pathlib.Path) -> bool:
+        """Determine if a path should be counted."""
         try:
             real_path = path.resolve()
-            if _should_skip_file(path, counted) or real_path in counted:
-                return
-
-            counted.add(real_path)
-            if real_path.is_file() and real_path.suffix == ".py":
-                total += _count_file_lines(real_path)
+            return (
+                real_path.is_file()
+                and real_path.suffix == ".py"
+                and not _should_skip_file(path, counted)
+                and real_path not in counted
+            )
         except (OSError, UnicodeDecodeError):
-            return
+            return False
 
     for path in base_path.rglob("*"):
-        _process_path(path)
+        if _should_count(path):
+            real_path = path.resolve()
+            counted.add(real_path)
+            total_lines += _count_file_lines(real_path)
 
-    return total
+    return total_lines
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
-    line_count = 0
     try:
         resolved_path = path.resolve(strict=True)
         if resolved_path.is_dir():
             return 0
+            
+        normalized_path = _normalize_path_case(resolved_path)
+        
+        if _should_skip_file(normalized_path, counted):
+            return 0
 
-        if sys.platform == "win32":
-            resolved_path = pathlib.Path(str(resolved_path).lower())
-
-        if not _should_skip_file(resolved_path, counted):
-            line_count = _count_file_lines(resolved_path)
-            logger.debug("Counted %d lines in %s", line_count, resolved_path)
+        line_count = _count_file_lines(normalized_path)
+        logger.debug("Counted %d lines in %s", line_count, normalized_path)
+        return line_count
 
     except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
         logger.warning("Error counting %s: %s", path, e, exc_info=True)
+        return 0
 
-    return line_count
+def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:
+    """Normalize path case for Windows systems."""
+    if sys.platform == "win32":
+        return pathlib.Path(str(path).lower())
+    return path
 
 
 class ProjectWatcher(FileSystemEventHandler):
