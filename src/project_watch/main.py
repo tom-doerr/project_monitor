@@ -193,13 +193,13 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     if sys.platform != "win32":
         return False
 
-    try:
-        stem = real_path.resolve().stem.split(".")[0].lower()
-    reserved_names = (
-        {"con", "prn", "aux", "nul"}
-        | {f"com{i}" for i in range(1, 10)}
-        | {f"lpt{i}" for i in range(1, 10)}
-    )
+    # Check base name without extensions or numeric suffixes
+    stem = real_path.stem.split(".")[0].lower()
+    reserved_names = {
+        "con", "prn", "aux", "nul",
+        *{f"com{i}" for i in range(1, 10)},
+        *{f"lpt{i}" for i in range(1, 10)}
+    }
     return stem in reserved_names
 
 

@@ -143,7 +143,9 @@
 | Performance           | 100%     | 100%           |
 
 ## Fixed in This Batch
-- Fixed Pylint score calculation error handling
+- Fixed Windows reserved name validation syntax error
+- Improved reserved name pattern matching
+- Added validation for reserved names with extensions
 - Added proper subprocess returncode validation  
 - Improved file path resolution error handling
 - Added comprehensive file reading error handling
