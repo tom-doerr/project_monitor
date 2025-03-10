@@ -29,8 +29,8 @@ def test_no_read_permission(tmp_path):
         test_dir.chmod(0o755)  # Ensure cleanup even if test fails
 
 
-@patch("project_watch.main.os.access")
-def test_filesystem_errors(mock_access):
-    mock_access.side_effect = PermissionError("Mocked permission error")
+@patch("project_watch.main.pathlib.Path.resolve")
+def test_filesystem_errors(mock_resolve):
+    mock_resolve.side_effect = PermissionError("Mocked permission error")
     with pytest.raises(PermissionError):
         count_lines_of_code()

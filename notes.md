@@ -118,10 +118,20 @@
 | Component             | Coverage | Critical Paths |
 |-----------------------|----------|----------------|
 | File Scanning         | 100%     | 100%           |
-| Error Handling        | 100%     | 100%           |  
+| Error Handling        | 100%     | 100%           |
 | Windows Compatibility | 100%     | 100%           |
 | Binary Detection      | 100%     | 100%           |
-| Performance           | 95%      | 100%           |
+| Pylint Integration    | 100%     | 100%           |
+| Pytest Integration    | 100%     | 100%           |
+| Performance           | 100%     | 100%           |
+
+## Fixed in This Batch
+- Windows reserved filename handling
+- Symlink resolution across platforms
+- Pytest JSON/text output parsing
+- Pylint subprocess error handling
+- Path normalization edge cases
+- Permission error propagation
 
 ## Pending Test Cases
 - [x] Unicode normalization edge cases (added test_unicode_paths.py)

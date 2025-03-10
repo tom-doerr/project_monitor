@@ -20,14 +20,22 @@ def get_pylint_score() -> float:
             cwd=pathlib.Path(__file__).parent.parent,
         )
 
-        # Directly target the score pattern with capture group
-        match = re.search(r"rated at (\d+\.?\d*)/10", result.stdout)
-        if match:
-            return float(match.group(1))
+        # Handle valid pylint exit codes (0-31)
+        if result.returncode not in range(0, 32):
+            return 0.0
 
-        # Fallback for different output formats
-        match = re.search(r"([\d\.]+)/10", result.stdout)
-        return float(match.group(1)) if match else 0.0
+        # Search stdout and stderr for score
+        for output in [result.stdout, result.stderr]:
+            match = re.search(r"rated at (\d+\.?\d*)/10", output)
+            if match:
+                return float(match.group(1))
+            
+            # Fallback pattern
+            match = re.search(r"([\d\.]+)/10", output)
+            if match:
+                return float(match.group(1))
+
+        return 0.0
     except (subprocess.SubprocessError, ValueError, AttributeError):
         return 0.0
 
@@ -42,21 +50,35 @@ def _parse_pytest_output(output: str) -> dict:
         "error": None,
     }
 
-    # Try to get precise numbers from summary line
+    # First try JSON parsing if available
+    json_match = re.search(r'{"\w+": \d+.*}', output)
+    if json_match:
+        try:
+            json_data = json.loads(json_match.group(0))
+            result.update({
+                "passed": json_data.get("passed", 0),
+                "failed": json_data.get("failed", 0),
+                "skipped": json_data.get("skipped", 0),
+                "warnings": json_data.get("warnings", 0),
+                "time": json_data.get("duration", 0.0)
+            })
+            return result
+        except json.JSONDecodeError:
+            pass
+
+    # Fallback to text parsing
     summary_match = re.search(
-        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped",
+        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
         output.replace("\n", " "),
     )
     if summary_match:
-        result["passed"] = int(summary_match.group(1))
-        result["failed"] = int(summary_match.group(2))
-        result["warnings"] = int(summary_match.group(3))
-        result["skipped"] = int(summary_match.group(4))
-    else:  # Fallback for older pytest versions
-        result["passed"] = len(re.findall(r"PASSED", output))
-        result["failed"] = len(re.findall(r"FAILED", output))
-        result["warnings"] = len(re.findall(r"WARNING", output))
-        result["skipped"] = len(re.findall(r"SKIPPED", output))
+        result.update({
+            "passed": int(summary_match.group(1)),
+            "failed": int(summary_match.group(2)),
+            "warnings": int(summary_match.group(3)),
+            "skipped": int(summary_match.group(4)),
+            "time": float(summary_match.group(5))
+        })
 
     # Try to get duration from output
     time_match = re.search(r" in ([\d.]+)s", output)
@@ -93,33 +115,31 @@ def get_pytest_results() -> dict:
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
-        real_path = path.resolve()
-    except OSError:
-        return True
+        # Resolve symlinks and get absolute path
+        real_path = path.resolve().absolute()
+        
+        # Normalize case for Windows
+        if sys.platform == "win32":
+            real_path = real_path.resolve().lower()
 
-    # Windows reserved name check (case-insensitive)
-    windows_reserved = False
-    if sys.platform == "win32":
-        reserved_names = (
-            {"con", "prn", "aux", "nul"}
-            | {f"com{i}" for i in range(1, 10)}
-            | {f"lpt{i}" for i in range(1, 10)}
-        )
-        windows_reserved = path.stem.split(".")[0].lower() in reserved_names
+        # Check Windows reserved names against resolved path
+        if sys.platform == "win32":
+            stem = real_path.stem.split(".")[0].lower()
+            reserved_names = {"con", "prn", "aux", "nul"} | \
+                            {f"com{i}" for i in range(1, 10)} | \
+                            {f"lpt{i}" for i in range(1, 10)}
+            if stem in reserved_names:
+                return True
 
-    return any(
-        [
-            not path.exists(),
+        return any([
             real_path in counted,
-            path.suffix != ".py",
-            not path.is_file() or real_path.is_dir(),
-            (
-                path.is_file()
-                and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
-            ),
-            windows_reserved,
-        ]
-    )
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
+        ])
+        
+    except OSError:
+        return True  # Skip files we can't resolve
 
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
