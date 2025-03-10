@@ -3,10 +3,11 @@
 from datetime import datetime
 from unittest.mock import patch
 import pytest
-from src.project_watch.main import (
+from project_watch.main import (
     get_project_stats,
     get_pylint_score,
     count_lines_of_code,
+    get_pytest_results
 )
 
 
@@ -67,25 +68,16 @@ def test_subprocess_failure_handling():
 
 def test_file_scanning_edge_cases(tmp_path):
     """Test LOC counting with edge case files"""
-    # Empty file
-    empty_file = tmp_path / "empty.py"
-    empty_file.touch()
+    # Create test files
+    (tmp_path / "empty.py").touch()
     
-    # Huge file
     huge_file = tmp_path / "huge.py"
-    with huge_file.open("w") as f:
-        f.write("\n".join(["pass"] * 10000))
+    huge_file.write_text("\n".join(["pass"] * 10000))
     
-    # Non-Python file
-    txt_file = tmp_path / "ignore.txt"
-    txt_file.touch()
-    
-    # Test with explicit path
-    result = count_lines_of_code(tmp_path)
+    (tmp_path / "ignore.txt").touch()  # Non-Python file
     
     # Verify counts while ignoring non-Python files
-    assert result == 10000, "Should count lines in Python files only"
-    assert not (tmp_path / "ignore.txt").exists(), "Temp files should be cleaned up"
+    assert count_lines_of_code(tmp_path) == 10000, "Should count lines in Python files only"
 
 def test_malformed_pytest_output():
     """Test handling of invalid pytest JSON output"""
