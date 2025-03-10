@@ -41,4 +41,5 @@
 - Pylint requires absolute path in init-hook:
   `init-hook='import sys; sys.path.append("src")'`
 - All file paths must use pathlib objects
+- Line counting follows PEP 8 conventions (physical lines)
 - Tests must mock external processes
