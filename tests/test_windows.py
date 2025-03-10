@@ -1,9 +1,9 @@
+from pathlib import PureWindowsPath
 import pytest
-from pathlib import Path, PureWindowsPath
 from src.project_watch.main import count_lines_of_code
 
 @pytest.mark.windows
-def test_windows_path_handling(tmp_path, monkeypatch):
+def test_windows_path_handling(tmp_path):
     """Test handling of Windows-style paths and reserved names"""
     # Create test files
     d = tmp_path / "sub"
@@ -13,7 +13,7 @@ def test_windows_path_handling(tmp_path, monkeypatch):
     
     # Test path normalization
     win_path = PureWindowsPath(str(d))
-    assert count_lines_of_code() == 3  # Should handle WindowsPath objects
+    assert count_lines_of_code(root=win_path) == 3  # Test WindowsPath handling
     
     # Test reserved filename handling
     with pytest.raises(OSError):
