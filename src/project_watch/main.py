@@ -12,6 +12,7 @@ from watchdog.events import FileSystemEventHandler  # Import kept for type hints
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
@@ -50,6 +51,7 @@ def _parse_pytest_output(output: str) -> dict:
 
     return result
 
+
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     json_match = re.search(r'{"\w+": \d+.*}', output)
@@ -58,13 +60,15 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
 
     try:
         json_data = json.loads(json_match.group(0))
-        result.update({
-            "passed": json_data.get("passed", 0),
-            "failed": json_data.get("failed", 0),
-            "skipped": json_data.get("skipped", 0),
-            "warnings": json_data.get("warnings", 0),
-            "time": json_data.get("duration", 0.0)
-        })
+        result.update(
+            {
+                "passed": json_data.get("passed", 0),
+                "failed": json_data.get("failed", 0),
+                "skipped": json_data.get("skipped", 0),
+                "warnings": json_data.get("warnings", 0),
+                "time": json_data.get("duration", 0.0),
+            }
+        )
         return True
     except json.JSONDecodeError:  # pylint: disable=no-member
         return False
@@ -73,13 +77,15 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
         output.replace("\n", " "),
     )
     if summary_match:
-        result.update({
-            "passed": int(summary_match.group(1)),
-            "failed": int(summary_match.group(2)),
-            "warnings": int(summary_match.group(3)),
-            "skipped": int(summary_match.group(4)),
-            "time": float(summary_match.group(5))
-        })
+        result.update(
+            {
+                "passed": int(summary_match.group(1)),
+                "failed": int(summary_match.group(2)),
+                "warnings": int(summary_match.group(3)),
+                "skipped": int(summary_match.group(4)),
+                "time": float(summary_match.group(5)),
+            }
+        )
 
     # Try to get duration from output
     time_match = re.search(r" in ([\d.]+)s", output)
@@ -117,31 +123,36 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve().absolute()
-        
+
         if sys.platform == "win32":
             real_path = real_path.resolve().lower()
             if _is_windows_reserved_name(real_path):
                 return True
 
-        return any((
-            real_path in counted,
-            real_path.suffix != ".py",
-            not real_path.is_file(),
-            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
-        ))
-        
+        return any(
+            (
+                real_path in counted,
+                real_path.suffix != ".py",
+                not real_path.is_file(),
+                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+            )
+        )
+
     except OSError:
         return True
+
 
 def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     """Check if path contains Windows reserved filename."""
     if sys.platform != "win32":
         return False
-        
+
     stem = real_path.stem.split(".")[0].lower()
-    reserved_names = {"con", "prn", "aux", "nul"} | \
-                    {f"com{i}" for i in range(1, 10)} | \
-                    {f"lpt{i}" for i in range(1, 10)}
+    reserved_names = (
+        {"con", "prn", "aux", "nul"}
+        | {f"com{i}" for i in range(1, 10)}
+        | {f"lpt{i}" for i in range(1, 10)}
+    )
     return stem in reserved_names
 
 
@@ -178,16 +189,19 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
     for path in base_path.rglob("*"):
         total += _process_code_path(path, counted)
-        
+
     return total
+
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
     if path.is_symlink() and path.is_dir():
         return 0
 
-    normalized_path = pathlib.Path(str(path).lower()) if sys.platform == "win32" else path
-    
+    normalized_path = (
+        pathlib.Path(str(path).lower()) if sys.platform == "win32" else path
+    )
+
     if _should_skip_file(normalized_path, counted):
         return 0
 
