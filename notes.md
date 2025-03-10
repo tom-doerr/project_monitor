@@ -65,6 +65,9 @@
 - Fixed binary file detection TypeError by removing redundant any()
 - Removed duplicate Windows reserved names check
 - Simplified path validation logic using pathlib stem
+- Fixed function signature mismatch in path validation
+- Resolved Windows reserved names scoping issue
+- Corrected count_lines_of_code implementation
 
 ## New Todos
 - [x] Added mimetype-based binary detection 
