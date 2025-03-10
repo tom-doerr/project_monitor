@@ -8,7 +8,7 @@ from .main import (
     get_project_stats,
 )
 
-__version__ = version("project_watch")
+from ._version import __version__
 __all__ = [
     "count_lines_of_code",
     "get_pylint_score",
