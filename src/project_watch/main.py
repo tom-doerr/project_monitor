@@ -67,13 +67,13 @@ def get_pytest_results() -> dict:
         if "INTERNALERROR" in output:
             return {"error": "pytest internal error", "output": output}
 
-        time_match = re.search(r' in ([\d.]+)s', result.stdout)
+        time_match = re.search(r" in ([\d.]+)s", result.stdout)
         return {
             "passed": passed,
             "failed": failed,
             "time": float(time_match.group(1)) if time_match else 0.0,
             "output": output,
-            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {})
+            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {}),
         }
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
@@ -99,7 +99,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             any(  # Check for binary files
                 b"\0" in content
                 for content in (
-                    [open(real_path, "rb").read(1024)] if path.is_file() else [b""]  # pylint: disable=consider-using-with
+                    [open(real_path, "rb").read(1024)]
+                    if path.is_file()
+                    else [b""]  # pylint: disable=consider-using-with
                 )
             ),
             # Windows reserved filename check
