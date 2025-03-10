@@ -84,10 +84,10 @@ def _update_results_from_json(json_data: dict, result: dict) -> None:
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
     patterns = [
-        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
-        r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s",
-        r"(\d+) passed.*?(\d+) skipped.*? in ([\d.]+)s",
-        r"(\d+) failed.*? in ([\d.]+)s",
+        (r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s", 5),
+        (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s", 4),
+        (r"(\d+) passed.*?(\d+) skipped.*? in ([\d.]+)s", 3),
+        (r"(\d+) failed.*? in ([\d.]+)s", 2)
     ]
 
     normalized_output = output.replace("\n", " ").lower()
@@ -99,9 +99,7 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
                 {
                     "passed": groups[0] if "passed" in pattern else result["passed"],
                     "failed": groups[1] if "failed" in pattern else result["failed"],
-                    "warnings": (
-                        groups[2] if "warnings" in pattern else result["warnings"]
-                    ),
+                    "warnings": groups[2] if "warnings" in pattern else result.get("warnings", 0),
                     "skipped": groups[3] if "skipped" in pattern else result["skipped"],
                     "time": groups[-1],  # Last group is always time
                 }
