@@ -1,5 +1,8 @@
 from unittest.mock import patch
-from src.project_watch.main import get_pytest_results  # pylint: disable=import-error,no-name-in-module
+from src.project_watch.main import (
+    get_pytest_results,
+)  # pylint: disable=import-error,no-name-in-module
+
 
 def test_get_pytest_results_success():
     with patch("subprocess.run") as mock_run:
@@ -9,6 +12,7 @@ def test_get_pytest_results_success():
         result = get_pytest_results()
         assert result["passed"] == 3
         assert result["time"] == 0.12
+
 
 def test_get_pytest_results_failure():
     with patch("subprocess.run") as mock_run:
