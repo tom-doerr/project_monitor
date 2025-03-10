@@ -1,6 +1,5 @@
-import pytest
 from unittest.mock import patch
-from src.project_watch.main import get_pytest_results
+from src.project_watch.main import get_pytest_results  # pylint: disable=import-error,no-name-in-module
 
 def test_get_pytest_results_success():
     with patch("subprocess.run") as mock_run:

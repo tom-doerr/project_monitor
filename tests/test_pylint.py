@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from src.project_watch.main import get_pylint_score
+from src.project_watch.main import get_pylint_score  # pylint: disable=import-error,no-name-in-module
 
 def test_get_pylint_score_success():
     with patch("subprocess.run") as mock_run:
