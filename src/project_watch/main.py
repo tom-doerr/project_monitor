@@ -23,9 +23,9 @@ def get_pylint_score() -> float:
     patterns = (
         r"rated at (\d+\.?\d*)/10",  # Primary pattern
         r"([\d\.]+)/10",  # Fallback pattern
-        r"\s(\d+\.\d+)\s+\(.*\)"  # Alternative format
+        r"\s(\d+\.\d+)\s+\(.*\)",  # Alternative format
     )
-    
+
     scores = (
         float(match.group(1))
         for pattern in patterns
@@ -34,7 +34,7 @@ def get_pylint_score() -> float:
         if match
     )
     return next(scores, max(scores) if scores else 0.0)
-    
+
     # Final fallback to split-based extraction
     parts = result.stdout.replace(",", "").split()
     scores = [float(s) for s in parts if s.replace(".", "").isdigit()]
@@ -53,8 +53,16 @@ def get_pytest_results() -> dict:
         )
 
         # Parse test counts from output
-        passed = int(re.findall(r'(\d+) passed', result.stdout)[-1]) if 'passed' in result.stdout else 0
-        failed = int(re.findall(r'(\d+) failed', result.stdout)[-1]) if 'failed' in result.stdout else 0
+        passed = (
+            int(re.findall(r"(\d+) passed", result.stdout)[-1])
+            if "passed" in result.stdout
+            else 0
+        )
+        failed = (
+            int(re.findall(r"(\d+) failed", result.stdout)[-1])
+            if "failed" in result.stdout
+            else 0
+        )
 
         output = result.stdout[-2000:]  # Truncate long output
 
@@ -66,7 +74,7 @@ def get_pytest_results() -> dict:
             "passed": passed,
             "failed": failed,
             "output": output,
-            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {})
+            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {}),
         }
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
