@@ -34,6 +34,9 @@ def _create_delayed_resolve(original):
     return delayed_resolve
 
 
+import contextlib
+
+@contextlib.contextmanager
 def _timeout_context():
     """Context manager for timeout measurement"""
     start = time.monotonic()
