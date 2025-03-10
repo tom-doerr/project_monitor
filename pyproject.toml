@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "project-watch"
+version = "0.1.0"
+description = "Real-time project monitoring with CLI and TUI interfaces"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+rich = "^13.0.0"
+textual = "^0.34.0"
+watchdog = "^3.0.0"
+pytest = "*"
+pylint = "*"
+
+[tool.poetry.scripts]
+project-watch = "project_watch.cli:main"
+project-watch-tui = "project_watch.tui:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
