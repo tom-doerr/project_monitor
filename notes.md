@@ -140,6 +140,10 @@
 - Improved pytest text parsing with multiple patterns
 - Added default values for missing test result fields
 - Fixed runtime import of FileSystemEventHandler
+- Fixed KeyError in pytest pattern parsing
+- Improved symlink handling using inode tracking
+- Added explicit file permission checks
+- Added missing os module import
 
 ## New Test Coverage
 - Nested symlink chains

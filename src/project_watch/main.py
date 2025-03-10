@@ -3,6 +3,7 @@
 # Standard library imports
 import json
 import logging
+import os
 import pathlib
 import re
 import subprocess
@@ -100,16 +101,13 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
     for pattern, _ in patterns:
         if match := re.search(pattern, normalized_output):
             groups = [int(g) if str(g).isdigit() else float(g) for g in match.groups()]
+            result.setdefault("skipped", 0)
             result.update(
                 {
-                    "passed": groups[0] if "passed" in pattern else result["passed"],
-                    "failed": groups[1] if "failed" in pattern else result["failed"],
-                    "warnings": (
-                        groups[2]
-                        if "warnings" in pattern
-                        else result.get("warnings", 0)
-                    ),
-                    "skipped": groups[3] if "skipped" in pattern else result["skipped"],
+                    "passed": groups[0] if "passed" in pattern else result.get("passed", 0),
+                    "failed": groups[1] if "failed" in pattern else result.get("failed", 0),
+                    "warnings": groups[2] if "warnings" in pattern else result.get("warnings", 0),
+                    "skipped": groups[3] if "skipped" in pattern else result.get("skipped", 0),
                     "time": groups[-1],
                 }
             )
@@ -221,7 +219,30 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     base_path = pathlib.Path(directory).resolve()
 
     for path in base_path.rglob("*"):
-        total += _process_code_path(path, counted)
+        try:
+            # Resolve symlinks and check permissions
+            real_path = path.resolve(strict=True)
+            
+            if real_path.is_dir():
+                continue
+                
+            if sys.platform == "win32":
+                real_path = pathlib.Path(str(real_path).lower())
+
+            if _should_skip_file(real_path, counted):
+                continue
+                
+            # Use inode to track files across symlinks
+            file_id = real_path.stat().st_ino
+            if file_id in counted:
+                continue
+
+            if real_path.is_file() and os.access(real_path, os.R_OK):
+                line_count = _count_file_lines(real_path)
+                total += line_count
+                counted.add(file_id)
+        except (OSError, PermissionError, FileNotFoundError):
+            continue
 
     return total
 
