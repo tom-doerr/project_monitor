@@ -1,4 +1,5 @@
 import pytest
+import sys
 
 from project_watch.main import (
     count_lines_of_code,
@@ -15,7 +16,9 @@ def test_windows_path_handling(tmp_path):
     (d / "con.py").write_text("# Reserved name\n")  # CON is reserved in Windows
 
     # Test path normalization with Windows-style paths
-    assert count_lines_of_code(d) == 2  # normal.py has 2 lines of code
+    # Windows should skip reserved names, others should count them
+    expected = 2 if sys.platform == "win32" else 3
+    assert count_lines_of_code(d) == expected
 
     # Test reserved filename handling
     with pytest.raises(OSError):
