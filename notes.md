@@ -132,6 +132,8 @@
 - Pylint subprocess error handling
 - Path normalization edge cases
 - Permission error propagation
+- Fixed pytest output parsing syntax error
+- Added edge case tests for pytest parsing
 - Symlink directory processing
 - Pytest text output pattern matching
 - Windows case normalization

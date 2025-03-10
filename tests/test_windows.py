@@ -124,3 +124,30 @@ def test_windows_mixed_slashes(tmp_path):
 
     # Test path normalization
     assert count_lines_of_code(file_path.parent) == 2
+
+def test_pytest_output_parsing_edge_cases():
+    """Test edge cases in pytest output parsing"""
+    from project_watch.main import _parse_pytest_output
+    
+    # Test empty output
+    assert _parse_pytest_output("") == {
+        "passed": 0,
+        "failed": 0,
+        "time": 0.0,
+        "output": "",
+        "error": None
+    }
+    
+    # Test malformed JSON
+    malformed_json = '{"passed": 5, "failed": 1'
+    assert _parse_pytest_output(malformed_json)["passed"] == 0
+    
+    # Test truncated output
+    truncated = "3 passed in 12.34s"
+    assert _parse_pytest_output(truncated) == {
+        "passed": 3,
+        "failed": 0,
+        "time": 12.34,
+        "output": truncated,
+        "error": None
+    }
