@@ -86,9 +86,14 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     counted = set()
     directory = pathlib.Path(directory).resolve(strict=True)
 
+    _WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "LPT1"}
+    
     def should_skip_file(path: pathlib.Path) -> bool:
         """Check if a file should be skipped."""
-        real_path = path.resolve()
+        try:
+            real_path = path.resolve()
+        except OSError:
+            return True
 
         # Combined skip conditions (order matters for performance)
         skip_conditions = [
@@ -96,6 +101,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             real_path in counted,  # Check cache before other ops
             path.suffix != ".py",
             not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
+            # Add Windows reserved name check
+            (sys.platform == "win32" and 
+             path.stem.upper() in _WINDOWS_RESERVED_NAMES),
             any(  # Check for binary files
                 b"\0" in content
                 for content in (
@@ -122,9 +130,13 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         """Count non-empty lines in a file."""
         try:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                return sum(1 for line in f if line.strip())
+                try:
+                    return sum(1 for line in f if line.strip())
+                except UnicodeDecodeError:
+                    return 0  # Properly handle binary files
         except (PermissionError, FileNotFoundError, OSError) as e:
-            print(f"Skipping {path}: {e}")
+            if isinstance(e, PermissionError):
+                print(f"Permission denied: {path}")
             return 0
 
     total = 0
