@@ -3,42 +3,64 @@
 import subprocess
 import pathlib
 import re
+import sys
+import json
 from datetime import datetime
 from watchdog.events import FileSystemEventHandler  # Import kept for type hints
 
 
 def get_pylint_score() -> float:
-    """Calculate pylint score for the current directory."""
+    """Calculate pylint score with robust parsing."""
     result = subprocess.run(
         ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "."],
         capture_output=True,
         text=True,
         check=False,
+        timeout=30,
     )
+    
+    # Improved score extraction with multiple fallbacks
     try:
-        return float(result.stdout.split()[-2].split("/")[0])
-    except (IndexError, ValueError):
-        return 0.0
+        # First try regex pattern matching
+        if match := re.search(r"rated at (\d+\.?\d*)/10", result.stdout):
+            return float(match.group(1))
+        
+        # Fallback to splitting output
+        parts = result.stdout.split()
+        if "/10" in parts:
+            return float(parts[parts.index("/10")-1])
+            
+    except (IndexError, ValueError, AttributeError):
+        pass
+    
+    return 0.0  # Explicit default on failure
 
 
-def get_pytest_results() -> dict:  # pylint: disable=too-many-return-statements
-    """Run pytest and return results summary."""
+def get_pytest_results() -> dict:
+    """Run pytest and return results summary with error handling."""
     try:
         result = subprocess.run(
             ["pytest", "--tb=no", "."],
             capture_output=True,
             text=True,
             check=False,
-            timeout=30,  # Add timeout protection
+            timeout=30,
         )
+        
         # Parse test counts from output
         passed = len(re.findall(r"^PASSED\b", result.stdout, flags=re.M))
         failed = len(re.findall(r"^FAILED\b", result.stdout, flags=re.M))
 
+        output = result.stdout[-2000:]  # Truncate long output
+        
+        # Check for JSON parse errors
+        if "INTERNALERROR" in output:
+            return {"error": "pytest internal error", "output": output}
+            
         return {
             "passed": passed,
             "failed": failed,
-            "output": result.stdout[-2000:],  # Truncate long output
+            "output": output,
         }
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
@@ -55,15 +77,18 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         """Check if a file should be skipped."""
         real_path = path.resolve()
 
-        # Combined skip conditions
+        # Combined skip conditions (order matters for performance)
         skip_conditions = [
-            not path.is_file(),
+            not path.exists(),  # Handle broken symlinks first
+            real_path in counted,  # Check cache before other ops
             path.suffix != ".py",
-            real_path in counted,
-            real_path.is_dir(),
-            any(
-                b"\0" in f.read(1024) for f in [open(real_path, "rb")]
-            ),  # Check for binary files
+            not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
+            any(b"\0" in f.read(1024) for f in [open(real_path, "rb")]  # Check binary last
+                if path.is_file() else [""]  # Prevent opening directories
+            ),
+            # Windows reserved filename check
+            (sys.platform == "win32" and path.name.split(".")[0].upper() in [
+                "CON", "PRN", "AUX", "NUL", "COM1", "LPT1"]),
         ]
 
         # Check all conditions with proper error handling
