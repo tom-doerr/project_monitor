@@ -217,10 +217,11 @@ def _count_file_lines(path: pathlib.Path) -> int:
                 and len(line) <= 1000000
                 and f.tell() < 10000000  # 10MB total read check
             )
-    except (UnicodeDecodeError, PermissionError, FileNotFoundError, OSError) as e:
-        is_permission_error = isinstance(e, PermissionError)
-        if is_permission_error:
-            print(f"Permission error reading {path}: {str(e)}")
+    except PermissionError as e:
+        logger.warning("Permission denied reading %s: %s", path, str(e))
+        return 0
+    except (UnicodeDecodeError, FileNotFoundError, OSError) as e:
+        logger.debug("Error counting lines in %s: %s", path, str(e))
         return 0
 
 
