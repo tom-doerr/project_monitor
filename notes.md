@@ -93,5 +93,5 @@
 ## Pending Test Cases
 - [x] Unicode normalization edge cases (added test_unicode_paths.py)
 - [x] Nested symlink resolution (added test_nested_symlinks.py) 
-- [ ] Network filesystem timing issues (simulated with mock)
+- [x] Network filesystem timing issues (added test_network_filesystems.py)
 - [x] Extremely long line handling (added test_long_lines.py)
