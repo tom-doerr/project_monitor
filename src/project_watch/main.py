@@ -1,15 +1,20 @@
 """Project monitoring core functionality with file system watching."""
 
+# Standard library imports
 import json
-import logging  # pylint: disable=unused-import
-
-logger = logging.getLogger(__name__)
-import subprocess
+import logging
 import pathlib
 import re
+import subprocess
 import sys
 from datetime import datetime
-from watchdog.events import FileSystemEventHandler  # Import kept for type hints
+from typing import TYPE_CHECKING
+
+# Third-party imports
+if TYPE_CHECKING:
+    from watchdog.events import FileSystemEventHandler
+
+logger = logging.getLogger(__name__)
 
 
 def get_pylint_score() -> float:
@@ -81,30 +86,31 @@ def _update_results_from_json(json_data: dict, result: dict) -> None:
     )
 
 
-def _parse_pytest_text(output: str, result: dict) -> bool:
-    """Fallback text parsing of pytest output."""
-    patterns = [
+def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
+    """Match pytest output patterns and update results."""
+    patterns = (
         (r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s", 5),
         (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s", 4),
         (r"(\d+) passed.*?(\d+) skipped.*? in ([\d.]+)s", 3),
         (r"(\d+) failed.*? in ([\d.]+)s", 2)
-    ]
+    )
 
-    normalized_output = output.replace("\n", " ").lower()
-    for pattern in patterns:
-        match = re.search(pattern, normalized_output)
-        if match:
+    for pattern, _ in patterns:
+        if match := re.search(pattern, normalized_output):
             groups = [int(g) if str(g).isdigit() else float(g) for g in match.groups()]
-            result.update(
-                {
-                    "passed": groups[0] if "passed" in pattern else result["passed"],
-                    "failed": groups[1] if "failed" in pattern else result["failed"],
-                    "warnings": groups[2] if "warnings" in pattern else result.get("warnings", 0),
-                    "skipped": groups[3] if "skipped" in pattern else result["skipped"],
-                    "time": groups[-1],  # Last group is always time
-                }
-            )
+            result.update({
+                "passed": groups[0] if "passed" in pattern else result["passed"],
+                "failed": groups[1] if "failed" in pattern else result["failed"],
+                "warnings": groups[2] if "warnings" in pattern else result.get("warnings", 0),
+                "skipped": groups[3] if "skipped" in pattern else result["skipped"],
+                "time": groups[-1],
+            })
             break
+
+def _parse_pytest_text(output: str, result: dict) -> bool:
+    """Fallback text parsing of pytest output."""
+    normalized_output = output.replace("\n", " ").lower()
+    _parse_pytest_patterns(normalized_output, result)
 
     # Fallback duration extraction
     time_match = re.search(r" in ([\d.]+)s", output)
@@ -143,20 +149,15 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     try:
         real_path = path.resolve().absolute()
 
-        if sys.platform == "win32":
-            real_path = real_path.resolve().lower()
-            if _is_windows_reserved_name(real_path):
-                return True
+        if sys.platform == "win32" and _is_windows_reserved_name(real_path.resolve().lower()):
+            return True
 
-        return any(
-            (
-                real_path in counted,
-                real_path.suffix != ".py",
-                not real_path.is_file(),
-                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-            )
-        )
-
+        return any((
+            real_path in counted,
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+        ))
     except OSError:
         return True
 
