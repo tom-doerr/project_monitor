@@ -24,20 +24,30 @@ def _test_reserved_names(test_dir):
     ]
     valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
 
-    # Test reserved names in nested directories
+    _create_nested_reserved_dirs(test_dir, reserved_names)
+    _create_test_files(test_dir, reserved_names, valid_names)
+
+    _verify_line_count(test_dir, len(valid_names))
+    _verify_windows_specific_behavior(test_dir)
+
+def _create_nested_reserved_dirs(test_dir, reserved_names):
+    """Create nested directories with reserved names"""
     for name in reserved_names:
         nested_dir = test_dir / "subdir" / name
         nested_dir.mkdir(parents=True)
         (nested_dir / "test.py").write_text("# Reserved name test\n")
 
+def _create_test_files(test_dir, reserved_names, valid_names):
+    """Create both reserved and valid test files"""
     _create_reserved_files(test_dir, reserved_names)
     _create_valid_files(test_dir, valid_names)
 
-    # Verify line counting skips all reserved names
-    assert count_lines_of_code(test_dir) == len(valid_names), (
-        "Should only count valid files"
-    )
-    # Verify Windows-specific behavior
+def _verify_line_count(test_dir, expected):
+    """Verify the line count matches expected value"""
+    assert count_lines_of_code(test_dir) == expected, "Should only count valid files"
+
+def _verify_windows_specific_behavior(test_dir):
+    """Verify Windows-specific file system behavior"""
     if sys.platform == "win32":
         assert (test_dir / "COM1").exists() is False, "Reserved files should be blocked"
 

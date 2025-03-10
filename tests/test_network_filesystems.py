@@ -1,6 +1,6 @@
+import contextlib
 import time
 import pathlib
-from unittest.mock import patch
 from project_watch.main import count_lines_of_code
 
 
@@ -36,6 +36,7 @@ def _create_delayed_resolve(original):
                 if attempt == 2:
                     raise
                 time.sleep(0.5 * attempt)
+        return None  # Explicit return for consistent-return
 
     return delayed_resolve
 
