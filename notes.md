@@ -141,6 +141,9 @@
 - Added default values for missing test result fields
 - Fixed runtime import of FileSystemEventHandler
 - Fixed KeyError in pytest pattern parsing
+- Fixed directory argument in file scanning edge case test
+- Added proper permission error logging
+- Separated permission error handling from other I/O errors
 - Improved symlink handling using inode tracking
 - Added explicit file permission checks
 - Added missing os module import
