@@ -62,20 +62,13 @@ def get_pytest_results() -> dict:
             timeout=30,
         )
         return _parse_pytest_output(result.stdout)
-    except subprocess.TimeoutExpired:
-        return {"error": "pytest timed out after 30 seconds"}
-    except (subprocess.SubprocessError, OSError) as e:  # Specific exceptions
-        return {"error": f"Subprocess error: {str(e)}"}
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
+        error_msg = "pytest timed out after 30 seconds" if isinstance(e, subprocess.TimeoutExpired) else f"Subprocess error: {str(e)}"
+        return {"error": error_msg}
 
 
-def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
-    """Count total lines of Python code in the given directory."""
-    counted = set()
-    directory = pathlib.Path(directory).resolve(strict=True)
-
-    _windows_reserved_names = {"con", "prn", "aux", "nul", "com1", "lpt1"}
-
-    def should_skip_file(path: pathlib.Path) -> bool:
+def _should_skip_file(path: pathlib.Path, counted: set, windows_reserved_names: set) -> bool:
+    """Check if a file should be skipped during line counting."""
         """Check if a file should be skipped."""
         try:
             real_path = path.resolve()
@@ -90,26 +83,28 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
             # Add Windows reserved name check
             # Check for binary files using context manager
-            (path.is_file() and b"\0" in open(real_path, "rb").read(1024)),
+            (path.is_file() and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))),
             # Windows reserved filename check
             (sys.platform == "win32" and path.stem.upper() in _windows_reserved_names),
         ]
 
         # Check all conditions with proper error handling
-        try:
-            return any(skip_conditions)
-        except OSError:
-            return True
+        return any(skip_conditions)
 
-    def count_file_lines(path: pathlib.Path) -> int:
+def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
+    """Read file in chunks using context manager."""
+    with open(path, "rb") as f:
+        while chunk := f.read(chunk_size):
+            yield chunk
+
+def _count_file_lines(path: pathlib.Path) -> int:
         """Count non-empty lines in a file."""
         try:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return sum(1 for line in f if line.strip())
-        except UnicodeDecodeError:
-            return 0  # Binary file
-        except (PermissionError, FileNotFoundError, OSError) as e:
-            if isinstance(e, PermissionError):
+        except (UnicodeDecodeError, PermissionError, FileNotFoundError, OSError) as e:
+            is_permission_error = isinstance(e, PermissionError)
+            if is_permission_error:
                 print(f"Permission error reading {path}: {str(e)}")
             return 0
 
