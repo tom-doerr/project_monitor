@@ -1,4 +1,3 @@
-
 import pytest
 
 from project_watch.main import (
