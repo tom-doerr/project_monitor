@@ -15,17 +15,27 @@ def _create_test_directory(tmp_path):
 def _test_reserved_names(test_dir):
     """Verify handling of Windows reserved filenames"""
     reserved_names = [
-        "COM1", "COM9", "LPT1", "LPT9", "CON", "PRN", 
-        "AUX", "NUL", "CON.txt", "com1", "lPt9.md"
+        "COM1",
+        "COM9",
+        "LPT1",
+        "LPT9",
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        "CON.txt",
+        "com1",
+        "lPt9.md",
     ]
     valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
-    
+
     _create_reserved_files(test_dir, reserved_names)
     _create_valid_files(test_dir, valid_names)
-    
+
     if sys.platform == "win32":
         assert count_lines_of_code(test_dir) == 0, "Reserved files should be skipped"
         _validate_normal_files(test_dir, valid_names)
+
 
 def _create_reserved_files(test_dir, names):
     """Create files with reserved names"""
@@ -36,15 +46,19 @@ def _create_reserved_files(test_dir, names):
         except OSError:
             continue
 
+
 def _create_valid_files(test_dir, names):
     """Create files with valid names"""
     for name in names:
         path = test_dir / name
         path.write_text(f"# Valid: {name}\n", encoding="utf-8")
 
+
 def _validate_normal_files(test_dir, valid_names):
     """Validate counting of normal files"""
-    assert count_lines_of_code(test_dir) == len(valid_names), "Valid files should be counted"
+    assert count_lines_of_code(test_dir) == len(
+        valid_names
+    ), "Valid files should be counted"
 
 
 def test_windows_path_handling(tmp_path):
