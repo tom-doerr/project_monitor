@@ -69,12 +69,12 @@ def get_pytest_results() -> dict:
 
 def _should_skip_file(path: pathlib.Path, counted: set, windows_reserved_names: set) -> bool:
     """Check if a file should be skipped during line counting."""
-        try:
-            real_path = path.resolve()
-        except OSError:
-            return True
+    try:
+        real_path = path.resolve()
+    except OSError:
+        return True
 
-        # Combined skip conditions (order matters for performance)
+    # Combined skip conditions (order matters for performance)
         skip_conditions = [
             not path.exists(),  # Handle broken symlinks first
             real_path in counted,  # Check cache before other ops
@@ -97,7 +97,7 @@ def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
             yield chunk
 
 def _count_file_lines(path: pathlib.Path) -> int:
-        """Count non-empty lines in a file."""
+    """Count non-empty lines in a file."""
         try:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 return sum(1 for line in f if line.strip())
