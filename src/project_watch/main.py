@@ -72,22 +72,29 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
         return True
     except json.JSONDecodeError:  # pylint: disable=no-member
         return False
-    summary_match = re.search(
+    # First try text pattern matching
+    patterns = [
         r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
-        output.replace("\n", " "),
-    )
-    if summary_match:
-        result.update(
-            {
-                "passed": int(summary_match.group(1)),
-                "failed": int(summary_match.group(2)),
-                "warnings": int(summary_match.group(3)),
-                "skipped": int(summary_match.group(4)),
-                "time": float(summary_match.group(5)),
-            }
-        )
+        r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s",
+        r"(\d+) passed.*?(\d+) skipped.*? in ([\d.]+)s",
+        r"(\d+) failed.*? in ([\d.]+)s"
+    ]
+    
+    normalized_output = output.replace("\n", " ").lower()
+    for pattern in patterns:
+        match = re.search(pattern, normalized_output)
+        if match:
+            groups = [int(g) if str(g).isdigit() else float(g) for g in match.groups()]
+            result.update({
+                "passed": groups[0] if "passed" in pattern else result["passed"],
+                "failed": groups[1] if "failed" in pattern else result["failed"],
+                "warnings": groups[2] if "warnings" in pattern else result["warnings"],
+                "skipped": groups[3] if "skipped" in pattern else result["skipped"],
+                "time": groups[-1]  # Last group is always time
+            })
+            break
 
-    # Try to get duration from output
+    # Fallback duration extraction
     time_match = re.search(r" in ([\d.]+)s", output)
     if time_match:
         result["time"] = float(time_match.group(1))
@@ -195,23 +202,30 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
-    if path.is_symlink() and path.is_dir():
-        return 0
-
-    normalized_path = (
-        pathlib.Path(str(path).lower()) if sys.platform == "win32" else path
-    )
-
-    if _should_skip_file(normalized_path, counted):
-        return 0
-
     try:
-        return _count_file_lines(normalized_path)
-    except PermissionError:
+        # Resolve symlinks before processing
+        resolved_path = path.resolve(strict=True)
+        
+        # Skip directory symlinks but follow file symlinks
+        if resolved_path.is_dir():
+            return 0
+            
+        # Normalize case for Windows after resolving
+        if sys.platform == "win32":
+            resolved_path = pathlib.Path(str(resolved_path).lower())
+
+        if _should_skip_file(resolved_path, counted):
+            logger.debug("Skipping file: %s", resolved_path)
+            return 0
+
+        line_count = _count_file_lines(resolved_path)
+        logger.debug("Counted %d lines in %s", line_count, resolved_path)
+        return line_count
+        
+    except (PermissionError, FileNotFoundError):
         return 0
     except (OSError, UnicodeDecodeError) as e:
-        logger = logging.getLogger(__name__)
-        logger.warning("Error counting %s: %s", normalized_path, e, exc_info=True)
+        logger.warning("Error counting %s: %s", path, e, exc_info=True)
         return 0
 
 
