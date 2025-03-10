@@ -34,7 +34,7 @@ def test_handles_invalid_pytest_output():
         )
         results = get_pytest_results()
         assert "error" in results
-        assert "JSON" in results["error"]
+        assert results.get("error", "").find("JSON") != -1
 
 
 def test_get_pytest_results_failure():

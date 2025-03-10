@@ -31,7 +31,7 @@ def _create_delayed_resolve(original):
     def delayed_resolve(self, *args, **kwargs):
         for attempt in range(3):
             try:
-                time.sleep(2.5)
+                time.sleep(0.5)  # Reduced from 2.5s to avoid CI timeouts
                 return original(self, *args, **kwargs)
             except FileNotFoundError:
                 if attempt == 2:
