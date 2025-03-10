@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest.mock import patch
 import pytest
-from project_watch.main import (
+from src.project_watch.main import (
     get_project_stats,
     get_pylint_score,
     count_lines_of_code,

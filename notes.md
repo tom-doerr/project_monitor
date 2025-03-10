@@ -18,6 +18,8 @@
 3. Add CI artifact publishing
 
 ## Recent Changes
+- Fixed Python import paths in tests
+- Fixed indentation error in file handling
 - Added pytest timeout handling
 - Improved LOC counting with:
   - UTF-8 encoding support
