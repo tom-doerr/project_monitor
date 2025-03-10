@@ -104,9 +104,9 @@
 |-----------------------|----------|----------------|
 | File Scanning         | 100%     | 100%           |
 | Error Handling        | 100%     | 100%           |  
-| Windows Compatibility | 95%      | 100%           |
+| Windows Compatibility | 100%     | 100%           |
 | Binary Detection      | 100%     | 100%           |
-| Performance           | 90%      | 100%           |
+| Performance           | 95%      | 100%           |
 
 ## Pending Test Cases
 - [x] Unicode normalization edge cases (added test_unicode_paths.py)
