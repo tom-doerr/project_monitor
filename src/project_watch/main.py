@@ -60,35 +60,7 @@ def get_pytest_results() -> dict:
             check=False,
             timeout=30,
         )
-
-        # Parse test counts from output
-        passed = (
-            int(re.findall(r"(\d+) passed", result.stdout)[-1])
-            if "passed" in result.stdout
-            else 0
-        )
-        failed = (
-            int(re.findall(r"(\d+) failed", result.stdout)[-1])
-            if "failed" in result.stdout
-            else 0
-        )
-
-        output = result.stdout[-2000:]  # Truncate long output
-
-        # Check for JSON parse errors
-        if "INTERNALERROR" in output:
-            return {"error": "pytest internal error", "output": output}
-
-        time_match = re.search(r" in ([\d.]+)s", result.stdout)
-        result_data = {
-            "passed": passed,
-            "failed": failed,
-            "time": float(time_match.group(1)) if time_match else 0.0,
-            "output": output
-        }
-        if "INTERNALERROR" in output:
-            result_data["error"] = "pytest internal error"
-        return result_data
+        return _parse_pytest_output(result.stdout)
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
     except (subprocess.SubprocessError, OSError) as e:  # Specific exceptions
@@ -136,17 +108,16 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         except UnicodeDecodeError:
             return 0  # Binary file
         except (PermissionError, FileNotFoundError, OSError) as e:
-            print(f"Error reading {path}: {str(e)}") if isinstance(e, PermissionError) else None
+            if isinstance(e, PermissionError):
+                print(f"Permission error reading {path}: {str(e)}")
             return 0
 
     total = 0
     for path in directory.rglob("*"):
-        if should_skip_file(path):
-            continue
-
         real_path = path.resolve()
-        total += count_file_lines(real_path)
-        counted.add(real_path)
+        if not should_skip_file(path):
+            total += count_file_lines(real_path)
+            counted.add(real_path)
 
     return total
 
