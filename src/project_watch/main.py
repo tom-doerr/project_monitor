@@ -53,21 +53,22 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     
     def should_skip_file(path: pathlib.Path) -> bool:
         """Check if a file should be skipped."""
-        if not path.is_file() or path.suffix != ".py":
-            return True
-            
         real_path = path.resolve()
-        if real_path in counted or real_path.is_dir():
-            return True
-            
+        
+        # Combined skip conditions
+        skip_conditions = [
+            not path.is_file(),
+            path.suffix != ".py",
+            real_path in counted,
+            real_path.is_dir(),
+            any(b'\0' in f.read(1024) for f in [open(real_path, "rb")]),  # Check for binary files
+        ]
+        
+        # Check all conditions with proper error handling
         try:
-            with open(real_path, "rb") as f:
-                if b'\0' in f.read(1024):
-                    return True
+            return any(skip_conditions)
         except OSError:
             return True
-            
-        return False
 
     def count_file_lines(path: pathlib.Path) -> int:
         """Count non-empty lines in a file."""
