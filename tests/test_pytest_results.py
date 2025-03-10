@@ -22,6 +22,7 @@ def test_handles_invalid_pytest_json():
         assert "error" in results
         assert "JSON" in results["error"]
 
+
 def test_get_pytest_results_failure():
     with patch("subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
