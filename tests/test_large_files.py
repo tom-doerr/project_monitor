@@ -1,9 +1,9 @@
-import pytest
 import pathlib
-import random
-from project_watch.main import count_lines_of_code
+# pylint: disable=wrong-import-order
+import pytest
+from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
-def generate_large_file(path: pathlib.Path, line_count: int, line_length: int = 1000):
+def generate_large_file(path: pathlib.Path, line_count: int, line_length: int = 1000):  # pylint: disable=too-many-arguments
     with path.open("w", encoding="utf-8") as f:
         for _ in range(line_count):
             f.write("a" * line_length + "\n")
@@ -19,7 +19,7 @@ def test_1gb_file(tmp_path: pathlib.Path):
         f.write(b"\0" * (1024**3))  # 1GB file
     assert count_lines_of_code(tmp_path) == 0
 
-def test_safety_limits(tmp_path: pathlib.Path, monkeypatch):
+def test_safety_limits(tmp_path: pathlib.Path):
     test_file = tmp_path / "malformed.txt"
     with test_file.open("w", encoding="utf-8") as f:
         f.write("partial line")
