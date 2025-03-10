@@ -26,12 +26,14 @@ def get_pylint_score() -> float:
         r"\s(\d+\.\d+)\s+\(.*\)"  # Alternative format
     )
     
-    for pattern in patterns:
-        if match := re.search(pattern, result.stdout):
-            try:
-                return float(match.group(1))
-            except (ValueError, IndexError):
-                continue
+    scores = (
+        float(match.group(1))
+        for pattern in patterns
+        if (match := re.search(pattern, result.stdout))
+        for _ in (None,)
+        if match
+    )
+    return next(scores, max(scores) if scores else 0.0)
     
     # Final fallback to split-based extraction
     parts = result.stdout.replace(",", "").split()
@@ -60,16 +62,12 @@ def get_pytest_results() -> dict:
         if "INTERNALERROR" in output:
             return {"error": "pytest internal error", "output": output}
 
-        result_data = {
+        return {
             "passed": passed,
             "failed": failed,
-            "output": output
+            "output": output,
+            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {})
         }
-        
-        if "INTERNALERROR" in output:
-            result_data["error"] = "pytest internal error"
-            
-        return result_data
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
     except subprocess.SubprocessError as e:  # More specific exception
@@ -92,11 +90,10 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             path.suffix != ".py",
             not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
             any(  # Check for binary files
-                b"\0" in f.read(1024)
-                for f in (
-                    [open(real_path, "rb")] if path.is_file() else []
+                b"\0" in content
+                for content in (
+                    [open(real_path, "rb").read(1024)] if path.is_file() else [b""]
                 )
-                if hasattr(f, "read")  # Handle empty case safely
             ),
             # Windows reserved filename check
             (
