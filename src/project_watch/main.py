@@ -49,35 +49,44 @@ def get_pytest_results() -> dict:  # pylint: disable=too-many-return-statements
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
     directory = pathlib.Path(directory).resolve()
-    total = 0
     counted = set()
     
-    for path in directory.rglob("*"):
-        # Skip directories and non-Python files
+    def should_skip_file(path: pathlib.Path) -> bool:
+        """Check if a file should be skipped."""
         if not path.is_file() or path.suffix != ".py":
-            continue
+            return True
+            
+        real_path = path.resolve()
+        if real_path in counted or real_path.is_dir():
+            return True
             
         try:
-            # Resolve symlinks and check for duplicates
-            real_path = path.resolve()
-            if real_path in counted:
-                continue
-                
-            # Skip binary files
             with open(real_path, "rb") as f:
                 if b'\0' in f.read(1024):
-                    continue
-                    
-            # Count non-empty lines
-            with open(real_path, "r", encoding="utf-8", errors="ignore") as f:
-                total += sum(1 for line in f if line.strip())
-                
-            counted.add(real_path)
+                    return True
+        except OSError:
+            return True
             
+        return False
+
+    def count_file_lines(path: pathlib.Path) -> int:
+        """Count non-empty lines in a file."""
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                return sum(1 for line in f if line.strip())
         except (PermissionError, FileNotFoundError, OSError) as e:
             print(f"Skipping {path}: {e}")
+            return 0
+
+    total = 0
+    for path in directory.rglob("*"):
+        if should_skip_file(path):
             continue
             
+        real_path = path.resolve()
+        total += count_file_lines(real_path)
+        counted.add(real_path)
+        
     return total
 
 
