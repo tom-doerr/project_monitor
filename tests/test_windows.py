@@ -17,7 +17,6 @@ def test_windows_path_handling(tmp_path):
     (d / "con.py").write_text("# Reserved name\n")  # CON is reserved in Windows
 
     # Test path normalization with Windows-style paths
-    win_path = PureWindowsPath(str(d))
     assert count_lines_of_code() == 2  # normal.py has 2 lines of code
 
     # Test reserved filename handling
@@ -49,7 +48,6 @@ def test_windows_unc_paths(tmp_path):
     test_file.write_text("# UNC path test\nx = 1\n")
 
     # Then verify Windows path handling
-    unc_path = PureWindowsPath(f"\\\\{tmp_path}\\share\\test.py")
     assert count_lines_of_code() == 2
 
 
@@ -61,5 +59,4 @@ def test_windows_mixed_slashes(tmp_path):
     file_path.write_text("a = 1\nb = 2\n")
 
     # Test Windows path representation
-    mixed_path = PureWindowsPath(str(tmp_path) + "/mixed\\slashes.py")
     assert count_lines_of_code() == 2
