@@ -7,9 +7,9 @@ from project_watch.main import (
 
 
 def test_windows_path_handling(tmp_path):
+    """Test handling of Windows-style paths and reserved names"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-    """Test handling of Windows-style paths and reserved names"""
     d = tmp_path / "sub"
     d.mkdir()
     (d / "normal.py").write_text("# Valid Python file\nprint('hello')\n")
@@ -30,9 +30,9 @@ def test_windows_path_handling(tmp_path):
 
 
 def test_windows_case_insensitivity(tmp_path):
+    """Test case-insensitive file handling"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-    """Test case-insensitive file handling"""
     (tmp_path / "MiXeDcAsE.py").write_text("x = 1\nx = 2\n")
     assert count_lines_of_code(tmp_path) == 2
 
