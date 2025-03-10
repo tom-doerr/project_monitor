@@ -2,6 +2,7 @@
 
 import json
 import logging  # pylint: disable=unused-import
+
 logger = logging.getLogger(__name__)
 import subprocess
 import pathlib
@@ -66,15 +67,19 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
     except json.JSONDecodeError:  # pylint: disable=no-member
         return False
 
+
 def _update_results_from_json(json_data: dict, result: dict) -> None:
     """Update results dict with data from JSON."""
-    result.update({
-        "passed": json_data.get("passed", 0),
-        "failed": json_data.get("failed", 0),
-        "skipped": json_data.get("skipped", 0),
-        "warnings": json_data.get("warnings", 0),
-        "time": json_data.get("duration", 0.0),
-    })
+    result.update(
+        {
+            "passed": json_data.get("passed", 0),
+            "failed": json_data.get("failed", 0),
+            "skipped": json_data.get("skipped", 0),
+            "warnings": json_data.get("warnings", 0),
+            "time": json_data.get("duration", 0.0),
+        }
+    )
+
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
@@ -82,21 +87,25 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
         r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
         r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s",
         r"(\d+) passed.*?(\d+) skipped.*? in ([\d.]+)s",
-        r"(\d+) failed.*? in ([\d.]+)s"
+        r"(\d+) failed.*? in ([\d.]+)s",
     ]
-    
+
     normalized_output = output.replace("\n", " ").lower()
     for pattern in patterns:
         match = re.search(pattern, normalized_output)
         if match:
             groups = [int(g) if str(g).isdigit() else float(g) for g in match.groups()]
-            result.update({
-                "passed": groups[0] if "passed" in pattern else result["passed"],
-                "failed": groups[1] if "failed" in pattern else result["failed"],
-                "warnings": groups[2] if "warnings" in pattern else result["warnings"],
-                "skipped": groups[3] if "skipped" in pattern else result["skipped"],
-                "time": groups[-1]  # Last group is always time
-            })
+            result.update(
+                {
+                    "passed": groups[0] if "passed" in pattern else result["passed"],
+                    "failed": groups[1] if "failed" in pattern else result["failed"],
+                    "warnings": (
+                        groups[2] if "warnings" in pattern else result["warnings"]
+                    ),
+                    "skipped": groups[3] if "skipped" in pattern else result["skipped"],
+                    "time": groups[-1],  # Last group is always time
+                }
+            )
             break
 
     # Fallback duration extraction
@@ -210,11 +219,11 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
     try:
         # Resolve symlinks before processing
         resolved_path = path.resolve(strict=True)
-        
+
         # Skip directory symlinks but follow file symlinks
         if resolved_path.is_dir():
             return 0
-            
+
         # Normalize case for Windows after resolving
         if sys.platform == "win32":
             resolved_path = pathlib.Path(str(resolved_path).lower())
@@ -226,7 +235,7 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         line_count = _count_file_lines(resolved_path)
         logger.debug("Counted %d lines in %s", line_count, resolved_path)
         return line_count
-        
+
     except (PermissionError, FileNotFoundError):
         return 0
     except (OSError, UnicodeDecodeError) as e:
