@@ -62,10 +62,14 @@
 - Added proper pytest time metric extraction 
 - Improved test error handling for OS-specific behaviors
 - Added pytest.skip() for Windows-specific test cases
-- Fixed ternary operator syntax in binary file detection
-- Fixed mismatched parentheses in file skip conditions
+- Fixed binary file detection TypeError by removing redundant any()
 - Removed duplicate Windows reserved names check
 - Simplified path validation logic using pathlib stem
+
+## New Todos
+- [ ] Add more robust binary file detection using mimetypes
+- [ ] Implement context manager for file handles
+- [ ] Add test for null bytes in non-binary files
 - Improved binary file handler cleanup
 - Improved error handling for permissions/filesystem errors
 - Standardized on pathlib for all file operations
