@@ -47,7 +47,10 @@
 - Develop plugin system for custom metrics
 
 ## New Test Coverage
-- Windows reserved filename handling
+- Windows reserved filename handling (including subdirectory validation)
+- UNC path normalization edge cases
+- Long path handling with pathlib normalization
+- Mixed slash/path separator handling
 - UNC path normalization  
 - Long path (>260 chars) handling
 - Mixed slash directions

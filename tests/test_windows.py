@@ -22,7 +22,8 @@ def _test_reserved_names(test_dir):
         )  # pylint: disable=unspecified-encoding
         assert count_lines_of_code(test_dir) == 2
         with pytest.raises(OSError):
-            (test_dir / "COM4.py").write_text("# Should fail in Windows")
+            with pytest.raises(OSError):
+                (test_dir / "COM4.py").write_text("# Should fail in Windows")
     except OSError:
         pytest.skip("Windows reserved name creation failed")
 
@@ -34,10 +35,9 @@ def test_windows_path_handling(tmp_path):
 
     test_dir = _create_test_directory(tmp_path)
 
-    if sys.platform.startswith("win"):
-        _test_reserved_names(test_dir)
-    else:  # Fallback for non-Windows platforms
-        assert count_lines_of_code(test_dir) == 3
+    _test_reserved_names(test_dir)
+    # Verify normal file counting works
+    assert count_lines_of_code(test_dir) == 2
 
 
 def test_windows_case_insensitivity(tmp_path):
