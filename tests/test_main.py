@@ -24,7 +24,7 @@ def mock_stats_fixture() -> dict:
 
 def test_get_project_stats_aggregation(_mock_stats):
     """Verify all metrics are properly combined"""
-    with patch("src.project_watch.main.get_project_stats") as mock_get:
+    with patch("project_watch.main.get_project_stats") as mock_get:
         mock_get.return_value = _mock_stats
         stats = get_project_stats()
         assert isinstance(stats["pylint"], float)
@@ -34,7 +34,7 @@ def test_get_project_stats_aggregation(_mock_stats):
 
 
 def test_pylint_returns_valid_score_range(_mock_stats):
-    with patch("src.project_watch.main.get_pylint_score") as mock_pylint:
+    with patch("project_watch.main.get_pylint_score") as mock_pylint:
         mock_pylint.return_value = _mock_stats["pylint"]
         score = get_pylint_score()
         assert 0.0 <= score <= 10.0
@@ -43,13 +43,13 @@ def test_pylint_returns_valid_score_range(_mock_stats):
 def test_loc_returns_non_negative_count(_mock_stats):
     # Should never return negative lines of code
     with patch(
-        "src.project_watch.main.count_lines_of_code", return_value=_mock_stats["loc"]
+        "project_watch.main.count_lines_of_code", return_value=_mock_stats["loc"]
     ):
         assert count_lines_of_code() >= 0
 
 
 def test_pytest_results_contain_required_keys(_mock_stats):
-    with patch("src.project_watch.main.get_project_stats") as mock_stats:
+    with patch("project_watch.main.get_project_stats") as mock_stats:
         mock_stats.return_value = _mock_stats
         pytest_results = get_project_stats()["pytest"]
         assert "passed" in pytest_results
