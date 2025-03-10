@@ -1,7 +1,7 @@
 import sys
 import pytest
 
-from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
+from project_watch.main import count_lines_of_code, _parse_pytest_output  # pylint: disable=no-name-in-module
 
 
 def _create_test_directory(tmp_path):
@@ -127,8 +127,6 @@ def test_windows_mixed_slashes(tmp_path):
 
 def test_pytest_output_parsing_edge_cases():
     """Test edge cases in pytest output parsing"""
-    from project_watch.main import _parse_pytest_output
-    
     # Test empty output
     assert _parse_pytest_output("") == {
         "passed": 0,
