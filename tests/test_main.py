@@ -1,10 +1,10 @@
 from datetime import datetime
 from unittest.mock import patch
 import pytest
-from src.project_watch.main import (
+from project_watch.main import (
     get_project_stats,
     get_pylint_score,
-    count_lines_of_code,
+    count_lines_of_code, 
     get_pytest_results,
 )
 
@@ -21,8 +21,8 @@ def mock_stats_fixture() -> dict:
     }
 
 
-def test_stats_structure_validation(_mock_stats):
-    """Validate structure of project stats dictionary"""
+def test_get_project_stats_aggregation(_mock_stats):
+    """Verify all metrics are properly combined"""
     with patch("src.project_watch.main.get_project_stats") as mock_get:
         mock_get.return_value = _mock_stats
         stats = get_project_stats()
