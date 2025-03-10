@@ -54,9 +54,10 @@
 - Symlink resolution
 
 ## Recent Changes
-- Added proper symlink resolution and deduplication
-- Implemented binary file detection using null byte check  
-- Added Windows path normalization with resolve()
+- Fixed Windows reserved filename test handling
+- Added proper pytest time metric extraction
+- Improved test error handling for OS-specific behaviors
+- Added pytest.skip() for Windows-specific test cases
 - Fixed ternary operator syntax in binary file detection
 - Added proper parentheses around conditional file handling
 - Improved binary file handler cleanup

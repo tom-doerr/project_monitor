@@ -70,11 +70,13 @@ def get_pytest_results() -> dict:
         if "INTERNALERROR" in output:
             return {"error": "pytest internal error", "output": output}
 
+        time_match = re.search(r' in ([\d.]+)s', result.stdout)
         return {
             "passed": passed,
             "failed": failed,
+            "time": float(time_match.group(1)) if time_match else 0.0,
             "output": output,
-            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {}),
+            **({"error": "pytest internal error"} if "INTERNALERROR" in output else {})
         }
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
