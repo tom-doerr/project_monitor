@@ -139,6 +139,7 @@
 - Fixed Windows path normalization syntax error
 - Improved pytest text parsing with multiple patterns
 - Added default values for missing test result fields
+- Fixed runtime import of FileSystemEventHandler
 
 ## New Test Coverage
 - Nested symlink chains
