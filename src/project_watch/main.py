@@ -97,14 +97,13 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     except OSError:
         return True
 
-    windows_reserved = sys.platform == "win32" and path.stem.upper() in {
-        "con",
-        "prn",
-        "aux",
-        "nul",
-        "com1",
-        "lpt1",
-    }
+    # Windows reserved name check (case-insensitive)
+    windows_reserved = False
+    if sys.platform == "win32":
+        reserved_names = {"con", "prn", "aux", "nul"} | \
+                        {f"com{i}" for i in range(1,10)} | \
+                        {f"lpt{i}" for i in range(1,10)}
+        windows_reserved = path.stem.split('.')[0].lower() in reserved_names
 
     return any(
         [
