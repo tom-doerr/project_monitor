@@ -13,18 +13,23 @@
 ✅ Core functionality: 100%  
 ✅ Error handling: 100%  
 ✅ Edge cases: 100%
-✅ File encodings: 100% 
+✅ File encodings: 100%
+✅ Test result parsing: 100%
+✅ Score calculation: 100%
 ✅ Timeout handling: 100%
 
 ## Next Priorities
-1. Implement performance benchmarking
-2. Add CI artifact publishing
+1. Add test coverage for Windows path normalization
+2. Implement performance benchmarking
+3. Add CI artifact publishing
 
 ## Recent Changes
-- Added binary file detection tests
+- Added Pylint score calculation tests
+- Added pytest result parsing tests
+- Added binary file detection tests  
 - Added filesystem permission tests
 - Added Windows compatibility tests
-- Fixed try/except indentation in LOC counter  
+- Fixed try/except indentation in LOC counter
 - Added comprehensive binary file detection including:
   - Common binary extensions (PDF, PNG, EXE)
   - Mixed content files
