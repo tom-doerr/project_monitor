@@ -9,7 +9,6 @@ import re
 import subprocess
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 # Third-party imports
 from watchdog.events import FileSystemEventHandler
@@ -40,7 +39,8 @@ def get_pylint_score() -> float:
 
         return max(extract_score(result.stdout), extract_score(result.stderr))
     except (subprocess.SubprocessError, ValueError, AttributeError):
-        return 0.0
+        score = 0.0
+    return min(max(score, 0.0), 10.0)
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -102,15 +102,11 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
         if match := re.search(pattern, normalized_output):
             groups = [int(g) if str(g).isdigit() else float(g) for g in match.groups()]
             result.setdefault("skipped", 0)
-            result.update(
-                {
-                    "passed": groups[0] if "passed" in pattern else result.get("passed", 0),
-                    "failed": groups[1] if "failed" in pattern else result.get("failed", 0),
-                    "warnings": groups[2] if "warnings" in pattern else result.get("warnings", 0),
-                    "skipped": groups[3] if "skipped" in pattern else result.get("skipped", 0),
-                    "time": groups[-1],
-                }
-            )
+            result.update({
+                key: groups[idx] if key in pattern else result.get(key, 0)
+                for idx, key in enumerate(["passed", "failed", "warnings", "skipped"])
+            })
+            result["time"] = groups[-1]
             break
 
 
@@ -219,33 +215,35 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     base_path = pathlib.Path(directory).resolve()
 
     for path in base_path.rglob("*"):
-        try:
-            # Resolve symlinks and check permissions
-            real_path = path.resolve(strict=True)
-            
-            if real_path.is_dir():
-                continue
-                
-            if sys.platform == "win32":
-                real_path = pathlib.Path(str(real_path).lower())
-
-            if _should_skip_file(real_path, counted):
-                continue
-                
-            # Use inode to track files across symlinks
-            file_id = real_path.stat().st_ino
-            if file_id in counted:
-                continue
-
-            if real_path.is_file() and os.access(real_path, os.R_OK):
-                line_count = _count_file_lines(real_path)
-                total += line_count
-                counted.add(file_id)
-        except (OSError, PermissionError, FileNotFoundError):
-            continue
+        total += _process_path(path, counted)
 
     return total
 
+
+def _process_path(path: pathlib.Path, counted: set) -> int:
+    """Handle path processing for line counting with error handling."""
+    try:
+        real_path = path.resolve(strict=True)
+        if real_path.is_dir():
+            return 0
+            
+        if sys.platform == "win32":
+            real_path = pathlib.Path(str(real_path).lower())
+
+        if _should_skip_file(real_path, counted):
+            return 0
+            
+        file_id = real_path.stat().st_ino
+        if file_id in counted:
+            return 0
+
+        if real_path.is_file() and os.access(real_path, os.R_OK):
+            line_count = _count_file_lines(real_path)
+            counted.add(file_id)
+            return line_count
+        return 0
+    except (OSError, PermissionError, FileNotFoundError):
+        return 0
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
