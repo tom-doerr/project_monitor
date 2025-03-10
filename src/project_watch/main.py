@@ -45,23 +45,29 @@ def _parse_pytest_output(output: str) -> dict:
         "error": None,
     }
 
-    # First try JSON parsing if available
-    json_match = re.search(r'{"\w+": \d+.*}', output)
-    if json_match:
-        try:
-            json_data = json.loads(json_match.group(0))
-            result.update({
-                "passed": json_data.get("passed", 0),
-                "failed": json_data.get("failed", 0),
-                "skipped": json_data.get("skipped", 0),
-                "warnings": json_data.get("warnings", 0),
-                "time": json_data.get("duration", 0.0)
-            })
-            return result
-        except json.JSONDecodeError:  # pylint: disable=no-member
-            pass
+    if not _parse_pytest_json(output, result):
+        _parse_pytest_text(output, result)
 
-    # Fallback to text parsing
+    return result
+
+def _parse_pytest_json(output: str, result: dict) -> bool:
+    """Attempt JSON parsing of pytest output, return True if successful."""
+    json_match = re.search(r'{"\w+": \d+.*}', output)
+    if not json_match:
+        return False
+
+    try:
+        json_data = json.loads(json_match.group(0))
+        result.update({
+            "passed": json_data.get("passed", 0),
+            "failed": json_data.get("failed", 0),
+            "skipped": json_data.get("skipped", 0),
+            "warnings": json_data.get("warnings", 0),
+            "time": json_data.get("duration", 0.0)
+        })
+        return True
+    except json.JSONDecodeError:  # pylint: disable=no-member
+        return False
     summary_match = re.search(
         r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
         output.replace("\n", " "),
@@ -110,31 +116,33 @@ def get_pytest_results() -> dict:
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
-        # Resolve symlinks and get absolute path
         real_path = path.resolve().absolute()
         
-        # Normalize case for Windows
         if sys.platform == "win32":
             real_path = real_path.resolve().lower()
-
-        # Check Windows reserved names against resolved path
-        if sys.platform == "win32":
-            stem = real_path.stem.split(".")[0].lower()
-            reserved_names = {"con", "prn", "aux", "nul"} | \
-                            {f"com{i}" for i in range(1, 10)} | \
-                            {f"lpt{i}" for i in range(1, 10)}
-            if stem in reserved_names:
+            if _is_windows_reserved_name(real_path):
                 return True
 
-        return any([
+        return any((
             real_path in counted,
             real_path.suffix != ".py",
             not real_path.is_file(),
             any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
-        ])
+        ))
         
     except OSError:
-        return True  # Skip files we can't resolve
+        return True
+
+def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
+    """Check if path contains Windows reserved filename."""
+    if sys.platform != "win32":
+        return False
+        
+    stem = real_path.stem.split(".")[0].lower()
+    reserved_names = {"con", "prn", "aux", "nul"} | \
+                    {f"com{i}" for i in range(1, 10)} | \
+                    {f"lpt{i}" for i in range(1, 10)}
+    return stem in reserved_names
 
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
@@ -169,27 +177,28 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     base_path = pathlib.Path(directory).resolve()
 
     for path in base_path.rglob("*"):
-        # Handle symlinks to directories
-        if path.is_symlink() and path.is_dir():
-            continue
-
-        # Normalize Windows paths
-        if sys.platform == "win32":
-            path = pathlib.Path(str(path).lower())
-
-        if _should_skip_file(path, counted):
-            continue
-
-        try:
-            line_count = _count_file_lines(path)
-            total += line_count
-        except PermissionError:
-            continue  # Already logged in _should_skip_file
-        except (OSError, UnicodeDecodeError) as e:  # Narrow exception scope
-            logger = logging.getLogger(__name__)
-            logger.warning("Error counting %s: %s", path, e, exc_info=True)
-
+        total += _process_code_path(path, counted)
+        
     return total
+
+def _process_code_path(path: pathlib.Path, counted: set) -> int:
+    """Process a single path for line counting."""
+    if path.is_symlink() and path.is_dir():
+        return 0
+
+    normalized_path = pathlib.Path(str(path).lower()) if sys.platform == "win32" else path
+    
+    if _should_skip_file(normalized_path, counted):
+        return 0
+
+    try:
+        return _count_file_lines(normalized_path)
+    except PermissionError:
+        return 0
+    except (OSError, UnicodeDecodeError) as e:
+        logger = logging.getLogger(__name__)
+        logger.warning("Error counting %s: %s", normalized_path, e, exc_info=True)
+        return 0
 
 
 class ProjectWatcher(FileSystemEventHandler):
