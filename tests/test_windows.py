@@ -13,7 +13,8 @@ def test_windows_path_handling(tmp_path):
     d = tmp_path / "sub"
     d.mkdir()
     (d / "normal.py").write_text("# Valid Python file\nprint('hello')\n")
-    (d / "con.py").write_text("# Reserved name\n")  # CON is reserved in Windows
+    if sys.platform == "win32":
+        (d / "con.py").write_text("# Reserved name\n")  # CON is reserved in Windows
 
     # Test path normalization with Windows-style paths
     # Windows should skip reserved names, others should count them

@@ -48,8 +48,8 @@ def get_pytest_results() -> dict:
         )
 
         # Parse test counts from output
-        passed = len(re.findall(r"^PASSED\b", result.stdout, flags=re.M))
-        failed = len(re.findall(r"^FAILED\b", result.stdout, flags=re.M))
+        passed = int(re.findall(r'(\d+) passed', result.stdout)[-1]) if 'passed' in result.stdout else 0
+        failed = int(re.findall(r'(\d+) failed', result.stdout)[-1]) if 'failed' in result.stdout else 0
 
         output = result.stdout[-2000:]  # Truncate long output
 
@@ -57,11 +57,19 @@ def get_pytest_results() -> dict:
         if "INTERNALERROR" in output:
             return {"error": "pytest internal error", "output": output}
 
-        return {
-            "passed": passed,
-            "failed": failed,
-            "output": output,
-        }
+        try:
+            return {
+                "passed": passed,
+                "failed": failed,
+                "output": output,
+            }
+        except json.JSONDecodeError:
+            return {
+                "passed": 0,
+                "failed": 0,
+                "error": "Invalid JSON output",
+                "output": output,
+            }
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
     except subprocess.SubprocessError as e:  # More specific exception
@@ -85,10 +93,8 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
             any(
                 b"\0" in f.read(1024)
-                for f in (
-                    [open(real_path, "rb")]  # Check binary last
-                    if path.is_file()
-                    else [""]
+                for f in (  # type: ignore
+                    [open(real_path, "rb")] if path.is_file() else []
                 )  # Prevent opening directories
             ),
             # Windows reserved filename check
