@@ -1,6 +1,6 @@
 import pathlib
 import pytest  # pylint: disable=unused-import
-from project_watch.main import count_lines_of_code, _count_file_lines
+from project_watch.main import count_lines_of_code, _count_file_lines  # pylint: disable=no-name-in-module
 
 def test_mixed_line_endings(tmp_path: pathlib.Path):
     test_file = tmp_path / "mixed.txt"
