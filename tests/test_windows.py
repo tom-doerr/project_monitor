@@ -2,7 +2,7 @@ from pathlib import PureWindowsPath
 
 import pytest
 
-from src.project_watch.main import (
+from project_watch.main import (
     count_lines_of_code,
 )  # pylint: disable=import-error,no-name-in-module
 

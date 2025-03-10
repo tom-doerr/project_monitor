@@ -1,5 +1,5 @@
 ## Test Improvements
-- Fixed Python module import paths using absolute src path
+- Fixed Python module import paths using correct package structure
 - Removed unnecessary pytest imports
 - Fixed PEP8 import ordering (standard lib -> third party -> local)
 - Added missing Path imports

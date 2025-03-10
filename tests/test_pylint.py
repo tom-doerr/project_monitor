@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from src.project_watch.main import (
+from project_watch.main import (
     get_pylint_score,
 )  # pylint: disable=import-error,no-name-in-module
 
