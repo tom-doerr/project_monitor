@@ -65,7 +65,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
         json_match = re.search(r'{"\w+": \d+.*}', output)
         if not json_match:
             return False
-            
+
         _update_results_from_json(json.loads(json_match.group(0)), result)
         return True
     except (json.JSONDecodeError, AttributeError):
@@ -171,15 +171,18 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
         if not real_path.exists():
             return True
 
-        return any((
-            real_path in counted,
-            real_path.suffix != ".py",
-            not real_path.is_file(),
-            _is_windows_reserved_path(real_path),
-            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
-        ))
+        return any(
+            (
+                real_path in counted,
+                real_path.suffix != ".py",
+                not real_path.is_file(),
+                _is_windows_reserved_path(real_path),
+                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+            )
+        )
     except OSError:
         return True
+
 
 def _is_windows_reserved_path(path: pathlib.Path) -> bool:
     """Check if path is a Windows reserved filename."""
@@ -237,7 +240,7 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             real_path = path.resolve()
             if _should_skip_file(path, counted) or real_path in counted:
                 return
-                
+
             counted.add(real_path)
             if real_path.is_file() and real_path.suffix == ".py":
                 total += _count_file_lines(real_path)
@@ -264,10 +267,10 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         if not _should_skip_file(resolved_path, counted):
             line_count = _count_file_lines(resolved_path)
             logger.debug("Counted %d lines in %s", line_count, resolved_path)
-            
+
     except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
         logger.warning("Error counting %s: %s", path, e, exc_info=True)
-        
+
     return line_count
 
 
