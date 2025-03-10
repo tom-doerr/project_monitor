@@ -13,18 +13,20 @@
 ✅ Timeout handling: 100%
 
 ## Next Priorities
-1. Add Windows compatibility tests
-2. Implement performance benchmarking
-3. Add CI artifact publishing
+1. Implement performance benchmarking
+2. Add CI artifact publishing
+3. Add filesystem permission tests
 
 ## Recent Changes
-- Fixed try/except indentation in LOC counter
+- Added Windows compatibility tests
+- Fixed try/except indentation in LOC counter  
 - Added binary file detection in line counting
 - Improved error handling for file system operations
 - Added pytest timeout handling
 - Improved test coverage for:
   - UTF-8 encoding support
   - Binary file detection
+  - Windows path handling
   - Error logging
 - Added detailed test result parsing
 - Implemented output truncation for large test runs
