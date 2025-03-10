@@ -63,7 +63,11 @@ def get_pytest_results() -> dict:
         )
         return _parse_pytest_output(result.stdout)
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
-        error_msg = "pytest timed out after 30 seconds" if isinstance(e, subprocess.TimeoutExpired) else f"Subprocess error: {str(e)}"
+        error_msg = (
+            "pytest timed out after 30 seconds"
+            if isinstance(e, subprocess.TimeoutExpired)
+            else f"Subprocess error: {str(e)}"
+        )
         return {"error": error_msg}
 
 
@@ -74,19 +78,29 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     except OSError:
         return True
 
-    windows_reserved = (
-        sys.platform == "win32" and 
-        path.stem.upper() in {"con", "prn", "aux", "nul", "com1", "lpt1"}
+    windows_reserved = sys.platform == "win32" and path.stem.upper() in {
+        "con",
+        "prn",
+        "aux",
+        "nul",
+        "com1",
+        "lpt1",
+    }
+
+    return any(
+        [
+            not path.exists(),
+            real_path in counted,
+            path.suffix != ".py",
+            not path.is_file() or real_path.is_dir(),
+            (
+                path.is_file()
+                and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
+            ),
+            windows_reserved,
+        ]
     )
 
-    return any([
-        not path.exists(),
-        real_path in counted,
-        path.suffix != ".py",
-        not path.is_file() or real_path.is_dir(),
-        (path.is_file() and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))),
-        windows_reserved
-    ])
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
     """Read file in chunks using context manager."""
@@ -94,15 +108,17 @@ def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
         while chunk := f.read(chunk_size):
             yield chunk
 
+
 def _count_file_lines(path: pathlib.Path) -> int:
     """Count non-empty lines in a file."""
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             return sum(
-                1 for line in f 
-                if line.strip() and 
-                len(line) <= 1000000 and 
-                f.tell() < 10000000  # 10MB total read check
+                1
+                for line in f
+                if line.strip()
+                and len(line) <= 1000000
+                and f.tell() < 10000000  # 10MB total read check
             )
     except (UnicodeDecodeError, PermissionError, FileNotFoundError, OSError) as e:
         is_permission_error = isinstance(e, PermissionError)
@@ -110,11 +126,12 @@ def _count_file_lines(path: pathlib.Path) -> int:
             print(f"Permission error reading {path}: {str(e)}")
         return 0
 
+
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
     base_dir = pathlib.Path(directory).resolve(strict=True)
     counted = set()
-    
+
     return sum(
         _count_file_lines(real_path)
         for path in base_dir.rglob("*")
