@@ -1,19 +1,16 @@
-import pathlib
-import pytest
-from src.project_watch.main import count_lines_of_code
+from project_watch.main import count_lines_of_code
 
 def test_files_with_null_bytes(tmp_path):
     """Test files containing null bytes are skipped"""
     # Create test files
-    valid_py = tmp_path / "valid.py"
-    valid_py.write_text("print('hello')\n")
+    # Create test files
+    (tmp_path / "valid.py").write_text("print('hello')\n")
     
-    null_py = tmp_path / "null.py"
-    with null_py.open("wb") as f:
+    null_file = tmp_path / "null.py"
+    with null_file.open("wb") as f:
         f.write(b"print(\x00'null')\n")
     
-    binary_py = tmp_path / "binary.py"
-    binary_py.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00")
+    (tmp_path / "binary.py").write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00")
 
     result = count_lines_of_code(tmp_path)
     assert result == 1, "Should only count valid.py"
