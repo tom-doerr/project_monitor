@@ -38,9 +38,11 @@ def get_pylint_score() -> float:
             return 0.0
 
         return max(extract_score(result.stdout), extract_score(result.stderr))
-    except (subprocess.SubprocessError, ValueError, AttributeError):
+    except (subprocess.SubprocessError, ValueError, AttributeError) as e:
+        logger.debug("Pylint error: %s", str(e))
         score = 0.0
-    return min(max(score, 0.0), 10.0)
+    finally:
+        return min(max(score, 0.0), 10.0)
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -61,15 +63,12 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    json_match = re.search(r'{"\w+": \d+.*}', output)
-    if not json_match:
-        return False
-
     try:
-        json_data = json.loads(json_match.group(0))
-        _update_results_from_json(json_data, result)
-        return True
-    except json.JSONDecodeError:  # pylint: disable=no-member
+        if json_match := re.search(r'{"\w+": \d+.*}', output):
+            _update_results_from_json(json.loads(json_match.group(0)), result)
+            return True
+        return False
+    except (json.JSONDecodeError, AttributeError):
         return False
 
 
@@ -100,14 +99,15 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
     for pattern, _ in patterns:
         if match := re.search(pattern, normalized_output):
-            groups = [int(g) if str(g).isdigit() else float(g) for g in match.groups()]
+            # Process matched groups directly
+            result.update(
+                {key: int(match.group(i+1)) 
+                for i, key in enumerate(["passed", "failed", "warnings", "skipped"])
+                if i < len(match.groups()) - 1  # Last group is always time
+            )
+            result["time"] = float(match.group(len(match.groups())))
             result.setdefault("skipped", 0)
-            result.update({
-                key: groups[idx] if key in pattern else result.get(key, 0)
-                for idx, key in enumerate(["passed", "failed", "warnings", "skipped"])
-            })
-            result["time"] = groups[-1]
-            break
+            break  # Stop after first match
 
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
@@ -219,31 +219,6 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
     return total
 
-
-def _process_path(path: pathlib.Path, counted: set) -> int:
-    """Handle path processing for line counting with error handling."""
-    try:
-        real_path = path.resolve(strict=True)
-        if real_path.is_dir():
-            return 0
-            
-        if sys.platform == "win32":
-            real_path = pathlib.Path(str(real_path).lower())
-
-        if _should_skip_file(real_path, counted):
-            return 0
-            
-        file_id = real_path.stat().st_ino
-        if file_id in counted:
-            return 0
-
-        if real_path.is_file() and os.access(real_path, os.R_OK):
-            line_count = _count_file_lines(real_path)
-            counted.add(file_id)
-            return line_count
-        return 0
-    except (OSError, PermissionError, FileNotFoundError):
-        return 0
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
