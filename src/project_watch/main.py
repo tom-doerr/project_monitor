@@ -44,8 +44,8 @@ def _parse_pytest_output(output: str) -> dict:
 
     # Try to get precise numbers from summary line
     summary_match = re.search(
-        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped", 
-        output.replace("\n", " ")
+        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped",
+        output.replace("\n", " "),
     )
     if summary_match:
         result["passed"] = int(summary_match.group(1))
@@ -100,10 +100,12 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     # Windows reserved name check (case-insensitive)
     windows_reserved = False
     if sys.platform == "win32":
-        reserved_names = {"con", "prn", "aux", "nul"} | \
-                        {f"com{i}" for i in range(1,10)} | \
-                        {f"lpt{i}" for i in range(1,10)}
-        windows_reserved = path.stem.split('.')[0].lower() in reserved_names
+        reserved_names = (
+            {"con", "prn", "aux", "nul"}
+            | {f"com{i}" for i in range(1, 10)}
+            | {f"lpt{i}" for i in range(1, 10)}
+        )
+        windows_reserved = path.stem.split(".")[0].lower() in reserved_names
 
     return any(
         [
@@ -155,14 +157,14 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         # Handle symlinks to directories
         if path.is_symlink() and path.is_dir():
             continue
-            
+
         # Normalize Windows paths
         if sys.platform == "win32":
             path = pathlib.Path(str(path).lower())
 
         if _should_skip_file(path, counted):
             continue
-            
+
         try:
             line_count = _count_file_lines(path)
             total += line_count
