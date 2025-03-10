@@ -62,10 +62,12 @@ def _parse_pytest_output(output: str) -> dict:
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     try:
-        if json_match := re.search(r'{"\w+": \d+.*}', output):
-            _update_results_from_json(json.loads(json_match.group(0)), result)
-            return True
-        return False
+        json_match = re.search(r'{"\w+": \d+.*}', output)
+        if not json_match:
+            return False
+            
+        _update_results_from_json(json.loads(json_match.group(0)), result)
+        return True
     except (json.JSONDecodeError, AttributeError):
         return False
 
@@ -112,12 +114,10 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
-    found = False
-
     # Extract time first
-    if time_match := re.search(r" in ([\d.]+)s", output):
+    time_match = re.search(r" in ([\d.]+)s", output)
+    if time_match:
         result["time"] = float(time_match.group(1))
-        found = True
 
     # Check for test counts using single pattern
     count_match = re.search(
@@ -171,21 +171,19 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
         if not real_path.exists():
             return True
 
-        if sys.platform == "win32" and _is_windows_reserved_name(
-            real_path.resolve().lower()
-        ):
-            return True
-
-        return any(
-            (
-                real_path in counted,
-                real_path.suffix != ".py",
-                not real_path.is_file(),
-                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-            )
-        )
+        return any((
+            real_path in counted,
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            _is_windows_reserved_path(real_path),
+            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
+        ))
     except OSError:
         return True
+
+def _is_windows_reserved_path(path: pathlib.Path) -> bool:
+    """Check if path is a Windows reserved filename."""
+    return sys.platform == "win32" and _is_windows_reserved_name(path.resolve().lower())
 
 
 def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
@@ -215,15 +213,15 @@ def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
 
 def _count_file_lines(path: pathlib.Path) -> int:
     """Count non-empty lines in a file."""
+    line_count = 0
     try:
         with path.open(encoding="utf-8", errors="ignore") as f:
-            return sum(1 for line in f if line.strip())
+            line_count = sum(1 for line in f if line.strip())
     except PermissionError as e:
         logger.warning("Permission denied reading %s: %s", path, str(e))
-        return 0
     except (UnicodeDecodeError, FileNotFoundError, OSError) as e:
         logger.debug("Error counting lines in %s: %s", path, str(e))
-        return 0
+    return line_count
 
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
@@ -232,53 +230,45 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     counted = set()
     base_path = pathlib.Path(directory).resolve()
 
-    for path in base_path.rglob("*"):
+    def _process_path(path: pathlib.Path) -> None:
+        """Process individual path and accumulate line count."""
+        nonlocal total
         try:
             real_path = path.resolve()
-            if (
-                _should_skip_file(path, counted)
-                or _is_windows_reserved_name(real_path)
-                or real_path in counted
-            ):
-                continue
-
+            if _should_skip_file(path, counted) or real_path in counted:
+                return
+                
             counted.add(real_path)
-
             if real_path.is_file() and real_path.suffix == ".py":
                 total += _count_file_lines(real_path)
         except (OSError, UnicodeDecodeError):
-            continue
+            return
+
+    for path in base_path.rglob("*"):
+        _process_path(path)
 
     return total
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
+    line_count = 0
     try:
-        # Resolve symlinks before processing
         resolved_path = path.resolve(strict=True)
-
-        # Skip directory symlinks but follow file symlinks
         if resolved_path.is_dir():
             return 0
 
-        # Normalize case for Windows after resolving
         if sys.platform == "win32":
             resolved_path = pathlib.Path(str(resolved_path).lower())
 
-        if _should_skip_file(resolved_path, counted):
-            logger.debug("Skipping file: %s", resolved_path)
-            return 0
-
-        line_count = _count_file_lines(resolved_path)
-        logger.debug("Counted %d lines in %s", line_count, resolved_path)
-        return line_count
-
-    except (PermissionError, FileNotFoundError):
-        return 0
-    except (OSError, UnicodeDecodeError) as e:
+        if not _should_skip_file(resolved_path, counted):
+            line_count = _count_file_lines(resolved_path)
+            logger.debug("Counted %d lines in %s", line_count, resolved_path)
+            
+    except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
         logger.warning("Error counting %s: %s", path, e, exc_info=True)
-        return 0
+        
+    return line_count
 
 
 class ProjectWatcher(FileSystemEventHandler):
