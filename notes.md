@@ -23,11 +23,12 @@
 2. ✅ Implement performance benchmarking  
 3. ◻️ Add CI artifact publishing
 4. ◻️ Add Windows CI runner configuration
-5. ◻️ Test long path handling (>260 chars)
+5. ✅ Test long path handling (>260 chars)
 
 ## New Test Coverage
 - Windows reserved filename handling
-- UNC path normalization
+- UNC path normalization  
+- Long path (>260 chars) handling
 - Mixed slash directions
 - Spaces in paths
 - Case insensitivity
@@ -38,7 +39,8 @@
 - Added pytest result parsing tests
 - Added binary file detection tests  
 - Added filesystem permission tests
-- Added Windows compatibility tests
+- Added Windows compatibility tests  
+- Added Windows long path (>260 char) handling
 - Fixed try/except indentation in LOC counter
 - Added comprehensive binary file detection including:
   - Common binary extensions (PDF, PNG, EXE)
