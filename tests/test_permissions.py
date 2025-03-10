@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.project_watch.main import count_lines_of_code
+from project_watch.main import count_lines_of_code
 
 
 def test_read_only_file(tmp_path):

@@ -1,5 +1,5 @@
 import pytest
-from src.project_watch.main import count_lines_of_code, get_pylint_score, get_pytest_results
+from project_watch.main import count_lines_of_code, get_pylint_score, get_pytest_results
 
 PERF_THRESHOLDS = {
     "count_lines_small": 0.1,  # seconds

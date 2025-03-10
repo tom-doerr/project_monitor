@@ -1,6 +1,7 @@
 # Package initialization for project_watch
 from pathlib import Path
 from importlib.metadata import version
+from .main import count_lines_of_code, get_pylint_score, get_pytest_results, get_project_stats
 
 __version__ = version("project_watch")
 __all__ = ['count_lines_of_code', 'get_pylint_score', 'get_pytest_results', 'get_project_stats']
