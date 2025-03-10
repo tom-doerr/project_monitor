@@ -11,8 +11,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 # Third-party imports
-if TYPE_CHECKING:
-    from watchdog.events import FileSystemEventHandler
+from watchdog.events import FileSystemEventHandler
 
 logger = logging.getLogger(__name__)
 
