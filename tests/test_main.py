@@ -36,25 +36,24 @@ def test_pylint_returns_valid_score_range(_mock_stats):
         assert 0.0 <= score <= 10.0
 
 
-def test_loc_positive(_mock_stats):
-    """Verify lines of code count is non-negative."""
-    with patch(
-        "src.project_watch.main.count_lines_of_code", return_value=_mock_stats["loc"]
-    ):
+def test_loc_returns_non_negative_count(_mock_stats):
+    # Should never return negative lines of code
+    with patch("src.project_watch.main.count_lines_of_code", 
+              return_value=_mock_stats["loc"]):
         assert count_lines_of_code() >= 0
 
 
-def test_pytest_results_structure(_mock_stats):
-    """Verify pytest results contain required keys"""
-    with patch("src.project_watch.main.get_project_stats", return_value=_mock_stats):
+def test_pytest_results_contain_required_keys(_mock_stats):
+    with patch("src.project_watch.main.get_project_stats") as mock_stats:
+        mock_stats.return_value = _mock_stats
         pytest_results = get_project_stats()["pytest"]
         assert "passed" in pytest_results
         assert "failed" in pytest_results
         assert "skipped" in pytest_results
 
 
-def test_subprocess_failure_handling():
-    """Test error handling for failed subprocess calls"""
+def test_handles_subprocess_failures_gracefully():
+    # Should return safe defaults when subprocess fails
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = Exception("Subprocess failed")
         # Test both functions that use subprocess
@@ -79,8 +78,8 @@ def test_file_scanning_edge_cases(tmp_path):
     ), "Should count lines in Python files only"
 
 
-def test_malformed_pytest_output():
-    """Test handling of invalid pytest JSON output"""
+def test_handles_invalid_pytest_json():
+    # Should catch JSON parsing errors
     with patch("subprocess.run") as mock_run:
         mock_run.return_value.stdout = '{"invalid": "json"'
         results = get_pytest_results()
