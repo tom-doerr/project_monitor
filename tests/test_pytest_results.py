@@ -22,7 +22,7 @@ def test_handles_malformed_pytest_json():
         mock_run.return_value.returncode = 0
         results = get_pytest_results()
         assert results["passed"] == 3
-        assert results["failed"] == 1
+        assert results.get("failed", 0) == 1
         assert "error" not in results
 
 
