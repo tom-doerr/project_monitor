@@ -17,10 +17,14 @@
 2. Add CI artifact publishing
 
 ## Recent Changes
+- Added binary file detection tests
 - Added filesystem permission tests
 - Added Windows compatibility tests
 - Fixed try/except indentation in LOC counter  
-- Added binary file detection in line counting
+- Added comprehensive binary file detection including:
+  - Common binary extensions (PDF, PNG, EXE)
+  - Mixed content files
+  - Ambiguous extensions
 - Improved error handling for file system operations
 - Added pytest timeout handling
 - Improved test coverage for:
