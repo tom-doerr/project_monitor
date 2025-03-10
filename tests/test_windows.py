@@ -168,9 +168,9 @@ def test_pytest_output_parsing_edge_cases():
         "error": None,
     }
 
-    # Test malformed JSON
-    malformed_json = '{"passed": 5, "failed": 1'
-    assert _parse_pytest_output(malformed_json)["passed"] == 0
+    # Test malformed JSON with valid text fallback
+    malformed_json = '{"passed": 5, "failed": 1\n3 passed, 1 failed in 0.5s'
+    assert _parse_pytest_output(malformed_json)["passed"] == 3
 
     # Test truncated output
     truncated = "3 passed in 12.34s"

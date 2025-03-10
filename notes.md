@@ -143,9 +143,13 @@
 | Performance           | 100%     | 100%           |
 
 ## Fixed in This Batch
-- Fixed Windows reserved name validation syntax error
-- Improved reserved name pattern matching
+- Fixed Windows reserved name validation syntax error  
+- Improved reserved name pattern matching with case-insensitive regex
 - Added validation for reserved names with extensions
+- Added comprehensive pytest output pattern matching
+- Implemented ordered fallback patterns for test result parsing
+- Fixed NameError in text parsing by returning explicit boolean
+- Updated Windows test cases for new regex pattern
 - Added proper subprocess returncode validation  
 - Improved file path resolution error handling
 - Added comprehensive file reading error handling
