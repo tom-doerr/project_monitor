@@ -21,9 +21,22 @@
 ## Next Priorities
 1. ✅ Add test coverage for Windows path normalization
 2. ✅ Implement performance benchmarking  
-3. ◻️ Add CI artifact publishing
-4. ◻️ Add Windows CI runner configuration
+3. 🚧 Add CI artifact publishing (in progress)
+4. 🚧 Add Windows CI runner configuration (in progress)
 5. ✅ Test long path handling (>260 chars)
+6. ◻️ Add dependency version compatibility checks
+
+## Future Considerations
+- Add remote repository monitoring capability
+- Implement database storage for historical metrics
+- Add REST API endpoint for status checks
+- Support multiple concurrent project scans
+- Develop VS Code/IntelliJ plugin versions
+- Add Prometheus metrics exporter
+- Create HTML dashboard interface
+- Implement GitHub Actions integration
+- Add anomaly detection for score trends
+- Develop plugin system for custom metrics
 
 ## New Test Coverage
 - Windows reserved filename handling
