@@ -1,7 +1,8 @@
 """Project monitoring core functionality with file system watching."""
 
 import json
-import logging
+import logging  # pylint: disable=unused-import
+logger = logging.getLogger(__name__)
 import subprocess
 import pathlib
 import re
@@ -60,19 +61,23 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
 
     try:
         json_data = json.loads(json_match.group(0))
-        result.update(
-            {
-                "passed": json_data.get("passed", 0),
-                "failed": json_data.get("failed", 0),
-                "skipped": json_data.get("skipped", 0),
-                "warnings": json_data.get("warnings", 0),
-                "time": json_data.get("duration", 0.0),
-            }
-        )
+        _update_results_from_json(json_data, result)
         return True
     except json.JSONDecodeError:  # pylint: disable=no-member
         return False
-    # First try text pattern matching
+
+def _update_results_from_json(json_data: dict, result: dict) -> None:
+    """Update results dict with data from JSON."""
+    result.update({
+        "passed": json_data.get("passed", 0),
+        "failed": json_data.get("failed", 0),
+        "skipped": json_data.get("skipped", 0),
+        "warnings": json_data.get("warnings", 0),
+        "time": json_data.get("duration", 0.0),
+    })
+
+def _parse_pytest_text(output: str, result: dict) -> bool:
+    """Fallback text parsing of pytest output."""
     patterns = [
         r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
         r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s",
