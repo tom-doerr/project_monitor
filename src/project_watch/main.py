@@ -119,22 +119,24 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
         (r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped", 4),
         (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors", 3),
         (r"(\d+) passed.*?(\d+) skipped", 2),
-        (r"(\d+) passed", 1)
+        (r"(\d+) passed", 1),
     )
-    
+
     normalized_output = output.replace("\n", " ")
     result["time"] = _extract_pytest_time(normalized_output)
-    
+
     return any(
         _match_pattern(pattern, groups, normalized_output, result)
         for pattern, groups in patterns
     ) or _handle_empty_results(normalized_output, result)
+
 
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
     if match := re.search(r" in ([\d.]+)s", output):
         return float(match.group(1))
     return 0.0
+
 
 def _match_pattern(pattern: str, groups: int, output: str, result: dict) -> bool:
     """Match a single output pattern and update results."""
@@ -144,10 +146,11 @@ def _match_pattern(pattern: str, groups: int, output: str, result: dict) -> bool
             result["failed"] = int(match.group(2))
         if groups >= 3:
             result["warnings"] = int(match.group(3)) if groups == 4 else 0
-        if groups >= 4: 
+        if groups >= 4:
             result["skipped"] = int(match.group(4))
         return True
     return False
+
 
 def _handle_empty_results(output: str, result: dict) -> bool:
     """Check for empty test results."""
@@ -267,9 +270,9 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         resolved_path = path.resolve(strict=True)
         if resolved_path.is_dir():
             return 0
-            
+
         normalized_path = _normalize_path_case(resolved_path)
-        
+
         if _should_skip_file(normalized_path, counted):
             return 0
 
@@ -280,6 +283,7 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
     except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
         logger.warning("Error counting %s: %s", path, e, exc_info=True)
         return 0
+
 
 def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:
     """Normalize path case for Windows systems."""

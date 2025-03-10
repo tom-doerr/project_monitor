@@ -30,9 +30,7 @@ def test_handles_invalid_pytest_output():
     """Verify error handling for completely invalid output"""
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(
-            stdout="{invalid: json}",
-            stderr="",
-            returncode=1
+            stdout="{invalid: json}", stderr="", returncode=1
         )
         results = get_pytest_results()
         assert "error" in results

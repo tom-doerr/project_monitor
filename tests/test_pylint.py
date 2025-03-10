@@ -11,7 +11,7 @@ def test_get_pylint_score_success():
             args=[],
             returncode=0,
             stdout="Your code has been rated at 9.50/10",
-            stderr=""
+            stderr="",
         )
         assert get_pylint_score() == 9.5
 
