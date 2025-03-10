@@ -151,6 +151,10 @@
 - Alternative pytest output formats
 - Directory symlink handling
 - Network filesystem timeout retries
+- Windows reserved name case insensitivity
+- Network latency timeout handling
+- Reserved name variant validation
+- Valid name false positive checks
 
 ## Pending Test Cases
 - [x] Unicode normalization edge cases (added test_unicode_paths.py)

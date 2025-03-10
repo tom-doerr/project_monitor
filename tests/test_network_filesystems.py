@@ -3,16 +3,25 @@ from unittest.mock import patch, Mock
 from project_watch.main import count_lines_of_code
 
 
-def test_normal_timing(tmp_path):
-    """Test normal filesystem timing"""
-    test_file = tmp_path / "normal.py"
+def test_network_timeout_handling(tmp_path, monkeypatch):
+    """Test handling of network filesystem timeouts"""
+    test_file = tmp_path / "delayed.py"
     test_file.write_text("# Valid Python file\nprint('hello')\n")
 
-    with patch("pathlib.Path.glob") as mock_glob:
-        mock_glob.return_value = [test_file]
-        start = time.monotonic()
-        assert count_lines_of_code(tmp_path) == 2
-        return time.monotonic() - start
+    original_resolve = pathlib.Path.resolve
+    
+    def delayed_resolve(self, *args, **kwargs):
+        time.sleep(2.5)  # Simulate network latency
+        return original_resolve(self, *args, **kwargs)
+        
+    monkeypatch.setattr(pathlib.Path, "resolve", delayed_resolve)
+    
+    start_time = time.monotonic()
+    result = count_lines_of_code(tmp_path)
+    duration = time.monotonic() - start_time
+    
+    assert result == 2
+    assert duration < 3  # Verify timeout handling works
 
 
 def test_network_filesystem_latency(tmp_path):

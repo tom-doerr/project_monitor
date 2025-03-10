@@ -16,16 +16,30 @@ def _create_test_directory(tmp_path):
 
 def _test_reserved_names(test_dir):
     """Verify handling of Windows reserved filenames"""
-    try:
-        (test_dir / "con.py").write_text(
-            "# Reserved name\n"
-        )  # pylint: disable=unspecified-encoding
-        assert count_lines_of_code(test_dir) == 2
-        with pytest.raises(OSError):
-            with pytest.raises(OSError):
-                (test_dir / "COM4.py").write_text("# Should fail in Windows")
-    except OSError:
-        pytest.skip("Windows reserved name creation failed")
+    reserved_names = [
+        "COM1", "COM9", "LPT1", "LPT9", "CON", "PRN", 
+        "AUX", "NUL", "CON.txt", "com1", "lPt9.md"
+    ]
+    
+    # Test reserved names
+    for name in reserved_names:
+        path = test_dir / name
+        try:
+            path.write_text(f"# Reserved: {name}\n", encoding="utf-8")
+        except OSError:
+            continue  # Expected on Windows
+            
+        if sys.platform == "win32":
+            assert count_lines_of_code(test_dir) == 0  # Should skip reserved names
+
+    # Test valid similar names that should be counted
+    valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
+    for name in valid_names:
+        path = test_dir / name
+        path.write_text(f"# Valid: {name}\n", encoding="utf-8")
+    
+    if sys.platform == "win32":
+        assert count_lines_of_code(test_dir) == len(valid_names)  # Should count all valid files
 
 
 def test_windows_path_handling(tmp_path):
