@@ -20,7 +20,7 @@
 
 ## Next Priorities
 1. ✅ Add test coverage for Windows path normalization
-2. ◻️ Implement performance benchmarking  
+2. ✅ Implement performance benchmarking  
 3. ◻️ Add CI artifact publishing
 4. ◻️ Add Windows CI runner configuration
 5. ◻️ Test long path handling (>260 chars)
