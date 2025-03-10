@@ -1,4 +1,5 @@
 """Project monitoring core functionality with file system watching."""
+
 import subprocess
 import pathlib
 from datetime import datetime
@@ -41,6 +42,7 @@ def count_lines_of_code() -> int:
 
 class ProjectWatcher(FileSystemEventHandler):
     """Watch for file changes and trigger updates."""
+
     def __init__(self, update_callback) -> None:
         self.update_callback = update_callback
 
