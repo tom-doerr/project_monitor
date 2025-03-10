@@ -1,7 +1,7 @@
 import sys
 import pytest
 
-from project_watch.main import count_lines_of_code  # pylint: disable=import-error
+from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
 
 def _create_test_directory(tmp_path):
