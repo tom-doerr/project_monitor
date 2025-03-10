@@ -54,13 +54,13 @@ def count_lines_of_code() -> int:  # pylint: disable=too-many-statements,too-man
         if not (path.suffix == ".py" and path.is_file()):
             continue
         try:
-                with path.open(encoding='utf-8') as f:
-                    total += sum(1 for line in f if line.strip())
-            except UnicodeDecodeError:
-                # Skip binary files masquerading as Python files
-                continue
-            except OSError as e:
-                print(f"Error reading {path}: {e}")
+            with path.open(encoding='utf-8') as f:
+                total += sum(1 for line in f if line.strip())
+        except UnicodeDecodeError:
+            # Skip binary files masquerading as Python files
+            continue
+        except OSError as e:
+            print(f"Error reading {path}: {e}")
     return total
 
 
