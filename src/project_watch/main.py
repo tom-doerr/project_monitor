@@ -10,45 +10,54 @@ from watchdog.events import FileSystemEventHandler  # Import kept for type hints
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-    result = subprocess.run(
-        ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "."],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=30,
-    )
-
-    # Extract score using combined pattern matching
-    patterns = (
-        r"rated at (\d+\.?\d*)/10",  # Primary pattern
-        r"([\d\.]+)/10",  # Fallback pattern
-        r"\s(\d+\.\d+)\s+\(.*\)",  # Alternative format
-    )
-
-    scores = (
-        float(match.group(1))
-        for pattern in patterns
-        if (match := re.search(pattern, result.stdout))
-        for _ in (None,)
-        if match
-    )
-    # Final fallback to split-based extraction
-    parts = result.stdout.replace(",", "").split()
-    scores = [float(s) for s in parts if s.replace(".", "").isdigit()]
-    return max(scores) if scores else 0.0
+    try:
+        result = subprocess.run(
+            ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+            cwd=pathlib.Path(__file__).parent.parent
+        )
+        
+        # Directly target the score pattern with capture group
+        match = re.search(r"rated at (\d+\.?\d*)/10", result.stdout)
+        if match:
+            return float(match.group(1))
+            
+        # Fallback for different output formats
+        match = re.search(r"([\d\.]+)/10", result.stdout)
+        return float(match.group(1)) if match else 0.0
+    except (subprocess.SubprocessError, ValueError, AttributeError):
+        return 0.0
 
 
 def _parse_pytest_output(output: str) -> dict:
     """Parse pytest output into structured results."""
-    passed = len(re.findall(r"PASSED", output))
-    failed = len(re.findall(r"FAILED", output))
-    time_match = re.search(r" in ([\d.]+)s", output)
-    return {
-        "passed": passed,
-        "failed": failed,
-        "time": float(time_match.group(1)) if time_match else 0.0,
+    result = {
+        "passed": 0,
+        "failed": 0,
+        "time": 0.0,
         "output": output[-2000:],
+        "error": None
     }
+    
+    # Try to get precise numbers from summary line
+    summary_match = re.search(r"(\d+) passed.*?(\d+) failed", output)
+    if summary_match:
+        result["passed"] = int(summary_match.group(1))
+        result["failed"] = int(summary_match.group(2))
+    
+    # Try to get duration from output
+    time_match = re.search(r" in ([\d.]+)s", output)
+    if time_match:
+        result["time"] = float(time_match.group(1))
+        
+    # Check for empty test results
+    if "no tests ran" in output:
+        result["error"] = "No tests executed"
+    
+    return result
 
 
 def get_pytest_results() -> dict:

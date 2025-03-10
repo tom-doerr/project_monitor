@@ -17,7 +17,15 @@ def test_get_pytest_results_success():
 def test_handles_invalid_pytest_json():
     """Verify JSON parsing error handling"""
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value.stdout = '{"invalid": "json"'
+        # Test with malformed JSON but valid text output
+        mock_run.return_value.stdout = '{"invalid": "json"\n3 passed, 1 failed in 0.5s'
+        results = get_pytest_results()
+        assert results["passed"] == 3
+        assert results["failed"] == 1
+        assert "error" not in results
+        
+        # Test with completely invalid output
+        mock_run.return_value.stdout = "{invalid: json}"
         results = get_pytest_results()
         assert "error" in results
         assert "JSON" in results["error"]
