@@ -17,14 +17,14 @@ def get_pylint_score() -> float:
             text=True,
             check=False,
             timeout=30,
-            cwd=pathlib.Path(__file__).parent.parent
+            cwd=pathlib.Path(__file__).parent.parent,
         )
-        
+
         # Directly target the score pattern with capture group
         match = re.search(r"rated at (\d+\.?\d*)/10", result.stdout)
         if match:
             return float(match.group(1))
-            
+
         # Fallback for different output formats
         match = re.search(r"([\d\.]+)/10", result.stdout)
         return float(match.group(1)) if match else 0.0
@@ -39,24 +39,24 @@ def _parse_pytest_output(output: str) -> dict:
         "failed": 0,
         "time": 0.0,
         "output": output[-2000:],
-        "error": None
+        "error": None,
     }
-    
+
     # Try to get precise numbers from summary line
     summary_match = re.search(r"(\d+) passed.*?(\d+) failed", output)
     if summary_match:
         result["passed"] = int(summary_match.group(1))
         result["failed"] = int(summary_match.group(2))
-    
+
     # Try to get duration from output
     time_match = re.search(r" in ([\d.]+)s", output)
     if time_match:
         result["time"] = float(time_match.group(1))
-        
+
     # Check for empty test results
     if "no tests ran" in output:
         result["error"] = "No tests executed"
-    
+
     return result
 
 
