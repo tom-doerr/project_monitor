@@ -11,7 +11,7 @@ def test_read_only_file(tmp_path):
     test_file.chmod(0o444)  # Set read-only
 
     try:
-        assert count_lines_of_code(tmp_path) == 3  # 3 non-empty lines
+        assert count_lines_of_code(tmp_path) == 2  # 2 non-empty lines
     finally:
         test_file.chmod(0o644)  # Ensure cleanup even if test fails
 

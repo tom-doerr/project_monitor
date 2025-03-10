@@ -32,7 +32,7 @@ def test_symlink_to_directory(tmp_path: Path):
     os.symlink(real_dir, symlink_dir)
 
     # Should count lines in both real and linked directories
-    assert count_lines_of_code(tmp_path) == 1
+    assert count_lines_of_code(tmp_path) == 1  # Should only count real file once
 
 
 def test_nested_symlinks(tmp_path: Path):
