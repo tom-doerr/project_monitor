@@ -41,8 +41,9 @@ def test_pylint_returns_valid_score_range(_mock_stats):
 
 def test_loc_returns_non_negative_count(_mock_stats):
     # Should never return negative lines of code
-    with patch("src.project_watch.main.count_lines_of_code",
-              return_value=_mock_stats["loc"]):
+    with patch(
+        "src.project_watch.main.count_lines_of_code", return_value=_mock_stats["loc"]
+    ):
         assert count_lines_of_code() >= 0
 
 
