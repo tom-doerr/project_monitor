@@ -6,8 +6,9 @@ from project_watch.main import (
 )  # pylint: disable=import-error,no-name-in-module
 
 
-@pytest.mark.windows
 def test_windows_path_handling(tmp_path):
+    if sys.platform != "win32":
+        pytest.skip("Windows-specific test")
     """Test handling of Windows-style paths and reserved names"""
     d = tmp_path / "sub"
     d.mkdir()
@@ -28,8 +29,9 @@ def test_windows_path_handling(tmp_path):
         assert count_lines_of_code(d) == 3
 
 
-@pytest.mark.windows
 def test_windows_case_insensitivity(tmp_path):
+    if sys.platform != "win32":
+        pytest.skip("Windows-specific test")
     """Test case-insensitive file handling"""
     (tmp_path / "MiXeDcAsE.py").write_text("x = 1\nx = 2\n")
     assert count_lines_of_code(tmp_path) == 2

@@ -19,7 +19,7 @@ def test_network_filesystem_latency(tmp_path):
         normal_duration = time.monotonic() - start
         
         # Second call - simulated latency
-        mock_glob.side_effect = lambda *args, **kwargs: (time.sleep(0.5) or [test_file]
+        mock_glob.side_effect = lambda *args, **kwargs: (time.sleep(0.5) or [test_file])
         start = time.monotonic()
         assert count_lines_of_code(tmp_path) == 2
         delayed_duration = time.monotonic() - start
