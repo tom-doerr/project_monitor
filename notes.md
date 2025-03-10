@@ -59,11 +59,13 @@
 
 ## Recent Changes
 - Fixed Windows reserved filename test handling
-- Added proper pytest time metric extraction
+- Added proper pytest time metric extraction 
 - Improved test error handling for OS-specific behaviors
 - Added pytest.skip() for Windows-specific test cases
 - Fixed ternary operator syntax in binary file detection
-- Added proper parentheses around conditional file handling
+- Fixed mismatched parentheses in file skip conditions
+- Removed duplicate Windows reserved names check
+- Simplified path validation logic using pathlib stem
 - Improved binary file handler cleanup
 - Improved error handling for permissions/filesystem errors
 - Standardized on pathlib for all file operations

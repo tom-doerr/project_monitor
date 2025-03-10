@@ -117,13 +117,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             (sys.platform == "win32" and 
              path.stem.upper() in _WINDOWS_RESERVED_NAMES),
             # Check for binary files using context manager
-            any(b"\0" in (open(real_path, "rb").read(1024)) if path.is_file() else False,
-            # Windows reserved filename check
-            (
-                sys.platform == "win32"
-                and path.name.split(".")[0].upper()
-                in ["CON", "PRN", "AUX", "NUL", "COM1", "LPT1"]
-            ),
+            (path.is_file() and any(b"\0" in open(real_path, "rb").read(1024))),
+            # Windows reserved filename check using existing set
+            (sys.platform == "win32" and path.stem.upper() in _windows_reserved_names),
         ]
 
         # Check all conditions with proper error handling
