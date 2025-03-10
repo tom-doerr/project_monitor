@@ -50,20 +50,22 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     """Count total lines of Python code in the given directory."""
     directory = pathlib.Path(directory).resolve()
     counted = set()
-    
+
     def should_skip_file(path: pathlib.Path) -> bool:
         """Check if a file should be skipped."""
         real_path = path.resolve()
-        
+
         # Combined skip conditions
         skip_conditions = [
             not path.is_file(),
             path.suffix != ".py",
             real_path in counted,
             real_path.is_dir(),
-            any(b'\0' in f.read(1024) for f in [open(real_path, "rb")]),  # Check for binary files
+            any(
+                b"\0" in f.read(1024) for f in [open(real_path, "rb")]
+            ),  # Check for binary files
         ]
-        
+
         # Check all conditions with proper error handling
         try:
             return any(skip_conditions)
@@ -83,11 +85,11 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     for path in directory.rglob("*"):
         if should_skip_file(path):
             continue
-            
+
         real_path = path.resolve()
         total += count_file_lines(real_path)
         counted.add(real_path)
-        
+
     return total
 
 
