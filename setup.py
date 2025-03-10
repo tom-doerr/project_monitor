@@ -4,7 +4,8 @@ setup(
     name="project_watch",
     version="0.1.0",
     package_dir={"": "src"},
-    packages=find_packages(where="src"),
+    packages=["project_watch"],
+    package_dir={"project_watch": "src/project_watch"},
     install_requires=[
         "pylint",
         "pytest",
