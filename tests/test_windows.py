@@ -13,23 +13,27 @@ def _create_test_directory(tmp_path):
     (test_dir / "normal.py").write_text("# Valid Python file\nprint('hello')\n")
     return test_dir
 
+
 def _test_reserved_names(test_dir):
     """Verify handling of Windows reserved filenames"""
     try:
-        (test_dir / "con.py").write_text("# Reserved name\n")  # pylint: disable=unspecified-encoding
+        (test_dir / "con.py").write_text(
+            "# Reserved name\n"
+        )  # pylint: disable=unspecified-encoding
         assert count_lines_of_code(test_dir) == 2
         with pytest.raises(OSError):
             (test_dir / "COM4.py").write_text("# Should fail in Windows")
     except OSError:
         pytest.skip("Windows reserved name creation failed")
 
+
 def test_windows_path_handling(tmp_path):
     """Test handling of Windows-style paths and reserved names"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-    
+
     test_dir = _create_test_directory(tmp_path)
-    
+
     if sys.platform.startswith("win"):
         _test_reserved_names(test_dir)
     else:  # Fallback for non-Windows platforms
