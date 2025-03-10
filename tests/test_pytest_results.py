@@ -19,6 +19,8 @@ def test_handles_invalid_pytest_json():
     with patch("subprocess.run") as mock_run:
         # Test with malformed JSON but valid text output
         mock_run.return_value.stdout = '{"invalid": "json"\n3 passed, 1 failed in 0.5s'
+        mock_run.return_value.stderr = ''
+        mock_run.return_value.returncode = 0
         results = get_pytest_results()
         assert results["passed"] == 3
         assert results["failed"] == 1
