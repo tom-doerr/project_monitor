@@ -100,11 +100,13 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
     for pattern, _ in patterns:
         if match := re.search(pattern, normalized_output):
             # Process matched groups directly
-            result.update({
-                key: int(match.group(i+1)) 
-                for i, key in enumerate(["passed", "failed", "warnings", "skipped"])
-                if i < len(match.groups()) - 1  # Last group is always time
-            })
+            result.update(
+                {
+                    key: int(match.group(i + 1))
+                    for i, key in enumerate(["passed", "failed", "warnings", "skipped"])
+                    if i < len(match.groups()) - 1  # Last group is always time
+                }
+            )
             result["time"] = float(match.group(len(match.groups())))
             result.setdefault("skipped", 0)
             break  # Stop after first match
