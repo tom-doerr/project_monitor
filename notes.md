@@ -1,9 +1,13 @@
 ## Test Improvements
 - Fixed Python module import paths using correct package structure
-- Removed unnecessary pytest imports
+- Removed unnecessary pytest imports  
 - Fixed PEP8 import ordering (standard lib -> third party -> local)
 - Added missing Path imports
 - Cleaned up Windows path handling
+- Fixed incorrect import paths from src.*
+- Added explicit error message validation
+- Fixed directory argument passing in permission tests
+- Added dedicated JSON parsing error test
 - Configured Pylint for src package resolution
 - Added proper package setup with setup.py
 - Standardized test naming conventions

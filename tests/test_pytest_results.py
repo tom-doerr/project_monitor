@@ -14,6 +14,14 @@ def test_get_pytest_results_success():
         assert result["time"] == 0.12
 
 
+def test_handles_invalid_pytest_json():
+    """Verify JSON parsing error handling"""
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value.stdout = '{"invalid": "json"'
+        results = get_pytest_results()
+        assert "error" in results
+        assert "JSON" in results["error"]
+
 def test_get_pytest_results_failure():
     with patch("subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1

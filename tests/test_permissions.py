@@ -11,7 +11,7 @@ def test_read_only_file(tmp_path):
     test_file.chmod(0o444)  # Set read-only
 
     # Should still be able to read but not modify
-    assert count_lines_of_code() == 2
+    assert count_lines_of_code(tmp_path) == 2
     test_file.chmod(0o644)  # Cleanup permissions
 
 
@@ -21,7 +21,7 @@ def test_no_read_permission(tmp_path):
     test_dir.chmod(0o000)  # No permissions
 
     with pytest.raises(PermissionError):
-        count_lines_of_code()
+        count_lines_of_code(test_dir)
 
     test_dir.chmod(0o755)  # Cleanup permissions
 

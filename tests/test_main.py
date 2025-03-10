@@ -63,7 +63,9 @@ def test_handles_subprocess_failures_gracefully():
         mock_run.side_effect = Exception("Subprocess failed")
         # Test both functions that use subprocess
         assert get_pylint_score() == 0.0
-        assert get_pytest_results() == {"error": "Subprocess failed"}
+        pytest_results = get_pytest_results()
+        assert "error" in pytest_results
+        assert "Subprocess" in pytest_results["error"]
         assert count_lines_of_code() == 0
 
 

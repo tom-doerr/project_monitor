@@ -77,7 +77,7 @@ def get_pytest_results() -> dict:
         }
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
-    except subprocess.SubprocessError as e:  # More specific exception
+    except Exception as e:  # Catch-all for any unexpected errors
         return {"error": f"Subprocess error: {str(e)}"}
 
 
