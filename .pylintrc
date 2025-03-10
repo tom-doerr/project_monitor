@@ -1,9 +1,7 @@
 [MASTER]
-# Maximum number of lines in a module
+init-hook="import sys, pathlib; sys.path.append(str(pathlib.Path().absolute() / 'src'))"
 max-module-lines=200
-# Files to ignore
 ignore=pyproject.toml
-init-hook="import sys; sys.path.append('src')"
 
 [MESSAGES CONTROL]
 # Disable missing docstring warnings

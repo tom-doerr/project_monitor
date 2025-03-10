@@ -1,4 +1,4 @@
-from pathlib import Path, PureWindowsPath
+from pathlib import PureWindowsPath
 
 import pytest
 
@@ -40,13 +40,23 @@ def test_windows_spaces_in_path(tmp_path):
 
 def test_windows_unc_paths(tmp_path):
     """Test UNC path handling"""
+    # Create files using normal Path operations first
+    share_path = tmp_path / "share"
+    share_path.mkdir()
+    test_file = share_path / "test.py"
+    test_file.write_text("# UNC path test\nx = 1\n")
+    
+    # Then verify Windows path handling
     unc_path = PureWindowsPath(f"\\\\{tmp_path}\\share\\test.py")
-    unc_path.parent.mkdir(parents=True, exist_ok=True)
-    unc_path.write_text("# UNC path test\nx = 1\n")
     assert count_lines_of_code(unc_path.parent) == 2
 
 def test_windows_mixed_slashes(tmp_path):
     """Test mixed forward/backward slashes"""
+    # Create file with normal Path operations
+    file_path = tmp_path / "mixed" / "slashes.py"
+    file_path.parent.mkdir()
+    file_path.write_text("a = 1\nb = 2\n")
+    
+    # Test Windows path representation
     mixed_path = PureWindowsPath(str(tmp_path) + "/mixed\\slashes.py")
-    mixed_path.write_text("a = 1\nb = 2\n")
     assert count_lines_of_code(mixed_path.parent) == 2
