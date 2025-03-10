@@ -69,7 +69,6 @@ def get_pytest_results() -> dict:
 
 def _should_skip_file(path: pathlib.Path, counted: set, windows_reserved_names: set) -> bool:
     """Check if a file should be skipped during line counting."""
-        """Check if a file should be skipped."""
         try:
             real_path = path.resolve()
         except OSError:
@@ -85,7 +84,7 @@ def _should_skip_file(path: pathlib.Path, counted: set, windows_reserved_names: 
             # Check for binary files using context manager
             (path.is_file() and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))),
             # Windows reserved filename check
-            (sys.platform == "win32" and path.stem.upper() in _windows_reserved_names),
+            (sys.platform == "win32" and path.stem.upper() in windows_reserved_names),
         ]
 
         # Check all conditions with proper error handling
@@ -108,11 +107,17 @@ def _count_file_lines(path: pathlib.Path) -> int:
                 print(f"Permission error reading {path}: {str(e)}")
             return 0
 
+def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
+    """Count total lines of Python code in the given directory."""
+    counted = set()
+    directory = pathlib.Path(directory).resolve(strict=True)
+    _windows_reserved_names = {"con", "prn", "aux", "nul", "com1", "lpt1"}
+    
     total = 0
     for path in directory.rglob("*"):
         real_path = path.resolve()
-        if not should_skip_file(path):
-            total += count_file_lines(real_path)
+        if not _should_skip_file(path, counted, _windows_reserved_names):
+            total += _count_file_lines(real_path)
             counted.add(real_path)
 
     return total
