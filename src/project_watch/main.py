@@ -161,7 +161,7 @@ def get_pytest_results() -> dict:
             if isinstance(e, subprocess.TimeoutExpired)
             else f"Subprocess error: {str(e)}"
         )
-        return {"error": error_msg}
+        return {"passed": 0, "failed": 0, "skipped": 0, "error": error_msg}
 
 
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
