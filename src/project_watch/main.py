@@ -38,7 +38,7 @@ def get_pylint_score() -> float:
             score = max(extract_score(result.stdout), extract_score(result.stderr))
     except (subprocess.SubprocessError, ValueError, AttributeError) as e:
         logger.debug("Pylint error: %s", str(e))
-    
+
     return min(max(score, 0.0), 10.0)
 
 
@@ -112,7 +112,7 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
     found = False
-    
+
     # Extract time first
     if time_match := re.search(r" in ([\d.]+)s", output):
         result["time"] = float(time_match.group(1))
@@ -121,7 +121,7 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
     # Check for test counts using single pattern
     count_match = re.search(
         r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped",
-        output.replace("\n", " ")
+        output.replace("\n", " "),
     )
     if count_match:
         result["passed"] = int(count_match.group(1))
@@ -233,13 +233,15 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     for path in base_path.rglob("*"):
         try:
             real_path = path.resolve()
-            if (_should_skip_file(path, counted) or 
-                _is_windows_reserved_name(real_path) or
-                real_path in counted):
+            if (
+                _should_skip_file(path, counted)
+                or _is_windows_reserved_name(real_path)
+                or real_path in counted
+            ):
                 continue
-                
+
             counted.add(real_path)
-            
+
             if real_path.is_file() and real_path.suffix == ".py":
                 total += _count_file_lines(real_path)
         except (OSError, UnicodeDecodeError):
