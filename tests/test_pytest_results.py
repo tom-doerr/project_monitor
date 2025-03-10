@@ -14,10 +14,9 @@ def test_get_pytest_results_success():
         assert result["time"] == 0.12
 
 
-def test_handles_invalid_pytest_json():
-    """Verify JSON parsing error handling"""
+def test_handles_malformed_pytest_json():
+    """Verify JSON parsing with valid text fallback"""
     with patch("subprocess.run") as mock_run:
-        # Test with malformed JSON but valid text output
         mock_run.return_value.stdout = '{"invalid": "json"\n3 passed, 1 failed in 0.5s'
         mock_run.return_value.stderr = ''
         mock_run.return_value.returncode = 0
@@ -26,7 +25,9 @@ def test_handles_invalid_pytest_json():
         assert results["failed"] == 1
         assert "error" not in results
 
-        # Test with completely invalid output
+def test_handles_invalid_pytest_output():
+    """Verify error handling for completely invalid output"""
+    with patch("subprocess.run") as mock_run:
         mock_run.return_value.stdout = "{invalid: json}"
         results = get_pytest_results()
         assert "error" in results
