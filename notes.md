@@ -69,21 +69,17 @@
 - Partial file read failures
 
 ## Recent Changes
-- Fixed Windows reserved filename test handling
-- Added proper pytest time metric extraction
-- Improved OS-specific error handling
-- Added Windows-specific test skipping
-- Fixed binary file detection type errors
-- Corrected critical indentation issues  
-- Added file size safety limits
-- Implemented encoding validation
-- Standardized line ending handling
-- Added partial read failure tests
-- Improved permission error handling
-- Simplified path validation logic
-- Fixed function signature mismatches
-- Resolved Windows naming scope issues
-- Updated line counting implementation
+- Fixed symlink handling in line counting
+- Improved Windows path normalization
+- Added JSON fallback for pytest output parsing
+- Enhanced Pylint score extraction robustness
+- Fixed permission error handling
+- Implemented resolved path deduplication
+- Added proper subprocess error handling
+- Improved test coverage for edge cases
+- Added detailed pytest output parsing
+- Fixed malformed JSON handling
+- Improved error reporting structure
 
 ## New Todos
 - [x] Add mimetype-based binary detection
