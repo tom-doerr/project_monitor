@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from project_watch.main import (
+from src.project_watch.main import (
     get_pytest_results,
 )  # pylint: disable=import-error,no-name-in-module
 

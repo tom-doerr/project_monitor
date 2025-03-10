@@ -36,6 +36,10 @@
 
 ## Recent Changes
 - Added Pylint score calculation tests
+- Fixed Python package structure with proper src layout
+- Updated all test imports to use src.project_watch
+- Removed unnecessary WindowsPath import
+- Added package initialization with version and paths
 - Added pytest result parsing tests
 - Added binary file detection tests  
 - Added filesystem permission tests
