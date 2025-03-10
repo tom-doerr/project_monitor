@@ -1,9 +1,7 @@
-"""Unit tests for project monitoring functionality"""
-
 from datetime import datetime
 from unittest.mock import patch
 import pytest
-from project_watch.main import (
+from src.project_watch.main import (
     get_project_stats,
     get_pylint_score,
     count_lines_of_code,
@@ -12,8 +10,7 @@ from project_watch.main import (
 
 
 @pytest.fixture(name="_mock_stats")
-def mock_stats_fixture():
-    """Fixture providing sample project stats"""
+def mock_stats_fixture() -> dict:
     return {
         "pylint": 8.5,
         "pytest": {"passed": 10, "failed": 0, "skipped": 0},
@@ -22,9 +19,9 @@ def mock_stats_fixture():
     }
 
 
-def test_get_project_stats_structure(_mock_stats):
-    """Verify the structure and types of the project stats dictionary."""
-    with patch("src.project_watch.main.get_project_stats", return_value=_mock_stats):
+def test_stats_structure_validation(_mock_stats):
+    with patch("src.project_watch.main.get_project_stats") as mock_get:
+        mock_get.return_value = _mock_stats
         stats = get_project_stats()
         assert isinstance(stats["pylint"], float)
         assert isinstance(stats["pytest"], dict)
@@ -32,11 +29,9 @@ def test_get_project_stats_structure(_mock_stats):
         assert isinstance(stats["last_updated"], datetime)
 
 
-def test_pylint_score_range(_mock_stats):
-    """Ensure pylint score is within valid 0-10 range."""
-    with patch(
-        "src.project_watch.main.get_pylint_score", return_value=_mock_stats["pylint"]
-    ):
+def test_pylint_returns_valid_score_range(_mock_stats):
+    with patch("src.project_watch.main.get_pylint_score") as mock_pylint:
+        mock_pylint.return_value = _mock_stats["pylint"]
         score = get_pylint_score()
         assert 0.0 <= score <= 10.0
 
