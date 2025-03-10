@@ -1,6 +1,6 @@
-import pytest
 from pathlib import Path
-from project_watch.main import count_lines_of_code
+
+from src.project_watch.main import count_lines_of_code
 
 
 def test_common_binary_extensions(tmp_path):

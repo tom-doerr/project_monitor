@@ -1,6 +1,9 @@
+from pathlib import Path
 from unittest.mock import patch
+
 import pytest
-from project_watch.main import count_lines_of_code
+
+from src.project_watch.main import count_lines_of_code
 
 
 def test_read_only_file(tmp_path):
