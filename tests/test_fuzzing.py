@@ -1,7 +1,6 @@
 import pathlib
-import pytest
-import random
-from src.project_watch.main import count_lines_of_code
+
+from project_watch.main import count_lines_of_code
 
 def generate_invalid_unicode_path(tmp_path: pathlib.Path) -> pathlib.Path:
     invalid_utf8 = b'\x80\x81\xfe\xff'
@@ -10,7 +9,7 @@ def generate_invalid_unicode_path(tmp_path: pathlib.Path) -> pathlib.Path:
     return test_file
 
 def test_invalid_unicode_files(tmp_path):
-    path = generate_invalid_unicode_path(tmp_path)
+    generate_invalid_unicode_path(tmp_path)
     assert count_lines_of_code(tmp_path) == 2  # Should count valid lines before invalid bytes
 
 def test_extremely_long_lines(tmp_path):
