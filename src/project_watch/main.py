@@ -34,7 +34,8 @@ def get_pylint_score() -> float:
             cwd=pathlib.Path(__file__).parent.parent,
         )
 
-        if 0 <= result.returncode <= 31:  # Valid pylint exit codes
+        # Check if returncode exists before comparison
+        if hasattr(result, 'returncode') and 0 <= result.returncode <= 31:
             score = max(extract_score(result.stdout), extract_score(result.stderr))
     except (subprocess.SubprocessError, ValueError, AttributeError) as e:
         logger.debug("Pylint error: %s", str(e))
@@ -166,7 +167,9 @@ def get_pytest_results() -> dict:
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
-        real_path = path.resolve().absolute()
+        real_path = path.resolve()
+        if not real_path.exists():
+            return True
 
         if sys.platform == "win32" and _is_windows_reserved_name(
             real_path.resolve().lower()
@@ -209,14 +212,8 @@ def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
 def _count_file_lines(path: pathlib.Path) -> int:
     """Count non-empty lines in a file."""
     try:
-        with open(path, "r", encoding="utf-8", errors="ignore") as f:
-            return sum(
-                1
-                for line in f
-                if line.strip()
-                and len(line) <= 1000000
-                and f.tell() < 10000000  # 10MB total read check
-            )
+        with path.open(encoding='utf-8', errors='ignore') as f:
+            return sum(1 for line in f if line.strip())
     except PermissionError as e:
         logger.warning("Permission denied reading %s: %s", path, str(e))
         return 0
