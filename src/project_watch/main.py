@@ -46,10 +46,9 @@ def get_pytest_results() -> dict:  # pylint: disable=too-many-return-statements
         return {"error": f"Subprocess error: {str(e)}"}
 
 
-def count_lines_of_code() -> (
-    int
-):  # pylint: disable=too-many-statements,too-many-nested-blocks
-    """Count total lines of Python code in the project."""
+def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
+    """Count total lines of Python code in the given directory."""
+    directory = pathlib.Path(directory)
     total = 0
     for path in pathlib.Path(".").rglob("*"):
         # Reduce nesting by filtering first
