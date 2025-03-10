@@ -1,6 +1,6 @@
 import pathlib
 # pylint: disable=wrong-import-order
-import pytest
+import pytest  # pylint: disable=unused-import
 from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
 def generate_large_file(path: pathlib.Path, line_count: int, line_length: int = 1000):  # pylint: disable=too-many-arguments
