@@ -67,25 +67,26 @@ def get_pytest_results() -> dict:
         return {"error": error_msg}
 
 
-def _should_skip_file(path: pathlib.Path, counted: set, windows_reserved_names: set) -> bool:
+def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve()
     except OSError:
         return True
 
-    # Combined skip conditions (order matters for performance)
-    skip_conditions = [
-        not path.exists(),  # Handle broken symlinks first
-        real_path in counted,  # Check cache before other ops
-        path.suffix != ".py",
-        not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
-        (path.is_file() and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))),
-        (sys.platform == "win32" and path.stem.upper() in windows_reserved_names),
-    ]
+    windows_reserved = (
+        sys.platform == "win32" and 
+        path.stem.upper() in {"con", "prn", "aux", "nul", "com1", "lpt1"}
+    )
 
-    # Check all conditions with proper error handling
-    return any(skip_conditions)
+    return any([
+        not path.exists(),
+        real_path in counted,
+        path.suffix != ".py",
+        not path.is_file() or real_path.is_dir(),
+        (path.is_file() and any(b"\0" in chunk for chunk in _read_file_chunks(real_path))),
+        windows_reserved
+    ])
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
     """Read file in chunks using context manager."""
@@ -95,18 +96,14 @@ def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
 
 def _count_file_lines(path: pathlib.Path) -> int:
     """Count non-empty lines in a file."""
-    line_count = 0
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                if line.strip():
-                    line_count += 1
-                # Safety limits
-                if len(line) > 1000000:  # 1MB line length protection
-                    break
-                if line_count > 10000000:  # 10M line sanity check
-                    break
-            return line_count
+            return sum(
+                1 for line in f 
+                if line.strip() and 
+                len(line) <= 1000000 and 
+                f.tell() < 10000000  # 10MB total read check
+            )
     except (UnicodeDecodeError, PermissionError, FileNotFoundError, OSError) as e:
         is_permission_error = isinstance(e, PermissionError)
         if is_permission_error:
@@ -115,18 +112,16 @@ def _count_file_lines(path: pathlib.Path) -> int:
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
+    base_dir = pathlib.Path(directory).resolve(strict=True)
     counted = set()
-    directory = pathlib.Path(directory).resolve(strict=True)
-    _windows_reserved_names = {"con", "prn", "aux", "nul", "com1", "lpt1"}
     
-    total = 0
-    for path in directory.rglob("*"):
-        real_path = path.resolve()
-        if not _should_skip_file(path, counted, _windows_reserved_names):
-            total += _count_file_lines(real_path)
-            counted.add(real_path)
-
-    return total
+    return sum(
+        _count_file_lines(real_path)
+        for path in base_dir.rglob("*")
+        if (real_path := path.resolve()) not in counted
+        and not _should_skip_file(path, counted)
+        and counted.add(real_path) is None
+    )
 
 
 class ProjectWatcher(FileSystemEventHandler):
