@@ -24,6 +24,7 @@ def get_pylint_score() -> float:
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
         return float(match.group(1)) if match else 0.0
 
+    score = 0.0
     try:
         result = subprocess.run(
             ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
@@ -34,15 +35,12 @@ def get_pylint_score() -> float:
             cwd=pathlib.Path(__file__).parent.parent,
         )
 
-        if result.returncode not in range(0, 32):  # Valid pylint exit codes
-            return 0.0
-
-        return max(extract_score(result.stdout), extract_score(result.stderr))
+        if 0 <= result.returncode <= 31:  # Valid pylint exit codes
+            score = max(extract_score(result.stdout), extract_score(result.stderr))
     except (subprocess.SubprocessError, ValueError, AttributeError) as e:
         logger.debug("Pylint error: %s", str(e))
-        score = 0.0
-    finally:
-        return min(max(score, 0.0), 10.0)
+    
+    return min(max(score, 0.0), 10.0)
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -114,35 +112,34 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing of pytest output."""
-    # Add more robust pattern matching for text output
-    text_patterns = [
-        (r"(\d+) passed", "passed"),
-        (r"(\d+) failed", "failed"),
-        (r"(\d+) warnings", "warnings"),
-        (r"(\d+) skipped", "skipped")
-    ]
-    
-    # Try to extract time first
-    time_match = re.search(r" in ([\d.]+)s", output)
-    if time_match:
-        result["time"] = float(time_match.group(1))
-    
-    # Extract test counts from text patterns
     found = False
-    for pattern, key in text_patterns:
-        match = re.search(pattern, output)
-        if match:
-            result[key] = int(match.group(1))
-            found = True
-
-    # Fallback for basic passed count
-    if not found and (passed_match := re.search(r"(\d+) passed", output)):
-        result["passed"] = int(passed_match.group(1))
+    
+    # Extract time first
+    if time_match := re.search(r" in ([\d.]+)s", output):
+        result["time"] = float(time_match.group(1))
         found = True
 
-    # Check for empty test results
+    # Check for test counts using single pattern
+    count_match = re.search(
+        r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped",
+        output.replace("\n", " ")
+    )
+    if count_match:
+        result["passed"] = int(count_match.group(1))
+        result["failed"] = int(count_match.group(2))
+        result["warnings"] = int(count_match.group(3))
+        result["skipped"] = int(count_match.group(4))
+        return True
+
+    # Fallback for basic passed count
+    if passed_match := re.search(r"(\d+) passed", output):
+        result["passed"] = int(passed_match.group(1))
+        return True
+
+    # Check for empty results
     if "no tests ran" in output.lower():
         result["error"] = "No tests executed"
+        return True
 
     return found
 
@@ -236,19 +233,14 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
     for path in base_path.rglob("*"):
         try:
-            if _should_skip_file(path, counted):
-                continue
-
-            # Resolve symlinks and check Windows reserved names
             real_path = path.resolve()
-            if _is_windows_reserved_name(real_path):
+            if (_should_skip_file(path, counted) or 
+                _is_windows_reserved_name(real_path) or
+                real_path in counted):
                 continue
-
-            # Skip already counted files (via symlinks)
-            if real_path in counted:
-                continue
+                
             counted.add(real_path)
-
+            
             if real_path.is_file() and real_path.suffix == ".py":
                 total += _count_file_lines(real_path)
         except (OSError, UnicodeDecodeError):
