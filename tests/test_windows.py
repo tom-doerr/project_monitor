@@ -83,8 +83,11 @@ def test_windows_mixed_slashes(tmp_path):
     file_path = tmp_path / "mixed" / "slashes.py"
     file_path.parent.mkdir()
     file_path.write_text("a = 1\nb = 2\n")
-
-    # Test Windows path representation
-    assert (
-        count_lines_of_code(file_path.parent) == 2
-    )  # Mixed slashes shouldn't affect count
+    
+    # Test case insensitivity
+    mixed_case_path = tmp_path / "MiXeD" / "sLaSheS.Py"
+    if sys.platform == "win32":
+        assert count_lines_of_code(mixed_case_path.parent) == 2
+    
+    # Test path normalization
+    assert count_lines_of_code(file_path.parent) == 2

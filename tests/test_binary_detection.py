@@ -25,8 +25,15 @@ def test_non_py_files_with_code(tmp_path):
     js_file = tmp_path / "file.js"
     js_file.write_text("console.log('test');\n")
 
+    # Test binary file cleanup
+    temp_file = tmp_path / "tempfile.py"
+    temp_file.write_text("temp content")
+    initial_file_count = len(list(tmp_path.glob("*")))
+    
     result = count_lines_of_code(tmp_path)
-    assert result == 2, "Should only count valid.py lines"
+    
+    assert result == 2
+    assert len(list(tmp_path.glob("*"))) == initial_file_count  # No temp files left
 
 
 def test_hidden_directories(tmp_path):

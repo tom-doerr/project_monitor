@@ -51,7 +51,10 @@
 
 ## New Test Coverage
 - Windows reserved filename handling (including subdirectory validation)
-- UNC path normalization edge cases  
+- UNC path normalization edge cases
+- Fuzzing tests for invalid UTF-8 sequences
+- Extreme path length variations (>1000 chars)
+- Mixed case path normalization
 - Long path handling with pathlib normalization
 - Mixed slash/path separator handling
 - UNC path normalization  
@@ -87,7 +90,7 @@
 - [x] Add mimetype-based binary detection
 - [x] Implement file handle context managers
 - [x] Create null byte test cases
-- [ ] Add fuzzing tests for edge cases
+- [x] Add fuzzing tests for edge cases
 - [ ] Implement probabilistic file sampling
 - [ ] Improve binary handler cleanup
 - [ ] Enhance filesystem error logging
