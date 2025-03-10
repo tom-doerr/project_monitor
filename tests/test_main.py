@@ -1,6 +1,6 @@
 """Unit tests for project monitoring functionality"""
 from datetime import datetime
-from project_watch.main import get_project_stats
+from src.project_watch.main import get_project_stats
 
 def test_get_project_stats_structure():
     """Verify the structure and types of the project stats dictionary."""
