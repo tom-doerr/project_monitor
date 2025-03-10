@@ -38,6 +38,18 @@ def get_pylint_score() -> float:
     return max(scores) if scores else 0.0
 
 
+def _parse_pytest_output(output: str) -> dict:
+    """Parse pytest output into structured results."""
+    passed = len(re.findall(r"PASSED", output))
+    failed = len(re.findall(r"FAILED", output))
+    time_match = re.search(r" in ([\d.]+)s", output)
+    return {
+        "passed": passed,
+        "failed": failed,
+        "time": float(time_match.group(1)) if time_match else 0.0,
+        "output": output[-2000:],
+    }
+
 def get_pytest_results() -> dict:
     """Run pytest and return results summary with error handling."""
     try:
@@ -77,7 +89,7 @@ def get_pytest_results() -> dict:
         }
     except subprocess.TimeoutExpired:
         return {"error": "pytest timed out after 30 seconds"}
-    except Exception as e:  # Catch-all for any unexpected errors
+    except (subprocess.SubprocessError, OSError) as e:  # Specific exceptions
         return {"error": f"Subprocess error: {str(e)}"}
 
 
@@ -86,7 +98,7 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     counted = set()
     directory = pathlib.Path(directory).resolve(strict=True)
 
-    _WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "LPT1"}
+    _windows_reserved_names = {"con", "prn", "aux", "nul", "com1", "lpt1"}
     
     def should_skip_file(path: pathlib.Path) -> bool:
         """Check if a file should be skipped."""
@@ -104,14 +116,8 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             # Add Windows reserved name check
             (sys.platform == "win32" and 
              path.stem.upper() in _WINDOWS_RESERVED_NAMES),
-            any(  # Check for binary files
-                b"\0" in content
-                for content in (
-                    [open(real_path, "rb").read(1024)]
-                    if path.is_file()
-                    else [b""]  # pylint: disable=consider-using-with
-                )
-            ),
+            # Check for binary files using context manager
+            any(b"\0" in (open(real_path, "rb").read(1024)) if path.is_file() else False,
             # Windows reserved filename check
             (
                 sys.platform == "win32"
@@ -130,10 +136,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         """Count non-empty lines in a file."""
         try:
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                try:
-                    return sum(1 for line in f if line.strip())
-                except UnicodeDecodeError:
-                    return 0  # Properly handle binary files
+                return sum(1 for line in f if line.strip())
+        except UnicodeDecodeError:
+            return 0  # Binary file
         except (PermissionError, FileNotFoundError, OSError) as e:
             if isinstance(e, PermissionError):
                 print(f"Permission denied: {path}")
