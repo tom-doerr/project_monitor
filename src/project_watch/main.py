@@ -83,8 +83,8 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             real_path in counted,  # Check cache before other ops
             path.suffix != ".py",
             not path.is_file() or real_path.is_dir(),  # Combine file/dir checks
-            any(b"\0" in f.read(1024) for f in [open(real_path, "rb")]  # Check binary last
-                if path.is_file() else [""]  # Prevent opening directories
+            any(b"\0" in f.read(1024) for f in ([open(real_path, "rb")]  # Check binary last
+                if path.is_file() else [""])  # Prevent opening directories
             ),
             # Windows reserved filename check
             (sys.platform == "win32" and path.name.split(".")[0].upper() in [
