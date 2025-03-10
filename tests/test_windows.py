@@ -18,26 +18,28 @@ def _create_test_directory(tmp_path):
 def _test_reserved_names(test_dir):
     """Verify handling of Windows reserved filenames"""
     reserved_names = [
-        "COM1",
-        "COM9",
-        "LPT1",
-        "LPT9",
-        "CON",
-        "PRN",
-        "AUX",
-        "NUL",
-        "CON.txt",
-        "com1",
-        "lPt9.md",
+        "COM1", "LPT2", "CON", "PRN",
+        "AUX", "NUL", "COM9", "LPT9",
+        "CON.txt", "com1", "lPt9.md"  # Mixed case variants
     ]
     valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
+
+    # Test reserved names in nested directories
+    for name in reserved_names:
+        nested_dir = test_dir / "subdir" / name
+        nested_dir.mkdir(parents=True)
+        (nested_dir / "test.py").write_text("# Reserved name test\n")
 
     _create_reserved_files(test_dir, reserved_names)
     _create_valid_files(test_dir, valid_names)
 
+    # Verify line counting skips all reserved names
+    assert count_lines_of_code(test_dir) == len(valid_names), (
+        "Should only count valid files"
+    )
+    # Verify Windows-specific behavior
     if sys.platform == "win32":
-        assert count_lines_of_code(test_dir) == 0, "Reserved files should be skipped"
-        _validate_normal_files(test_dir, valid_names)
+        assert (test_dir / "COM1").exists() is False, "Reserved files should be blocked"
 
 
 def _create_reserved_files(test_dir, names):

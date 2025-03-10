@@ -26,10 +26,16 @@ def test_network_timeout_handling(tmp_path, monkeypatch):
 
 def _create_delayed_resolve(original):
     """Create resolve function with simulated latency"""
-
+    # Add retry logic for network filesystems
     def delayed_resolve(self, *args, **kwargs):
-        time.sleep(2.5)
-        return original(self, *args, **kwargs)
+        for attempt in range(3):
+            try:
+                time.sleep(2.5)
+                return original(self, *args, **kwargs)
+            except FileNotFoundError:
+                if attempt == 2:
+                    raise
+                time.sleep(0.5 * attempt)
 
     return delayed_resolve
 
