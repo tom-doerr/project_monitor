@@ -28,21 +28,23 @@ def test_network_timeout_handling(tmp_path, monkeypatch):
 
 def test_network_retry_backoff(tmp_path, monkeypatch):
     """Validate exponential backoff timing between retries"""
-    (tmp_path / "retry_test.py").write_text("# Retry test file\n")
+    test_file = tmp_path / "retry_test.py"
+    test_file.write_text("# Retry test file\n")
 
-    resolve_times = []
-    original_resolve = pathlib.Path.resolve
+    def create_tracked_resolver():
+        resolve_times = []
+        original_resolve = pathlib.Path.resolve
+        
+        def tracked_resolve(self):
+            resolve_times.append(time.monotonic())
+            if len(resolve_times) < 3:
+                raise OSError(errno.ETIMEDOUT, "Simulated timeout")
+            return original_resolve(self)
+            
+        return resolve_times, tracked_resolve
 
-    def tracked_resolve(self):
-        resolve_times.append(time.monotonic())
-        if len(resolve_times) < 3:  # Fail first two attempts
-            raise OSError(errno.ETIMEDOUT, "Simulated timeout")
-        return original_resolve(self)
-
-    monkeypatch.setattr(pathlib.Path, "resolve", tracked_resolve)
-
-    start_time = time.monotonic()
-    count_lines_of_code(tmp_path)
+    resolve_times, resolver = create_tracked_resolver()
+    monkeypatch.setattr(pathlib.Path, "resolve", resolver)
 
     # Verify retry delays (should be ~1s and ~2s)
     assert len(resolve_times) == 3
@@ -85,8 +87,15 @@ def _create_delayed_resolve(original):
 
     def delayed_resolve(self, *args, **kwargs):
         for attempt in range(3):
-            if attempt == 2:  # Success on final attempt
+            if attempt == 2:
                 return original(self, *args, **kwargs)
+            try:
+                raise OSError(errno.ETIMEDOUT, "Simulated network timeout")
+            except OSError as e:
+                if attempt == 1:
+                    raise OSError(errno.EHOSTUNREACH, "Final timeout") from e
+                time.sleep(0.5 * (attempt + 1))
+        raise OSError("Maximum retries exceeded")
 
             try:
                 raise OSError(errno.ETIMEDOUT, "Simulated network timeout")
