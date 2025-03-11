@@ -147,7 +147,8 @@ def test_windows_unc_paths(tmp_path, unc_name, path_suffix, expected_lines, expe
     test_dir.mkdir(parents=True, exist_ok=True)
     
     # Create test file if specified
-    (test_dir / path_suffix).write_text("# Test content\n" * expected_lines) if path_suffix else None
+    if path_suffix:  # Only create file if suffix specified
+        (test_dir / path_suffix).write_text("# Test content\n" * expected_lines)
     
     # Validate expectations
     if expected_error:
