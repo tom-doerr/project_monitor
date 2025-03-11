@@ -161,7 +161,10 @@
 - Added missing subprocess imports in test_pylint
 - Improved network filesystem timeout handling
 - Added default values for test result fields
-- Improved reserved name pattern matching with case-insensitive regex
+- Fixed regex flags usage for case-insensitive matching
+- Added CONIN$ and CONOUT$ reserved names
+- Added more test cases for mixed-case reserved names
+- Verified regex handles all casing variants properly
 - Added validation for reserved names with extensions
 - Added comprehensive pytest output pattern matching
 - Implemented ordered fallback patterns for test result parsing

@@ -45,12 +45,13 @@ _WINDOWS_RESERVED_NAMES = {
 }
 
 _RESERVED_PATTERN = re.compile(
-    r"^(?i)(CON|PRN|AUX|NUL|CLOCK\$|"
-    r"COM[1-9]|LPT[1-9]|"
+    r"^(CON|PRN|AUX|NUL|CLOCK\$|"
+    r"COM[1-9]|LPT[1-9]|CONIN\$|CONOUT\$|"
     r"\$Mft|\$MftMirr|\$LogFile|\$Volume|"
     r"\$AttrDef|\$Bitmap|\$Boot|\$BadClus|"
     r"\$Secure|\$Upcase|\$Extend|"
-    r"\$Quota|\$ObjId|\$Reparse)(\..*)?$"
+    r"\$Quota|\$ObjId|\$Reparse)(\..*)?$",
+    flags=re.IGNORECASE
 )
 
 
