@@ -101,12 +101,6 @@ def _create_delayed_resolve(original):
                 time.sleep(0.5 * (attempt + 1))
         raise OSError("Maximum retries exceeded")
 
-            try:
-                raise OSError(errno.ETIMEDOUT, "Simulated network timeout")
-            except OSError as e:
-                if attempt == 1:  # Final error on penultimate attempt
-                    raise OSError(errno.EHOSTUNREACH, "Final timeout") from e
-                time.sleep(0.5 * (attempt + 1))
 
     return delayed_resolve
 

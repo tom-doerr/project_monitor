@@ -322,6 +322,8 @@
   - Fixed indentation in network filesystem test exception handling
   - Added proper type hints for path parameters
   - Removed duplicate error handling in path validation
+  - Added missing start_time variable in retry test
+  - Removed duplicated try/except block in network resolver
 - Fixed indentation error in file error logging
 - Added comprehensive test for Windows reserved names with numeric suffixes
 - Fixed indentation error in file line counting logic
