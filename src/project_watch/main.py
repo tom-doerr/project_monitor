@@ -226,7 +226,6 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
             _is_windows_reserved_path(real_path),
             any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
         ])
-        )
     except OSError:
         return True
 
