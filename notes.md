@@ -146,6 +146,9 @@
 - Added network timeout retry logic
 - Implemented binary mime-type detection
 - Fixed coverage tracking edge cases
+- Fixed missing patch import in Windows tests
+- Added setup.py import test for coverage
+- Resolved NameError in Windows platform tests
 
 ## New Todos
 - [x] Add filesystem error simulation tests
