@@ -29,7 +29,7 @@ def test_network_timeout_handling(tmp_path, monkeypatch):
 def test_network_retry_backoff(tmp_path, monkeypatch):
     """Validate exponential backoff timing between retries"""
     (tmp_path / "retry_test.py").write_text("# Retry test file\n")
-    
+
     resolve_times = []
     original_resolve = pathlib.Path.resolve
 
@@ -40,18 +40,18 @@ def test_network_retry_backoff(tmp_path, monkeypatch):
         return original_resolve(self)
 
     monkeypatch.setattr(pathlib.Path, "resolve", tracked_resolve)
-    
+
     start_time = time.monotonic()
     count_lines_of_code(tmp_path)
-    
+
     # Verify retry delays (should be ~1s and ~2s)
     assert len(resolve_times) == 3
     first_delay = resolve_times[1] - resolve_times[0]
     second_delay = resolve_times[2] - resolve_times[1]
-    
+
     assert 0.9 < first_delay < 1.1, f"First delay was {first_delay}"
     assert 1.9 < second_delay < 2.1, f"Second delay was {second_delay}"
-    
+
     total_time = time.monotonic() - start_time
     assert 2.5 < total_time < 3.5, f"Total duration was {total_time}"
 
@@ -59,24 +59,26 @@ def test_network_retry_backoff(tmp_path, monkeypatch):
 def test_mixed_network_errors(tmp_path, monkeypatch):
     """Test handling of different error types across retries"""
     (tmp_path / "mixed_errors.py").touch()
-    
-    error_sequence = iter([
-        OSError(errno.ETIMEDOUT, "Timeout"),
-        OSError(errno.EHOSTUNREACH, "Host unreachable"),
-        OSError(errno.EACCES, "Permission denied")
-    ])
-    
+
+    error_sequence = iter(
+        [
+            OSError(errno.ETIMEDOUT, "Timeout"),
+            OSError(errno.EHOSTUNREACH, "Host unreachable"),
+            OSError(errno.EACCES, "Permission denied"),
+        ]
+    )
+
     def resolve_with_errors(self):
         try:
             raise next(error_sequence)
         except StopIteration:
             return pathlib.Path.resolve(self)
-    
+
     monkeypatch.setattr(pathlib.Path, "resolve", resolve_with_errors)
-    
+
     with pytest.raises(OSError) as exc_info:
         count_lines_of_code(tmp_path)
-    
+
     assert exc_info.value.errno == errno.EACCES
 
 
