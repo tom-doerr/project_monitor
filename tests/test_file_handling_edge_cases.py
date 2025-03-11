@@ -45,4 +45,10 @@ def test_partial_read_failure(tmp_path: pathlib.Path, monkeypatch):
     monkeypatch.setattr("builtins.open", mock_open(read_data=""))
     monkeypatch.setattr("pathlib.Path.read_bytes", mock_read)
     monkeypatch.setattr(_count_file_lines, "__code__", mock_read.__code__)
-    assert count_lines_of_code(tmp_path) == 0
+    
+    # Verify error handling and cleanup
+    with pytest.raises(OSError):
+        count_lines_of_code(tmp_path)
+    
+    # Verify temporary files are cleaned up
+    assert not list(tmp_path.glob("*.tmp")), "Temporary files not cleaned up"
