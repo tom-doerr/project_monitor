@@ -61,16 +61,13 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    json_match = re.search(r'{"\w+": \d+.*}', output)
-    if not json_match:
-        return False
-
-    try:
-        data = json.loads(json_match.group(0))
-        _update_results_from_json(data, result)
-        return True
-    except (json.JSONDecodeError, AttributeError):
-        return False
+    if json_match := re.search(r'{"\w+": \d+.*}', output):
+        try:
+            _update_results_from_json(json.loads(json_match.group(0)), result)
+            return True
+        except (json.JSONDecodeError, AttributeError):
+            pass
+    return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -138,18 +135,19 @@ def _extract_pytest_time(output: str) -> float:
     return 0.0
 
 
-def _match_pattern(pattern: str, groups: int, output: str, result: dict) -> bool:
+def _match_pattern(pattern: str, groups: int, output: str, result: dict) -> bool:  # pylint: disable=too-many-arguments
     """Match a single output pattern and update results."""
-    if match := re.search(pattern, output):
-        result["passed"] = int(match.group(1))
-        if groups >= 2:
-            result["failed"] = int(match.group(2))
-        if groups >= 3:
-            result["warnings"] = int(match.group(3)) if groups == 4 else 0
-        if groups >= 4:
-            result["skipped"] = int(match.group(4))
-        return True
-    return False
+    if not (match := re.search(pattern, output)):
+        return False
+        
+    result["passed"] = int(match.group(1))
+    if groups >= 2:
+        result["failed"] = int(match.group(2))
+    if groups >= 3:
+        result["warnings"] = int(match.group(3)) if groups == 4 else 0
+    if groups >= 4:
+        result["skipped"] = int(match.group(4))
+    return True
 
 
 def _handle_empty_results(output: str, result: dict) -> bool:
@@ -192,18 +190,13 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve()
-        if not real_path.exists():
-            return True
-
-        return any(
-            (
-                real_path in counted,
-                real_path.suffix != ".py",
-                not real_path.is_file(),
-                _is_windows_reserved_path(real_path),
-                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-            )
-        )
+        return not real_path.exists() or any((
+            real_path in counted,
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            _is_windows_reserved_path(real_path),
+            any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+        ))
     except OSError:
         return True
 
@@ -247,30 +240,18 @@ def _count_file_lines(path: pathlib.Path) -> int:
 
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
-    total_lines = 0
     counted = set()
     base_path = pathlib.Path(directory).resolve()
 
-    def _should_count(path: pathlib.Path) -> bool:
-        """Determine if a path should be counted."""
-        try:
-            real_path = path.resolve()
-            return (
-                real_path.is_file()
-                and real_path.suffix == ".py"
-                and not _should_skip_file(path, counted)
-                and real_path not in counted
-            )
-        except (OSError, UnicodeDecodeError):
-            return False
-
-    for path in base_path.rglob("*"):
-        if _should_count(path):
-            real_path = path.resolve()
-            counted.add(real_path)
-            total_lines += _count_file_lines(real_path)
-
-    return total_lines
+    return sum(
+        _count_file_lines(real_path)
+        for path in base_path.rglob("*")
+        if (real_path := path.resolve()) not in counted
+        and not counted.add(real_path)  # Returns None, always False
+        and real_path.is_file()
+        and real_path.suffix == ".py"
+        and not _should_skip_file(real_path, counted)
+    )
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:

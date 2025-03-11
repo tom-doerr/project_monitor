@@ -22,7 +22,6 @@ def test_10m_line_file(tmp_path: pathlib.Path):
 
 def test_1gb_file(tmp_path: pathlib.Path):
     test_file = tmp_path / "huge.bin"
-    chunk_size = 1024**3  # 1GB
     with test_file.open("wb") as f:
         # Write in 1MB chunks to avoid memory issues
         for _ in range(1024):
