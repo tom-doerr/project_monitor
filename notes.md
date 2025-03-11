@@ -131,6 +131,8 @@
 - [x] Add filesystem error simulation tests
 - [x] Add performance tests for large result parsing
 - [x] Fix JSON parsing edge cases (invalid/malformed formats)
+- [x] Improve Windows reserved name regex coverage
+- [x] Add inode-based file tracking
 - [x] Add explicit error message validation
 - [x] Fix exception type checking in error logger
 - [x] Add path validation to error messages
