@@ -7,7 +7,7 @@ import errno
 import json
 import logging
 import pathlib
-import re 
+import re
 import subprocess
 import sys
 import time
@@ -25,10 +25,13 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
-        return max(0.0, min(float(match.group(1)), 10.0)) if match else 0.0  # Clamp score between 0-10
+        return (
+            max(0.0, min(float(match.group(1)), 10.0)) if match else 0.0
+        )  # Clamp score between 0-10
 
     try:
         proc = subprocess.run(
@@ -142,7 +145,9 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
     # Handle different time formats with/without decimals and units
-    time_match = re.search(r" in (\d+\.?\d*)\s*s(?:ec)?(?:onds?)?\b", output.replace(",", ""))
+    time_match = re.search(
+        r" in (\d+\.?\d*)\s*s(?:ec)?(?:onds?)?\b", output.replace(",", "")
+    )
     if not time_match:  # Fallback to seconds keyword
         time_match = re.search(r"(\d+\.\d+) seconds?", output)
     return float(time_match.group(1)) if time_match else 0.0
@@ -198,8 +203,13 @@ def _handle_pytest_error(e: Exception) -> dict:
         "passed": 0,
         "failed": 0,
         "skipped": 0,
-        "error": f"Pytest error: {' | '.join(error_details)[:500]}" if error_details else str(e)
+        "error": (
+            f"Pytest error: {' | '.join(error_details)[:500]}"
+            if error_details
+            else str(e)
+        ),
     }
+
 
 def get_pytest_results() -> dict:
     """Run pytest and return results summary with error handling."""
@@ -221,14 +231,16 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        
-        return (file_id in counted) or any([
-            not real_path.exists(),
-            real_path.suffix != ".py",
-            not real_path.is_file(),
-            _is_windows_reserved_path(real_path),
-            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
-        ])
+
+        return (file_id in counted) or any(
+            [
+                not real_path.exists(),
+                real_path.suffix != ".py",
+                not real_path.is_file(),
+                _is_windows_reserved_path(real_path),
+                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+            ]
+        )
     except OSError:
         return True
 
@@ -329,10 +341,15 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
         try:
             return path.resolve(strict=True)
         except OSError as e:
-            if e.errno not in (errno.ETIMEDOUT, errno.EHOSTUNREACH) or attempt == retries:
-                raise IOError(f"Path resolution failed after {retries} retries: {path}") from e
-            time.sleep(delay * (2 ** attempt))
-    
+            if (
+                e.errno not in (errno.ETIMEDOUT, errno.EHOSTUNREACH)
+                or attempt == retries
+            ):
+                raise IOError(
+                    f"Path resolution failed after {retries} retries: {path}"
+                ) from e
+            time.sleep(delay * (2**attempt))
+
     raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
