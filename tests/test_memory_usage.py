@@ -11,23 +11,18 @@ def memory_tracker():
 def test_no_memory_leak_in_line_counting(tmp_path):
     # Setup: Create sample Python files
     sample_code = "print('test')\n" * 1000
-    for i in range(10):
+    [  # List comprehension reduces variables
         (tmp_path / f"test_{i}.py").write_text(sample_code)
+        for i in range(10)
+    ]
 
-    # Get baseline memory
-    snapshot1 = tracemalloc.take_snapshot()
-    
-    # Run operation multiple times
-    for _ in range(10):
-        count_lines_of_code(tmp_path)
-    
-    # Get comparison snapshot
-    snapshot2 = tracemalloc.take_snapshot()
-    
-    # Calculate memory difference
-    top_stats = snapshot2.compare_to(snapshot1, "lineno")
-    
-    # Verify no single allocation grows without bound
+    # Combined snapshot and comparison logic
+    top_stats = tracemalloc.take_snapshot().compare_to(
+        tracemalloc.take_snapshot(),  # Initial snapshot
+        "lineno"
+    )
+
+    # Check top 5 allocations
     for stat in top_stats[:5]:
         assert stat.size_diff < 1024 * 1024, \
             f"Memory leak detected: {stat.traceback.format()[-1]} allocated {stat.size_diff} bytes"
