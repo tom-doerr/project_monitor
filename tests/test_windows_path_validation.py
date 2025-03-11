@@ -78,6 +78,9 @@ def test_reserved_names_with_extensions(tmp_path: Path):
         "CONFIG~.tmp",  # Temporary file pattern
         "CONIN$.txt",  # Special device with extension
         "LPT1.config.ini",  # Reserved name with multiple extensions
+        "COM1.",  # Empty extension
+        "LPT1..test",  # Double dot extension
+        "nul.tar.gz",  # Multiple extensions
         "ＣＯＮＩＮ＄.txt",  # Fullwidth Unicode homoglyph
         "ＣＯＭ１.txt",  # Fullwidth COM1
         "COM1. .txt",  # Space in extension
