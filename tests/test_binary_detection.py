@@ -39,6 +39,20 @@ def test_binary_file_cleanup(tmp_path):
     assert len(list(tmp_path.glob("*"))) == initial_file_count  # No temp files left
 
 
+def test_deeply_nested_binary_files(tmp_path):
+    """Test binary detection in nested directory structure"""
+    nested_dir = tmp_path / "a" / "b" / "c" / "d"
+    nested_dir.mkdir(parents=True)
+    
+    # Create test files
+    (nested_dir / "valid.py").write_text("print('hello')")
+    (nested_dir / "invalid.bin").write_bytes(b"\x00\x01\x02\x03")
+    (nested_dir / "ambiguous.dat").write_text("Mixed\x00\xFFcontent")
+    
+    results = count_lines_of_code(tmp_path)
+    assert results == 1, "Should only count valid Python files"
+
+
 def test_hidden_directories(tmp_path):
     """Test files in hidden directories are skipped"""
     hidden_dir = tmp_path / ".hidden"
