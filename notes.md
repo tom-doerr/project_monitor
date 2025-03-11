@@ -102,6 +102,9 @@
 - Real-time file change detection
 
 ## Recent Changes
+- Added missing pathlib import in main.py
+- Fixed PEP8 import ordering in test files
+- Removed unused MagicMock import
 - Fixed symlink handling in line counting
 - Improved Windows path normalization
 - Added JSON fallback for pytest output parsing

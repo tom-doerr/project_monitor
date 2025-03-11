@@ -1,5 +1,5 @@
 import pathlib
-from unittest.mock import mock_open
+from unittest.mock import mock_open  # pylint: disable=wrong-import-order
 import pytest  # pylint: disable=unused-import
 from project_watch.main import (
     count_lines_of_code,
