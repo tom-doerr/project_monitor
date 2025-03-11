@@ -28,12 +28,13 @@ def test_non_py_files_with_code(tmp_path):
     result = count_lines_of_code(tmp_path)
     assert result == 2
 
+
 def test_binary_file_cleanup(tmp_path):
     """Verify binary file handling doesn't leave temp files"""
     temp_file = tmp_path / "tempfile.py"
     temp_file.write_text("temp content")
     initial_file_count = len(list(tmp_path.glob("*")))
-    
+
     count_lines_of_code(tmp_path)
     assert len(list(tmp_path.glob("*"))) == initial_file_count  # No temp files left
 
