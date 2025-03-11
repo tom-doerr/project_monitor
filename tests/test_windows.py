@@ -273,7 +273,7 @@ def test_pytest_output_parsing_edge_cases(tmp_path: Path):
         "output": "",
         "error": None,
     }
-    
+
     # Use tmp_path for Windows compatibility
     (tmp_path / "empty.txt").touch()
 
