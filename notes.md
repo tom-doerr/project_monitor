@@ -38,7 +38,11 @@
 10. ◻️ Implement caching layer
 11. ◻️ Add Azure Pipelines support
 12. ◻️ Implement real-time monitoring
-13. ◻️ Add memory leak detection
+13. ✅ Fixed pytest JSON parsing edge cases
+14. ✅ Implemented inode-based symlink tracking  
+15. ✅ Added Windows path case normalization
+16. ✅ Improved read-only file handling
+17. ◻️ Add memory leak detection
 
 ## Future Considerations
 - Add remote repository monitoring capability

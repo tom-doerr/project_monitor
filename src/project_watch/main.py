@@ -255,15 +255,20 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     if sys.platform == "win32":
         base_path = pathlib.Path(str(base_path).lower())
 
-    return sum(
-        _count_file_lines(real_path)
-        for path in base_path.rglob("*")
-        if (real_path := path.resolve()) not in counted
-        and not counted.add(real_path)  # Returns None, always False
-        and real_path.is_file()
-        and real_path.suffix == ".py"
-        and not _should_skip_file(real_path, counted)
-    )
+    total = 0
+    for path in base_path.rglob("*"):
+        try:
+            real_path = path.resolve(strict=True)
+            # Track by inode to handle symlinks/hardlinks
+            file_id = (real_path.stat().st_ino, real_path.device)
+            if file_id in counted or not real_path.is_file() or real_path.suffix != ".py":
+                continue
+                
+            counted.add(file_id)
+            total += _count_file_lines(real_path)
+        except (OSError, PermissionError, FileNotFoundError):
+            continue
+    return total
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
