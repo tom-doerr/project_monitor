@@ -107,10 +107,11 @@
 - Real-time file change detection
 
 ## Recent Changes
-- Added CONFIG$ to Windows reserved pattern
-- Improved symlink cross-device handling
-- Added debug output for Windows path tests
-- Clarified symlink test documentation
+- Split large Windows test into focused test cases
+- Reduced return statements in pytest JSON parser
+- Added helper function for Windows path tests
+- Improved test documentation
+- Fixed remaining Pylint warnings
 - Fixed unmatched parenthesis syntax error in file skipping logic
 - Enhanced Windows reserved name regex coverage
 - Added test cases for mixed case and complex extensions

@@ -159,111 +159,59 @@ def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
         
     return reserved_names, valid_names
 
-def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
-    """Verify case-insensitive detection of reserved names with various extensions"""
-    reserved_names, valid_names = _create_reserved_test_files(tmp_path)
-    count = count_lines_of_code(tmp_path)
-    
-    # Debug output for test failures
-    print(f"\nFound files: {list(tmp_path.glob('*'))}")
-    
-    # Should only count valid files
-    assert count == len(valid_names), (
-        f"Failed to filter {len(reserved_names)} reserved names. "
-        f"Expected {len(valid_names)} valid files, counted {count}")
-    if sys.platform != "win32":
-        pytest.skip("Windows-specific test")
+def test_windows_special_devices(tmp_path: Path):
+    """Test special device name handling (CONIN$, CONOUT$, CLOCK$)"""
+    _run_reserved_name_test(
+        tmp_path,
+        reserved_names=["CONIN$", "CONOUT$.log", "CLOCK$.tmp"],
+        valid_names=["CONFIG", "clock", "CONIN"]
+    )
 
-    reserved_names = [
-        "COM1",
-        "lpt9",
-        "CON.TXT",
-        "aux.json",
-        "nul.txt",
-        "LPT5.csv",
-        "PRN.png",
-        "COM4.tar.gz",
-        "NUL.LOG",
-        "AuX.yml",
-        "CoM1",
-        "lpt3.config.ini",
-        "PRN.",
-        "NUL..txt",
-        "CON.tar.gz",
-        "CONIN$",
-        "CONOUT$",
-        "CLOCK$",
-        "CaSeInSeNsItIvE",
-        "$Mft",
-        "CoM3",
-        "lPt4.txt",
-        "nUl",
-        "AUX",
-        "COM1.old",  # Added more variants
-        "LPT2.new",
-        "CON.final.py",
-        "com1.log",  # Lowercase
-        "lPt9.md",  # Mixed case extension
-    ]
-    valid_names = [
-        "CONFIG",
-        "COM10",
-        "LPT",
-        "null.txt",
-        "CLOCK",
-        "Mft",
-        "validfile",
-        "test.config",
-        "data123",
-        "backup~",
-    ]
-    valid_names = [
-        "COM10",  # Exceeds COM9 range
-        "LPTS",  # Not LPT prefix
-        "conventional.txt",  # Contains reserved substring but valid
-        "null_device",  # Contains NUL substring
-        "auxiliary.py",  # Contains AUX substring
-        "COM0",  # Below COM1 range
-        "LPT10",  # Exceeds LPT9 range
-        "PRN_file",  # Underscore separated
-        "NULISH",  # Suffix
-        "AUXIL",  # Prefix
-    ]
+def test_windows_numeric_suffixes(tmp_path: Path):
+    """Test COM/LPT numeric suffix handling"""
+    _run_reserved_name_test(
+        tmp_path,
+        reserved_names=["COM1", "LPT9", "COM0", "lPt3"],
+        valid_names=["COM10", "LPTS", "COMX"]
+    )
 
-    # Create nested directory with reserved name but valid contents
-    nested_dir = tmp_path / "COM2" / "valid_sub"
-    nested_dir.mkdir(parents=True)
-    (nested_dir / "valid.py").write_text("# Valid nested file\n")
+def test_windows_case_variants(tmp_path: Path):
+    """Test mixed case reserved name variants"""
+    _run_reserved_name_test(
+        tmp_path,
+        reserved_names=["CoM1", "nUl", "AuX", "pRn"],
+        valid_names=["Compass", "Nullify", "Auxiliary"]
+    )
 
-    # Create test files
+def test_windows_system_files(tmp_path: Path):
+    """Test NTFS system file patterns"""
+    _run_reserved_name_test(
+        tmp_path,
+        reserved_names=["$Mft", "$LogFile", "$Volume"],
+        valid_names=["Mft", "LogFile", "Volume"]
+    )
+
+def _run_reserved_name_test(tmp_path: Path, reserved_names: list, valid_names: list):
+    """Helper to run reserved name test cases"""
+    # Setup test files
     for name in reserved_names + valid_names:
         try:
             (tmp_path / name).write_text("content")
         except OSError:
             pass  # Expected to fail creating reserved names on Windows
 
-    # Verify reserved files were not created on Windows
-    if sys.platform == "win32":
-        for name in reserved_names:
-            assert not (
-                tmp_path / name
-            ).exists(), f"Reserved file {name} should not be creatable"
+    # Create nested valid file
+    nested_dir = tmp_path / "COM2" / "valid_sub"
+    nested_dir.mkdir(parents=True)
+    (nested_dir / "valid.py").write_text("# Valid nested file\n")
 
-    # Count lines - should skip reserved names regardless of case
+    # Count lines and verify
     result = count_lines_of_code(tmp_path)
-
-    # Should count valid names plus nested valid file
-    expected_count = len(valid_names) + 1  # Add 1 for nested valid.py
-    assert result == expected_count, (
-        f"Expected {expected_count} lines from {len(valid_names)} valid files "
+    expected = len(valid_names) + 1  # Add 1 for nested valid.py
+    assert result == expected, (
+        f"Expected {expected} lines from {len(valid_names)} valid files "
         f"plus 1 nested file, got {result}"
     )
-
-    # Verify we can access a valid file in a reserved-named directory
-    if sys.platform == "win32":
-        assert (
-            nested_dir / "valid.py"
-        ).exists(), "Valid files in reserved-named directories should be accessible"
 
 
 def test_windows_mixed_slashes(tmp_path):

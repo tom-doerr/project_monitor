@@ -70,18 +70,19 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
+    success = False
     json_match = re.search(r'{"\w+": \d+.*}', output)
-    if not json_match:
-        return False
-
-    try:
-        json_data = json.loads(json_match.group(0))
-        if isinstance(json_data, dict) and "passed" in json_data:
-            _update_results_from_json(json_data, result)
-            return True
-    except (json.JSONDecodeError, AttributeError, ValueError) as e:
-        result["error"] = f"JSON parsing failed: {str(e)}"
-    return False
+    
+    if json_match:
+        try:
+            json_data = json.loads(json_match.group(0))
+            if isinstance(json_data, dict) and "passed" in json_data:
+                _update_results_from_json(json_data, result)
+                success = True
+        except (json.JSONDecodeError, AttributeError, ValueError) as e:
+            result["error"] = f"JSON parsing failed: {str(e)}"
+    
+    return success
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
