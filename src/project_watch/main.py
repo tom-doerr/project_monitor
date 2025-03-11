@@ -160,7 +160,6 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
     # Handle different time formats with/without decimals and units
-    # Handle different time formats with/without decimals and units
     time_match = re.search(
         r"(\d+\.?\d*)\s*(?:s|sec|seconds?)\b",
         output.replace(",", ""),
@@ -169,7 +168,7 @@ def _extract_pytest_time(output: str) -> float:
     if not time_match:  # More robust fallback pattern
         time_match = re.search(r"\bin\s+(\d+\.\d+)\b", output)
     if not time_match:  # Fallback to looking for time format without unit
-        time_match = re.search(r" in (\d+\.?\d*)", output)
+        time_match = re.search(r" in ([\d\.]+)\s*(s|seconds?)", output, re.IGNORECASE)
     return float(time_match.group(1)) if time_match else 0.0
 
 
