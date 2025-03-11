@@ -3,7 +3,7 @@
 # Standard library imports
 import json
 import logging
-import pathlib 
+import pathlib
 import re
 import subprocess
 import sys
@@ -126,7 +126,9 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
         PatternMatchParams(pattern, groups, normalized_output, result)
         for pattern, groups in patterns
     ]
-    return any(_match_pattern(p) for p in params) or _handle_empty_results(normalized_output, result)
+    return any(_match_pattern(p) for p in params) or _handle_empty_results(
+        normalized_output, result
+    )
 
 
 def _extract_pytest_time(output: str) -> float:
@@ -217,6 +219,7 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
 
 from .path_validation import is_windows_reserved_path
 
+
 def _is_windows_reserved_path(path: pathlib.Path) -> bool:
     """Check if path contains Windows reserved names."""
     return is_windows_reserved_path(path)
@@ -283,16 +286,14 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.device)
-        
+
         should_skip = (
-            file_id in counted or 
-            not real_path.is_file() or 
-            real_path.suffix != ".py"
+            file_id in counted or not real_path.is_file() or real_path.suffix != ".py"
         )
-        
+
         if should_skip:
             return 0
-            
+
         counted.add(file_id)
         return _count_file_lines(real_path)
 

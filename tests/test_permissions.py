@@ -78,5 +78,6 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         with caplog.at_level(logging.ERROR):
             result = _process_code_path(tmp_path, set())
             assert result == 0, f"Failed to handle {exc_type.__name__}"
-            assert any(msg in record.message for record in caplog.records), \
-                f"Missing error log for {exc_type.__name__}"
+            assert any(
+                msg in record.message for record in caplog.records
+            ), f"Missing error log for {exc_type.__name__}"
