@@ -215,10 +215,16 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     if sys.platform != "win32":
         return False
 
-    # Use regex to match entire name with possible extension
-    name = real_path.name
-    pattern = r"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$"
-    return re.fullmatch(pattern, name, re.IGNORECASE) is not None
+    # Expanded pattern with all reserved names and case-insensitive match
+    reserved_pattern = (
+        r"^(CON|PRN|AUX|NUL|CLOCK\$|"
+        r"COM[1-9]|LPT[1-9]|"
+        r"\$Mft|\$MftMirr|\$LogFile|\$Volume|"
+        r"\$AttrDef|\$Bitmap|\$Boot|\$BadClus|"
+        r"\$Secure|\$Upcase|\$Extend|"
+        r"\$Quota|\$ObjId|\$Reparse)(\..*)?$"
+    )
+    return re.fullmatch(reserved_pattern, real_path.name, re.IGNORECASE) is not None
 
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:

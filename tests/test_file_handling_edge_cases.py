@@ -38,8 +38,11 @@ def test_partial_read_failure(tmp_path: pathlib.Path, monkeypatch):
     test_file = tmp_path / "partial.txt"
     test_file.write_text("Valid\nContent")
 
+    # Test multiple read failure scenarios
     def mock_read(*args, **kwargs):
         raise IOError("Simulated partial read failure")
-
+        
+    monkeypatch.setattr("builtins.open", mock_open(read_data=""))
+    monkeypatch.setattr("pathlib.Path.read_bytes", mock_read)
     monkeypatch.setattr(_count_file_lines, "__code__", mock_read.__code__)
     assert count_lines_of_code(tmp_path) == 0
