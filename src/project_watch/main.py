@@ -37,7 +37,7 @@ def get_pylint_score() -> float:
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
-        return max(0.0, min(float(match.group(1), 10.0)) if match else 0.0  # Clamp score between 0-10
+        return max(0.0, min(float(match.group(1)), 10.0)) if match else 0.0  # Clamp score between 0-10
 
     try:
         proc = subprocess.run(
@@ -53,7 +53,7 @@ def get_pylint_score() -> float:
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
         return 0.0
-    return result if 'result' in locals() else 0.0
+    return result if 'result' in locals() and result is not None else 0.0
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -259,7 +259,7 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"CON|PRN|AUX|NUL|CLOCK\$|"
         r"COM[0-9]|LPT[0-9]|"  # COM0-COM9, LPT0-LPT9
         r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|CLOCK\$|"
-        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
+        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|CLOCK\$|"
         r"\$Mft|\$LogFile|\$Volume|"
         r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
         r"CONFIG\$"
