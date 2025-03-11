@@ -5,11 +5,9 @@
 # Standard library imports
 import json
 import logging
-import pathlib
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
 from datetime import datetime
 
 # Third-party imports
@@ -306,8 +304,7 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
 
     except (OSError, PermissionError, FileNotFoundError) as e:
         logger.debug("File processing error: %s", str(e))
-
-    return line_count
+        return 0
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
