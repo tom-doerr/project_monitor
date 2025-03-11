@@ -146,6 +146,9 @@
 
 ## Fixed in This Batch
 - Fixed Windows reserved name validation syntax error
+- Added 10+ reserved name variants with mixed cases/extensions
+- Tested 8+ valid name false positive scenarios
+- Verified nested valid files in reserved-named directories
 - Fixed extremely long line counting logic
 - Improved 1GB file test generation with chunked writes
 - Initialized pytest error field as empty string

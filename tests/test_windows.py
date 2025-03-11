@@ -158,8 +158,29 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         "COM4.tar.gz",
         "NUL.LOG",
         "AuX.yml",
+        "CoM1",  # Mixed case
+        "lpt3.config.ini",  # Multiple extensions
+        "PRN.",  # Empty extension
+        "NUL..txt",  # Double dot
+        "CON.tar.gz"  # Multiple extensions
     ]
-    valid_names = ["COM10", "LPTS", "conventional.txt", "null_device", "auxiliary.py"]
+    valid_names = [
+        "COM10",  # Exceeds COM9 range
+        "LPTS",   # Not LPT prefix
+        "conventional.txt",  # Contains reserved substring but valid
+        "null_device",  # Contains NUL substring
+        "auxiliary.py",  # Contains AUX substring
+        "COM0",  # Below COM1 range
+        "LPT10",  # Exceeds LPT9 range
+        "PRN_file",  # Underscore separated
+        "NULISH",  # Suffix
+        "AUXIL"  # Prefix
+    ]
+
+    # Create nested directory with reserved name but valid contents
+    nested_dir = tmp_path / "COM2" / "valid_sub"
+    nested_dir.mkdir(parents=True)
+    (nested_dir / "valid.py").write_text("# Valid nested file\n")
 
     # Create test files
     for name in reserved_names + valid_names:
@@ -178,8 +199,17 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
     # Count lines - should skip reserved names regardless of case
     result = count_lines_of_code(tmp_path)
 
-    # Should only count the valid names
-    assert result == len(valid_names)
+    # Should count valid names plus nested valid file
+    expected_count = len(valid_names) + 1  # Add 1 for nested valid.py
+    assert result == expected_count, (
+        f"Expected {expected_count} lines from {len(valid_names)} valid files "
+        f"plus 1 nested file, got {result}"
+    )
+
+    # Verify we can access a valid file in a reserved-named directory
+    if sys.platform == "win32":
+        assert (nested_dir / "valid.py").exists(), \
+            "Valid files in reserved-named directories should be accessible"
 
 
 def test_windows_mixed_slashes(tmp_path):
