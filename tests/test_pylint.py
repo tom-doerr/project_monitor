@@ -13,6 +13,7 @@ def test_get_pylint_score_success():
         )
         assert get_pylint_score() == 9.5
 
+
 def test_get_pylint_score_minimum():
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = subprocess.CompletedProcess(
@@ -22,6 +23,7 @@ def test_get_pylint_score_minimum():
             stderr="",
         )
         assert get_pylint_score() == 0.0
+
 
 def test_get_pylint_score_maximum():
     with patch("subprocess.run") as mock_run:
@@ -33,6 +35,7 @@ def test_get_pylint_score_maximum():
         )
         assert get_pylint_score() == 10.0
 
+
 def test_get_pylint_score_invalid_output():
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = subprocess.CompletedProcess(
@@ -43,6 +46,7 @@ def test_get_pylint_score_invalid_output():
         )
         assert get_pylint_score() == 0.0
 
+
 def test_get_pylint_score_malformed_number():
     with patch("subprocess.run") as mock_run, patch("logging.debug") as mock_debug:
         mock_run.return_value = subprocess.CompletedProcess(
@@ -52,7 +56,10 @@ def test_get_pylint_score_malformed_number():
             stderr="",
         )
         assert get_pylint_score() == 0.0
-        mock_debug.assert_called_with("Invalid pylint score format: %s - %s", "9.5.0", ANY)
+        mock_debug.assert_called_with(
+            "Invalid pylint score format: %s - %s", "9.5.0", ANY
+        )
+
 
 def test_get_pylint_score_error():
     with patch("subprocess.run") as mock_run:
