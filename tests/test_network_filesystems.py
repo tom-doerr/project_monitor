@@ -35,7 +35,9 @@ def _create_delayed_resolve(original):
                 return original(self, *args, **kwargs)
             except FileNotFoundError as e:
                 if attempt == 2:
-                    raise FileNotFoundError(f"Network timeout after 3 attempts: {str(e)}") from e
+                    raise FileNotFoundError(
+                        f"Network timeout after 3 attempts: {str(e)}"
+                    ) from e
                 time.sleep(1 * (attempt + 1))  # Exponential backoff
                 time.sleep(0.5 * attempt)
         return None  # Explicit return for consistent-return
