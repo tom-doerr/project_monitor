@@ -39,11 +39,29 @@ def test_nested_symlinks(tmp_path: Path):
     """Test complex symlink scenarios"""
     real_file = tmp_path / "target.py"
     real_file.write_text("# Target\n")
-
+    
     link1 = tmp_path / "link1.py"
     os.symlink(real_file, link1)
-
+    
     link2 = tmp_path / "link2.py"
     os.symlink(link1, link2)
+    
+    assert count_lines_of_code(tmp_path) == 1
 
+def test_nested_symlink_chain(tmp_path: Path):
+    """Test symlink chain resolution"""
+    # Create chain: linkA -> linkB -> linkC -> real_file
+    real_file = tmp_path / "real.py"
+    real_file.write_text("x = 1\n")
+    
+    link_c = tmp_path / "linkC.py"
+    os.symlink(real_file, link_c)
+    
+    link_b = tmp_path / "linkB.py"
+    os.symlink(link_c, link_b)
+    
+    link_a = tmp_path / "linkA.py" 
+    os.symlink(link_b, link_a)
+    
+    # Should count lines once despite 3 symlinks
     assert count_lines_of_code(tmp_path) == 1

@@ -198,15 +198,18 @@
 - Fixed UNC path normalization edge cases
 
 ## New Test Coverage
-- Nested symlink chains
-- Mixed case Windows paths  
+- Nested symlink chains ✅
+- Mixed case Windows paths ✅  
 - Alternative pytest output formats
-- Directory symlink handling
-- Network filesystem timeout retries
+- Directory symlink handling ✅
+- Network filesystem timeout retries ✅
 - Windows reserved name case insensitivity
-- Network latency timeout handling
+- Network latency timeout handling ✅
 - Reserved name variant validation
 - Valid name false positive checks
+- Symlink chain resolution ✅
+- Mixed slash directions ✅
+- Network filesystem backoff retries ✅
 
 ## Pending Test Cases
 - [x] Unicode normalization edge cases (added test_unicode_paths.py)
