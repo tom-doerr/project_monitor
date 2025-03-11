@@ -63,7 +63,9 @@ def test_reserved_names_with_extensions(tmp_path: Path):
 
     reserved_files = [
         "COM1.txt",
+        "COM0.log",  # COM0 edge case
         "lpt2.tar.gz",
+        "lpt0.config",  # LPT0 edge case
         "nul.config.ini",
         "CONFIG.INI",
         "aux.backup.bak",
@@ -71,13 +73,18 @@ def test_reserved_names_with_extensions(tmp_path: Path):
         "LPT4.config.yml",  # Numeric suffix
         "nul..config",  # Double extension
         "CLOCK$.log",  # Special device
+        "CONFIG$",  # Extended device name
+        "FAX$.tmp",  # Fax device
         "CONFIG~.tmp",  # Temporary file pattern
         "CONIN$.txt",  # Special device with extension
         "LPT1.config.ini",  # Reserved name with multiple extensions
         "ＣＯＮＩＮ＄.txt",  # Fullwidth Unicode homoglyph
+        "ＣＯＭ１.txt",  # Fullwidth COM1
         "COM1. .txt",  # Space in extension
         "LPT1..config",  # Double dot extension
         "NUL.config..",  # Trailing double dot
+        "COMⅨ.txt",  # Roman numeral homoglyph
+        "CLOCK％.log",  # Unicode percent homoglyph
     ]
     valid_files = [
         "COM10.log",

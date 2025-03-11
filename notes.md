@@ -232,11 +232,14 @@
 - Validated 15+ edge cases for Windows reserved names
 - Verified case folding for 100+ unicode characters
 - Fixed Windows reserved name validation syntax error (unclosed parenthesis)
-- Added 25 reserved name variants including:
+- Added 28 reserved name variants including:
   - Special device names (CONIN$, CONOUT$, CLOCK$)
   - NTFS system files ($Mft, $LogFile, $Volume)
-  - Case variants with numeric suffixes (COM1-COM9, LPT1-LPT9)
+  - Case variants with numeric suffixes (COM0-COM9, LPT0-LPT9)
   - Mixed case variations (CoM9, lPt1)
+  - Extended device names (CONFIG$, FAX$)
+  - Unicode homoglyph variations (ＣＯＭ１, COMⅨ, CLOCK％)
+  - Zero-prefixed variants (COM0/LPT0)
 - Tested 15+ valid name false positive scenarios
 - Verified case folding behavior with Unicode characters
 - Added CONIN$/CONOUT$/CLOCK$ special device testing
