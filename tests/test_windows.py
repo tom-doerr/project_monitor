@@ -147,8 +147,18 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
-    reserved_names = ["COM1", "lpt9", "CON.TXT", "aux.json", "nul.txt", "LPT5.csv", 
-                     "PRN.png", "COM4.tar.gz", "NUL.LOG", "AuX.yml"]
+    reserved_names = [
+        "COM1",
+        "lpt9",
+        "CON.TXT",
+        "aux.json",
+        "nul.txt",
+        "LPT5.csv",
+        "PRN.png",
+        "COM4.tar.gz",
+        "NUL.LOG",
+        "AuX.yml",
+    ]
     valid_names = ["COM10", "LPTS", "conventional.txt", "null_device", "auxiliary.py"]
 
     # Create test files
@@ -161,7 +171,9 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
     # Verify reserved files were not created on Windows
     if sys.platform == "win32":
         for name in reserved_names:
-            assert not (tmp_path / name).exists(), f"Reserved file {name} should not be creatable"
+            assert not (
+                tmp_path / name
+            ).exists(), f"Reserved file {name} should not be creatable"
 
     # Count lines - should skip reserved names regardless of case
     result = count_lines_of_code(tmp_path)
