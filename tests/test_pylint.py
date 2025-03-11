@@ -7,7 +7,6 @@ from project_watch.main import (
 
 def test_get_pylint_score_success():
     with patch("subprocess.run") as mock_run:
-        # Configure both stdout and stderr to avoid MagicMock errors
         mock_run.return_value = subprocess.CompletedProcess(
             args=[],
             returncode=0,
@@ -16,6 +15,46 @@ def test_get_pylint_score_success():
         )
         assert get_pylint_score() == 9.5
 
+def test_get_pylint_score_minimum():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="Your code has been rated at 0.0/10",
+            stderr="",
+        )
+        assert get_pylint_score() == 0.0
+
+def test_get_pylint_score_maximum():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="Your code has been rated at 10.0/10",
+            stderr="",
+        )
+        assert get_pylint_score() == 10.0
+
+def test_get_pylint_score_invalid_output():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="No score here",
+            stderr="Also no score",
+        )
+        assert get_pylint_score() == 0.0
+
+def test_get_pylint_score_malformed_number():
+    with patch("subprocess.run") as mock_run, patch("logging.debug") as mock_debug:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="Your code has been rated at 9.5.0/10",  # Invalid number format
+            stderr="",
+        )
+        assert get_pylint_score() == 0.0
+        mock_debug.assert_called_with("Invalid pylint score format: %s - %s", "9.5.0", mock.ANY)
 
 def test_get_pylint_score_error():
     with patch("subprocess.run") as mock_run:
