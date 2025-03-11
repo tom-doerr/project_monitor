@@ -93,8 +93,7 @@ def test_handles_invalid_pytest_json():
 
         results = get_pytest_results()
         assert "error" in results, "Should have error key"
-        assert (
-            "JSON" in results["error"]
-        ), f"Should detect JSON parsing error, got {results['error']}"
+        assert results["error"].startswith("JSON"), \
+            f"Should detect JSON parsing error, got: {results['error']}"
         assert results.get("passed", 0) == 0  # Should fall back to text parsing
         assert results.get("failed", 0) == 0  # Default values on parse failure

@@ -30,7 +30,7 @@ def test_no_read_permission(tmp_path):
 
 @patch("project_watch.main.pathlib.Path.resolve")
 def test_filesystem_errors(mock_resolve, caplog):
-    mock_resolve.side_effect = PermissionError("Mocked permission error")
+    mock_resolve.side_effect = PermissionError("Mocked permission error for path /test")
     with caplog.at_level(logging.DEBUG):
         with pytest.raises(PermissionError):
             count_lines_of_code()

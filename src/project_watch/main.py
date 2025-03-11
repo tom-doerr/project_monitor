@@ -34,9 +34,11 @@ def get_pylint_score() -> float:
             capture_output=True,
             text=True,
             check=False,
-            timeout=30,
+            timeout=15,  # Reduced timeout for test environments
             cwd=pathlib.Path(__file__).parent.parent,
         )
+    except subprocess.TimeoutExpired:
+        return 0.0  # Return minimum score on timeout
 
         # Check if returncode exists before comparison
         if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
