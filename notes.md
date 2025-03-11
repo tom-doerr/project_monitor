@@ -125,6 +125,9 @@
 - Improved error handling in Pylint integration
 - Enhanced Windows reserved name regex coverage
 - Added test cases for mixed case and complex extensions
+- Fixed unclosed try block in file line counting
+- Added proper inode_cache parameter passing
+- Added comprehensive error handling for file operations
 - Fixed PEP8 import ordering in test files
 - Removed unused MagicMock import
 - Fixed symlink handling in line counting
