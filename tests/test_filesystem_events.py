@@ -1,6 +1,5 @@
 import time
 from pathlib import Path
-import pytest
 from watchdog.observers import Observer
 from project_watch.main import ProjectWatcher  # pylint: disable=no-name-in-module
 
