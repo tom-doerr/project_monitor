@@ -265,7 +265,7 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"\$Mft|\$LogFile|\$Volume|"
         r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$"
         r")(\..+)?$",  # Require at least 1 character after extension
-        re.IGNORECASE
+        re.IGNORECASE,
     )
     return reserved_pattern.fullmatch(real_path.name) is not None
 
