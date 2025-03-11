@@ -63,16 +63,20 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     """Test filesystem error handling with different exception types."""
 
     for exc_type, msg in ERROR_CASES:
-        # Create mock that raises specific error
-        def _raise_exc(*args, _exc=exc_type, _msg=msg, **kwargs):
-            raise _exc(_msg)
+        # Create mock that raises specific error with proper chaining
+        monkeypatch.setattr(
+            "project_watch.main._count_file_lines",
+            lambda *args, **kwargs: (_ for _ in ()).throw(exc_type(msg))
+        )
+        caplog.clear()
 
-        mock_file = MagicMock()
-        mock_file.open.side_effect = _raise_exc
-        monkeypatch.setattr("pathlib.Path", mock_file)
+        # Attempt to count lines
         with caplog.at_level(logging.ERROR):
             result = count_lines_of_code(tmp_path)
             assert result == 0, f"Failed to handle {exc_type.__name__}"
+            
+            # Verify error message contains both our custom message and the path
             assert any(
-                msg in record.message for record in caplog.records
-            ), f"Missing error log for {exc_type.__name__}"
+                msg in record.message and str(tmp_path) in record.message
+                for record in caplog.records
+            ), f"Missing expected error message for {exc_type.__name__}"
