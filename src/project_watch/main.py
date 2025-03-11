@@ -294,16 +294,14 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        
-        if (real_path.is_file() 
-            and real_path.suffix == ".py" 
-            and file_id not in counted):
+
+        if real_path.is_file() and real_path.suffix == ".py" and file_id not in counted:
             counted.add(file_id)
             result = _count_file_lines(real_path)
 
     except (OSError, PermissionError, FileNotFoundError) as e:
         logger.debug("File processing error: %s", str(e))
-    
+
     return result
 
 
@@ -334,7 +332,11 @@ def _log_file_error(error: Exception, path: pathlib.Path) -> None:
     log_level = logging.WARNING if isinstance(error, PermissionError) else logging.DEBUG
     resolved_path = path.resolve() if path.exists() else path
     error_msg = f"{error.__class__.__name__} processing {resolved_path}: {str(error)}"
-    logger.log(log_level, error_msg, extra={"path": str(resolved_path), "error_type": error.__class__.__name__})
+    logger.log(
+        log_level,
+        error_msg,
+        extra={"path": str(resolved_path), "error_type": error.__class__.__name__},
+    )
 
 
 def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:
