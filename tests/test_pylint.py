@@ -61,7 +61,28 @@ def test_get_pylint_score_malformed_number():
         )
 
 
-def test_get_pylint_score_error():
+def test_get_pylint_score_error(caplog):
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = Exception("Pylint failed")
+        assert get_pylint_score() == 0.0
+        assert "Pylint error: Pylint failed" in caplog.text
+
+def test_get_pylint_score_from_stderr():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="No score here",
+            stderr="Your code has been rated at 7.5/10",
+        )
+        assert get_pylint_score() == 7.5
+
+def test_get_pylint_score_high_return_code():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=32,  # Above threshold
+            stdout="Your code has been rated at 8.5/10",
+            stderr="",
+        )
         assert get_pylint_score() == 0.0
