@@ -25,14 +25,9 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-    cmd = [
-        "pylint", 
-        "--disable=all", 
-        "--enable=similarities", 
-        "--score=yes", 
-        "src"
-    ]
+    cmd = ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src")
     cwd = pathlib.Path(__file__).parent.parent
+    result = 0.0  # Initialize with default value
     
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
@@ -53,7 +48,8 @@ def get_pylint_score() -> float:
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
         return 0.0
-    return result if 'result' in locals() and result is not None else 0.0
+    # Initialize result with default value to prevent E0606
+    return getattr(locals(), 'result', 0.0)
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -74,19 +70,18 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    json_match = re.search(r'{"\w+": \d+.*}', output)
-    success = False
-    
-    if json_match:
-        try:
-            json_data = json.loads(json_match.group(0))
-            if isinstance(json_data, dict) and "passed" in json_data:
-                _update_results_from_json(json_data, result)
-                success = True
-        except (json.JSONDecodeError, AttributeError, ValueError) as e:
-            result["error"] = f"JSON parsing failed: {str(e)}"
+    if not (json_match := re.search(r'{"\w+": \d+.*}', output)):
+        return False
 
-    return success
+    try:
+        json_data = json.loads(json_match.group(0))
+        if isinstance(json_data, dict) and "passed" in json_data:
+            _update_results_from_json(json_data, result)
+            return True
+    except (json.JSONDecodeError, AttributeError, ValueError) as e:
+        result["error"] = f"JSON parsing failed: {str(e)}"
+    
+    return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -199,6 +194,19 @@ def _handle_empty_results(output: str, result: dict) -> bool:
 
 def get_pytest_results() -> dict:
     """Run pytest and return results summary with error handling."""
+    def _handle_error(e: Exception) -> dict:
+        error_details = []
+        if hasattr(e, "stderr") and e.stderr.strip():
+            error_details.append(e.stderr.strip())
+        if hasattr(e, "stdout") and e.stdout.strip():
+            error_details.append(e.stdout.strip())
+        return {
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0,
+            "error": f"Pytest error: {' | '.join(error_details)[:500]}" if error_details else str(e)
+        }
+
     try:
         result = subprocess.run(
             ["pytest", "--tb=no", "."],
@@ -208,22 +216,10 @@ def get_pytest_results() -> dict:
             timeout=30,
         )
         results = _parse_pytest_output(result.stdout)
-        results.setdefault("error", "")  # Ensure error field exists
+        results.setdefault("error", "")
         return results
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
-        # Include both stderr and stdout in error details
-        error_details = []
-        if hasattr(e, "stderr") and e.stderr.strip():
-            error_details.append(e.stderr.strip())
-        if hasattr(e, "stdout") and e.stdout.strip():
-            error_details.append(e.stdout.strip())
-
-        error_msg = (
-            f"Pytest error: {' | '.join(error_details)[:500]}"
-            if error_details
-            else str(e)
-        )
-        return {"passed": 0, "failed": 0, "skipped": 0, "error": error_msg}
+        return _handle_error(e)
 
 
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
@@ -333,23 +329,15 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
 
 def _resolve_with_retry(path: pathlib.Path, retries: int = 3, delay: float = 1.5) -> pathlib.Path:
     """Resolve path with retries for network filesystem timeouts."""
-
-    attempt = 0
-    last_err = None
-
-    while attempt <= retries:
+    for attempt in range(retries + 1):
         try:
             return path.resolve(strict=True)
         except OSError as e:
-            last_err = e
-            if e.errno not in (errno.ETIMEDOUT, errno.EHOSTUNREACH):
-                raise
-            time.sleep(delay * (2**attempt))
-            attempt += 1
-
-    raise IOError(
-        f"Path resolution failed after {retries} retries: {path}"
-    ) from last_err
+            if e.errno not in (errno.ETIMEDOUT, errno.EHOSTUNREACH) or attempt == retries:
+                raise IOError(f"Path resolution failed after {retries} retries: {path}") from e
+            time.sleep(delay * (2 ** attempt))
+    
+    raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
 def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
