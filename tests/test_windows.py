@@ -162,11 +162,11 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         "lpt3.config.ini",  # Multiple extensions
         "PRN.",  # Empty extension
         "NUL..txt",  # Double dot
-        "CON.tar.gz"  # Multiple extensions
+        "CON.tar.gz",  # Multiple extensions
     ]
     valid_names = [
         "COM10",  # Exceeds COM9 range
-        "LPTS",   # Not LPT prefix
+        "LPTS",  # Not LPT prefix
         "conventional.txt",  # Contains reserved substring but valid
         "null_device",  # Contains NUL substring
         "auxiliary.py",  # Contains AUX substring
@@ -174,7 +174,7 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         "LPT10",  # Exceeds LPT9 range
         "PRN_file",  # Underscore separated
         "NULISH",  # Suffix
-        "AUXIL"  # Prefix
+        "AUXIL",  # Prefix
     ]
 
     # Create nested directory with reserved name but valid contents
@@ -208,8 +208,9 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
 
     # Verify we can access a valid file in a reserved-named directory
     if sys.platform == "win32":
-        assert (nested_dir / "valid.py").exists(), \
-            "Valid files in reserved-named directories should be accessible"
+        assert (
+            nested_dir / "valid.py"
+        ).exists(), "Valid files in reserved-named directories should be accessible"
 
 
 def test_windows_mixed_slashes(tmp_path):
