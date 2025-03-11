@@ -132,15 +132,24 @@ def test_long_path_handling(tmp_path):
 
 
 def test_windows_unc_paths(tmp_path):
-    """Test UNC path handling"""
-    # Create files using normal Path operations first
-    share_path = tmp_path / "share"
-    share_path.mkdir()
-    test_file = share_path / "test.py"
-    test_file.write_text("# UNC path test\nx = 1\n")
+    """Test UNC path handling including reserved names."""
+    # Test valid UNC path
+    valid_share = tmp_path / "share"
+    valid_share.mkdir()
+    (valid_share / "test.py").write_text("# Valid UNC test\nx = 1\n")
+    assert count_lines_of_code(valid_share) == 2
 
-    # Then verify Windows path handling
-    assert count_lines_of_code(share_path) == 2
+    # Test reserved UNC path
+    reserved_unc = tmp_path / "\\\\server\\CONIN$"
+    reserved_unc.mkdir(parents=True, exist_ok=True)
+    (reserved_unc / "test.py").write_text("# Should be skipped\n")
+    assert count_lines_of_code(reserved_unc) == 0
+
+    # Test case-insensitive reserved UNC
+    mixed_case_unc = tmp_path / "\\\\Server\\ClOcK$"
+    mixed_case_unc.mkdir(parents=True, exist_ok=True)
+    (mixed_case_unc / "test.py").write_text("# Should be skipped\n")
+    assert count_lines_of_code(mixed_case_unc) == 0
 
 
 def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
