@@ -28,10 +28,21 @@ def get_pylint_score() -> float:
 
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
-        match = re.search(r"rated at (\d+\.?\d*)/10", text)
-        return (
-            max(0.0, min(float(match.group(1)), 10.0)) if match else 0.0
-        )  # Clamp score between 0-10
+        matches = re.findall(r"rated at (\d+\.?\d*)/10", text)
+        if not matches:
+            return 0.0
+            
+        # Validate all found scores and take highest valid one
+        valid_scores = []
+        for score_str in matches:
+            try:
+                score = float(score_str)
+                if 0.0 <= score <= 10.0:
+                    valid_scores.append(score)
+            except ValueError:
+                continue
+                
+        return max(valid_scores) if valid_scores else 0.0
 
     try:
         proc = subprocess.run(
