@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import pytest
+from unittest.mock import patch
 from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
 

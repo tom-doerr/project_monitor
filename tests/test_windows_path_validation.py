@@ -103,6 +103,9 @@ def test_reserved_names_with_extensions(tmp_path: Path):
         "COM1.txt",
         "COM0.log",  # COM0 edge case
         "lpt2.tar.gz",
+        "CLOCK$.tmp",  # Special device
+        "CONIN$.log",  # Input device
+        "CoM1.TxT",  # Mixed case
         "lpt0.config",  # LPT0 edge case
         "nul.config.ini",
         "CONFIG.INI",
