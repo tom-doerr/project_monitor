@@ -261,7 +261,9 @@
 - Improved pytest parallel execution output handling
 - Fixed UNC path case normalization edge cases
 - Improved Windows reserved name regex coverage with extensions
-- Fixed test assertion for reserved name filtering
+- Fixed Windows test assertion logic that incorrectly counted nested files in reserved directories
+- Added reserved names list to test error output for better debugging
+- Verified COM2 directory exclusion in Windows path validation
 - Added explicit error messages to test assertions
 - Verified case-insensitive matching for reserved names
 - Added case-insensitive matching for reserved names

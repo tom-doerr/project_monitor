@@ -214,8 +214,8 @@ def _run_reserved_name_test(tmp_path: Path, reserved_names: list, valid_names: l
     result = count_lines_of_code(tmp_path)
     expected = len(valid_names)  # Nested file in reserved directory should be excluded
     assert result == expected, (
-        f"Expected {expected} lines from {len(valid_names)} valid files "
-        f"plus 1 nested file, got {result}"
+        f"Expected {expected} lines from {len(valid_names)} valid files, got {result}. "
+        f"Reserved files: {reserved_names}"
     )
 
 
