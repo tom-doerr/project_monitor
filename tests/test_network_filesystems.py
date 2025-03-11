@@ -71,7 +71,7 @@ def test_mixed_network_errors(tmp_path, monkeypatch):
     def resolve_with_errors(self):
           try:
             raise next(error_sequence)
-        except StopIteration:
+            except StopIteration:
             return pathlib.Path.resolve(self)
         return None  # Explicit fallback return
 

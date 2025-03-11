@@ -360,6 +360,12 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
 
 
 def _count_valid_file_lines(  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,too-many-branches
+    path: pathlib.Path,
+    counted: set,
+    inode_cache: set,
+    encoding: str = "utf-8",
+    errors: str = "replace",
+) -> int:
     """Count lines in valid, accessible files with inode tracking."""
     try:
         resolved_path = _resolve_with_retry(path)
