@@ -53,6 +53,7 @@ ERROR_CASES = [
     (OSError, "No space left on device"),
 ]
 
+
 def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     """Test filesystem error handling with different exception types."""
     from unittest.mock import MagicMock
@@ -61,7 +62,7 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         # Create mock that raises specific error
         def _raise_exc(*args, _exc=exc_type, _msg=msg, **kwargs):
             raise _exc(_msg)
-        
+
         mock_file = MagicMock()
         mock_file.open.side_effect = _raise_exc
         monkeypatch.setattr("pathlib.Path", mock_file)
