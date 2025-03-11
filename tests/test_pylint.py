@@ -61,6 +61,26 @@ def test_get_pylint_score_malformed_number():
             "Invalid pylint score format: %s - %s", "9.5.0", ANY
         )
 
+def test_get_pylint_score_above_max():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="Your code has been rated at 12.0/10",
+            stderr="",
+        )
+        assert get_pylint_score() == 10.0
+
+def test_get_pylint_score_below_min():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="Your code has been rated at -5.0/10", 
+            stderr="",
+        )
+        assert get_pylint_score() == 0.0
+
 
 def test_get_pylint_score_error(caplog):
     with patch("subprocess.run") as mock_run:
