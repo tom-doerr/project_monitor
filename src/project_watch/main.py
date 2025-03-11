@@ -328,16 +328,16 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         pathlib.Path(str(base_path).lower()) if sys.platform == "win32" else base_path
     )
 
-    return sum(_process_file(path, counted) for path in base_path.rglob("*"))
+    return sum(_process_file(path, counted, inode_cache) for path in base_path.rglob("*"))
 
 
-def _process_file(path: pathlib.Path, counted: set) -> int:
+def _process_file(path: pathlib.Path, counted: set, inode_cache: set) -> int:
     """Process individual files for line counting."""
     try:
         return (
             0
             if _should_skip_file(path, counted)
-            else _count_valid_file_lines(path, counted)
+            else _count_valid_file_lines(path, counted, inode_cache)
         )
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
@@ -374,7 +374,7 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
     raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
-def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
+def _count_valid_file_lines(path: pathlib.Path, counted: set, inode_cache: set) -> int:
     """Count lines in valid, accessible files."""
     try:
         resolved_path = _resolve_with_retry(path)
@@ -398,6 +398,9 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
             
         logger.debug("Counted %d lines in %s", line_count, normalized_path)
         return line_count
+    except Exception as e:
+        _log_file_error(e, path)
+        return 0
 
 
 def _log_file_error(error: Exception, path: pathlib.Path) -> None:
