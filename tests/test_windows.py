@@ -141,22 +141,22 @@ def test_long_path_handling(tmp_path):
     ("CLOCK$", "time.txt", 1, None),
     ("LPT1", None, None, "reserved Windows name"),
 ])
-def test_windows_unc_paths(tmp_path, unc_name, path_suffix, expected_lines, expected_error):
+def test_windows_unc_paths(tmp_path, unc_name, path_suffix, expected_lines, expected_error):  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
     """Test UNC path handling with various reserved names and cases."""
     test_dir = tmp_path / unc_name
     test_dir.mkdir(parents=True, exist_ok=True)
     
-    if path_suffix:
-        (test_dir / path_suffix).write_text("# Test content\n" * (expected_lines or 1))
+    # Create test file if specified
+    (test_dir / path_suffix).write_text("# Test content\n" * expected_lines) if path_suffix else None
     
+    # Validate expectations
     if expected_error:
         with pytest.raises(ValueError, match=expected_error):
             count_lines_of_code(test_dir)
-    else:
-        result = count_lines_of_code(test_dir)
-        assert result == expected_lines, (
-            f"Expected {expected_lines} lines, got {result} for {unc_name}"
-        )
+        return
+    
+    result = count_lines_of_code(test_dir)
+    assert result == expected_lines, f"Expected {expected_lines}, got {result} for {unc_name}"
 
 
 def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
