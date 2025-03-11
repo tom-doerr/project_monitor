@@ -61,9 +61,13 @@ def is_windows_reserved_path(path: Path) -> bool:
     if sys.platform != "win32":
         return False
 
-    result = False
     try:
-        result = any(_RESERVED_PATTERN.match(part) for part in path.resolve().parts)
+        resolved = path.resolve()
+        # Check all path components against the reserved pattern
+        return any(
+            _RESERVED_PATTERN.fullmatch(part)
+            for part in resolved.parts
+            if part.split('.')[0]  # Handle extensions properly
+        )
     except OSError:
-        pass  # Default to False on resolution errors
-    return result
+        return False  # Default to False on resolution errors

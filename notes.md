@@ -181,6 +181,10 @@
 - [ ] Add Azure Fileshare validation
 - [x] Fixed undefined line_count error in file processing  
 - [x] Cleaned up duplicate dataclass import
+- [x] Fixed pytest time parsing with multiple format support
+- [x] Expanded Windows reserved name regex (CLOCK$, COM0/LPT0)
+- [x] Added error field initialization in pytest results
+- [x] Verified Windows reserved name case insensitivity
 - [x] Fixed Python import order violations
 - [x] Added 15 new Windows path validation test cases
 - [x] Implemented extended pytest output pattern matching

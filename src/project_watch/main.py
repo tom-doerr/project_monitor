@@ -145,9 +145,11 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
-    if match := re.search(r" in (\d+\.?\d*)s", output):
-        return float(match.group(1))
-    return 0.0
+    # Handle different time formats with/without decimals and units
+    time_match = re.search(r" in (\d+\.?\d*)s(?:ec)?(?:onds?)?\b", output.replace(",", ""))
+    if not time_match:  # Fallback to seconds keyword
+        time_match = re.search(r"(\d+\.\d+) seconds?", output)
+    return float(time_match.group(1)) if time_match else 0.0
 
 
 @dataclass
@@ -199,7 +201,9 @@ def get_pytest_results() -> dict:
             check=False,
             timeout=30,
         )
-        return _parse_pytest_output(result.stdout)
+        results = _parse_pytest_output(result.stdout)
+        results.setdefault("error", "")  # Ensure error field exists
+        return results
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
         # Include both stderr and stdout in error details
         error_details = []
