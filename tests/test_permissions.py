@@ -51,6 +51,8 @@ ERROR_CASES = [
     (UnicodeDecodeError, "UTF-8 decode error"),
     (OSError, "Too many open files"),
     (OSError, "No space left on device"),
+    (IsADirectoryError, "Is a directory"),
+    (NotADirectoryError, "Not a directory"),
 ]
 
 

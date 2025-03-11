@@ -224,6 +224,9 @@
 - Resolved race conditions in file handle tracking
 - Standardized error reporting across filesystem operations
 - Fixed edge cases in network filesystem backoff logic
+- Expanded filesystem error test coverage
+- Fixed Pylint import ordering
+- Added 2 new I/O error simulations
 
 ## New Test Coverage
 - Nested symlink chains ✅
