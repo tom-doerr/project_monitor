@@ -30,29 +30,32 @@ def test_network_retry_backoff(tmp_path, monkeypatch):
     test_file = tmp_path / "retry_test.py"
     test_file.write_text("# Retry test file\n")
     
-    resolve_times = []
-    
+    resolve_data = {
+        'times': [],
+        'original_resolve': pathlib.Path.resolve
+    }
+
     def tracked_resolve(self):
-        resolve_times.append(time.monotonic())
-        if len(resolve_times) < 3:  # Fail first two attempts
+        resolve_data['times'].append(time.monotonic())
+        if len(resolve_data['times']) < 3:  # Fail first two attempts
             raise OSError(errno.ETIMEDOUT, "Simulated timeout")
-        return self._flavour.resolve(self)
+        return resolve_data['original_resolve'](self)
 
     monkeypatch.setattr(pathlib.Path, "resolve", tracked_resolve)
     
     start_time = time.monotonic()
     count_lines_of_code(tmp_path)
-    duration = time.monotonic() - start_time
     
     # Verify retry delays (should be ~1s and ~2s)
-    assert len(resolve_times) == 3
-    delays = [
-        resolve_times[1] - resolve_times[0],
-        resolve_times[2] - resolve_times[1]
-    ]
+    assert len(resolve_data['times']) == 3
+    delays = (
+        resolve_data['times'][1] - resolve_data['times'][0],
+        resolve_data['times'][2] - resolve_data['times'][1]
+    )
     assert 0.9 < delays[0] < 1.1, f"First delay was {delays[0]}"
     assert 1.9 < delays[1] < 2.1, f"Second delay was {delays[1]}"
-    assert 2.5 < duration < 3.5, f"Total duration was {duration}"
+    total_duration = time.monotonic() - start_time
+    assert 2.5 < total_duration < 3.5, f"Total duration was {total_duration}"
 
 
 def test_mixed_network_errors(tmp_path, monkeypatch):
@@ -60,17 +63,19 @@ def test_mixed_network_errors(tmp_path, monkeypatch):
     test_file = tmp_path / "mixed_errors.py"
     test_file.write_text("# Mixed errors test\n")
     
-    error_sequence = [
+    errors = iter([
         OSError(errno.ETIMEDOUT, "Timeout"),
         OSError(errno.EHOSTUNREACH, "Host unreachable"),
         OSError(errno.EACCES, "Permission denied")
-    ]
+    ])
+    
+    original_resolve = pathlib.Path.resolve
     
     def resolve_with_errors(self):
-        if error_sequence:
-            err = error_sequence.pop(0)
-            raise err
-        return self._flavour.resolve(self)
+        try:
+            raise next(errors)
+        except StopIteration:
+            return original_resolve(self)
     
     monkeypatch.setattr(pathlib.Path, "resolve", resolve_with_errors)
     
@@ -82,7 +87,6 @@ def test_mixed_network_errors(tmp_path, monkeypatch):
 
 def _create_delayed_resolve(original):
     """Create resolve function with simulated timeout errors"""
-    import errno
 
     def delayed_resolve(self, *args, **kwargs):
         for attempt in range(3):
