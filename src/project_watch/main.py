@@ -53,8 +53,7 @@ def get_pylint_score() -> float:
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
         return 0.0
-
-    return result
+    return result if 'result' in locals() else 0.0
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -153,7 +152,7 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
     # Handle different time formats with/without decimals and units
-    time_match = re.search(r" in (\d+\.?\d*)s(?:ec)?(?:onds?)?\b", output.replace(",", ""))
+    time_match = re.search(r" in (\d+\.?\d*)\s*s(?:ec)?(?:onds?)?\b", output.replace(",", ""))
     if not time_match:  # Fallback to seconds keyword
         time_match = re.search(r"(\d+\.\d+) seconds?", output)
     return float(time_match.group(1)) if time_match else 0.0
@@ -259,6 +258,7 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"^("
         r"CON|PRN|AUX|NUL|CLOCK\$|"
         r"COM[0-9]|LPT[0-9]|"  # COM0-COM9, LPT0-LPT9
+        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|CLOCK\$|"
         r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
         r"\$Mft|\$LogFile|\$Volume|"
         r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
