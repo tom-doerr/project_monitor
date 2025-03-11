@@ -23,34 +23,30 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
-        if match := re.search(r"rated at (\d+\.?\d*)/10", text):
-            return max(0.0, min(float(match.group(1)), 10.0))
-        return 0.0
+        match = re.search(r"rated at (\d+\.?\d*)/10", text)
+        return max(0.0, min(float(match.group(1)), 10.0) if match else 0.0
 
-    proc = None
+    cmd = ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"]
+    cwd = pathlib.Path(__file__).parent.parent
+    result = 0.0
+    
     try:
         proc = subprocess.run(
-            ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
+            cmd,
             capture_output=True,
             text=True,
             check=False,
             timeout=15,
-            cwd=pathlib.Path(__file__).parent.parent,
+            cwd=cwd,
         )
-
-        if getattr(proc, "returncode", 127) <= 31:  # Handle missing returncode
-            return max(extract_score(proc.stdout), extract_score(proc.stderr))
+        if getattr(proc, "returncode", 127) <= 31:
+            result = max(extract_score(proc.stdout), extract_score(proc.stderr))
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
-        return 0.0
-
-    final_score = 0.0
-    if proc is not None and getattr(proc, "returncode", 127) <= 31:
-        final_score = max(extract_score(proc.stdout), extract_score(proc.stderr))
-    return final_score
+    
+    return result
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -71,19 +67,19 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    success = False
     json_match = re.search(r'{"\w+": \d+.*}', output)
+    if not json_match:
+        return False
 
-    if json_match:
-        try:
-            json_data = json.loads(json_match.group(0))
-            if isinstance(json_data, dict) and "passed" in json_data:
-                _update_results_from_json(json_data, result)
-                success = True
-        except (json.JSONDecodeError, AttributeError, ValueError) as e:
-            result["error"] = f"JSON parsing failed: {str(e)}"
-
-    return success
+    try:
+        json_data = json.loads(json_match.group(0))
+        if isinstance(json_data, dict) and "passed" in json_data:
+            _update_results_from_json(json_data, result)
+            return True
+    except (json.JSONDecodeError, AttributeError, ValueError) as e:
+        result["error"] = f"JSON parsing failed: {str(e)}"
+    
+    return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -220,29 +216,20 @@ def get_pytest_results() -> dict:
 
 
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
-    """Check if a file should be skipped during line counting.
-    Valid skip reasons:
-    - Already counted via inode tracking
-    - Path doesn't exist
-    - Not a Python file
-    - Windows reserved path name
-    - Contains null bytes
-    """
+    """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve(strict=True)
-        # Track by inode and device to handle symlinks/hardlinks
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
         if file_id in counted:
             return True
-        return any(
-            [
-                not real_path.exists(),
-                real_path.suffix != ".py",
-                not real_path.is_file(),
-                _is_windows_reserved_path(real_path),
-                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-            ]
-        )
+            
+        return any((
+            not real_path.exists(),
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            _is_windows_reserved_path(real_path),
+            any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+        ))
     except OSError:
         return True
 
