@@ -56,23 +56,20 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch):
         (PermissionError, "Access is denied"),
         (FileNotFoundError, "The system cannot find the path specified"),
         (OSError, "Invalid argument"),
-        
         # POSIX-style errors
         (PermissionError, "Permission denied"),
         (FileNotFoundError, "No such file or directory"),
         (OSError, "Input/output error"),
-        
         # Encoding issues
         (UnicodeDecodeError, "UTF-8 decode error"),
-        
         # Special cases
         (OSError, "Too many open files"),
-        (OSError, "No space left on device")
+        (OSError, "No space left on device"),
     ]
 
     for case in error_cases:
         exc_type, msg = case  # Unpack here to avoid cell-var issues
-        
+
         def mock_open(*args, **kwargs):
             raise exc_type(msg)  # Now uses local variables
 

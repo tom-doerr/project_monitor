@@ -171,7 +171,7 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         "CoM3",  # Mixed case reserved name
         "lPt4.txt",  # Mixed case with extension
         "nUl",  # All lowercase
-        "AUX"  # All uppercase
+        "AUX",  # All uppercase
     ]
     valid_names = [
         "CONFIG",
