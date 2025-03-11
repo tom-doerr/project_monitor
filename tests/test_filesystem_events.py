@@ -11,13 +11,12 @@ def test_file_event_streaming(tmp_path: Path):
     def _handle_event(event_type: str, path: str) -> None:
         event_log.append((event_type, path))
     
-    with _create_observer(tmp_path, _handle_event) as observer:
+    with _create_observer(tmp_path, _handle_event) as _:
+        # Perform file operations
         test_file = tmp_path / "test_file.txt"
-        
-        # Test create/modify/delete sequence
-        test_file.touch()
-        test_file.write_text("content")
-        test_file.unlink()
+        operations = (test_file.touch, lambda: test_file.write_text("content"), test_file.unlink)
+        for op in operations:
+            op()
         
         time.sleep(0.5)  # Allow time for events to propagate
         
@@ -42,7 +41,7 @@ def test_latency_threshold(tmp_path: Path):
         nonlocal event_count
         event_count += 1
     
-    with _create_observer(tmp_path, callback) as observer:
+    with _create_observer(tmp_path, callback) as _:
         test_file = tmp_path / "rapid.txt"
         
         # Rapid sequential writes
