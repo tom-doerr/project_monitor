@@ -31,11 +31,12 @@ def _create_delayed_resolve(original):
     def delayed_resolve(self, *args, **kwargs):
         for attempt in range(3):
             try:
-                time.sleep(0.5)  # Reduced from 2.5s to avoid CI timeouts
+                time.sleep(0.5)  # Simulate network latency
                 return original(self, *args, **kwargs)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
                 if attempt == 2:
-                    raise
+                    raise FileNotFoundError(f"Network timeout after 3 attempts: {str(e)}") from e
+                time.sleep(1 * (attempt + 1))  # Exponential backoff
                 time.sleep(0.5 * attempt)
         return None  # Explicit return for consistent-return
 
