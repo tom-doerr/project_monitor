@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 import pytest
+from src.project_watch.path_validation import is_windows_reserved_path
 from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
 
