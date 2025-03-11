@@ -1,5 +1,6 @@
 import pathlib
 import pytest  # pylint: disable=unused-import
+from unittest.mock import mock_open
 from project_watch.main import (
     count_lines_of_code,
     _count_file_lines,
