@@ -201,7 +201,9 @@ def test_windows_system_files(_mock_platform, tmp_path: Path):
     )
 
 
-def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):  # pylint: disable=too-many-locals,too-many-statements
+def _run_reserved_name_test(
+    tmp_path: Path, test_cases: tuple[list, list]
+):  # pylint: disable=too-many-locals,too-many-statements
     """Validate Windows reserved name handling.
 
     Args:
@@ -219,12 +221,12 @@ def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):  # p
 
     # Verify line count matches valid files only (should exclude all reserved names)
     valid_count = count_lines_of_code(tmp_path)
-        
+
     # Debug output for test failures
     print(f"Reserved names: {reserved_names}")  # noqa: T201
     print(f"Valid names: {valid_names}")  # noqa: T201
     print(f"Actual count: {valid_count}")  # noqa: T201
-        
+
     assert valid_count == len(valid_names), (
         f"Expected {len(valid_names)} valid lines, got {valid_count}. "  # nosec
         f"Reserved: {reserved_names} | Valid: {valid_names}"
