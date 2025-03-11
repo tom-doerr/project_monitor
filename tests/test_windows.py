@@ -254,7 +254,7 @@ def test_windows_mixed_slashes(tmp_path):
     test_file.write_text("x = 1\n")
     
     # Test with mixed slashes
-    mixed_path = Path(str(test_file).as_posix().replace("mixed/", "mixed\\")
+    mixed_path = Path(str(test_file).as_posix().replace("mixed/", "mixed\\"))
     assert count_lines_of_code(mixed_path) == 1
 
 

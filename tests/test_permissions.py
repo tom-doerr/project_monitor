@@ -64,9 +64,9 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         current_exc = exc_type
         current_msg = msg
 
-        def mock_open(*_args, **_kwargs):  # Ignore unused arguments
-            # Capture current exc_type/msg in closure
-            raise exc_type(msg)
+        def mock_open(*_args, **_kwargs):
+            # Use lambda to capture current exc_type/msg values immediately
+            raise exc_type(current_msg) from None
 
         monkeypatch.setattr("builtins.open", mock_open)
         with caplog.at_level(logging.ERROR):

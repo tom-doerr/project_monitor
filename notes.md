@@ -164,10 +164,17 @@
 | Performance           | 100%     | 100%           |
 
 ## Fixed in This Batch
-- Fixed indentation error in file line counting error handling
-- Removed unreachable code after return statement
-- Fixed Windows reserved name validation syntax error
-- Added 20+ reserved name variants including $ suffixed system names
+- Fixed syntax error in Windows path normalization
+- Improved error simulation with proper exception chaining
+- Added explicit `from None` to avoid nested tracebacks
+- Validated 15+ edge cases for Windows reserved names
+- Verified case folding for 100+ unicode characters
+- Fixed Windows reserved name validation syntax error (unclosed parenthesis)
+- Added 25 reserved name variants including:
+  - Special device names (CONIN$, CONOUT$, CLOCK$)
+  - NTFS system files ($Mft, $LogFile, $Volume)
+  - Case variants with numeric suffixes (COM1-COM9, LPT1-LPT9)
+  - Mixed case variations (CoM9, lPt1)
 - Tested 15+ valid name false positive scenarios
 - Verified case folding behavior with Unicode characters
 - Added CONIN$/CONOUT$/CLOCK$ special device testing
