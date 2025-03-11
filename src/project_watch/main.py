@@ -9,6 +9,7 @@ import pathlib
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime
 
 # Third-party imports
@@ -22,12 +23,12 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
         return float(match.group(1)) if match else 0.0
 
+    score = 0.0
     try:
         result = subprocess.run(
             ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
@@ -40,15 +41,18 @@ def get_pylint_score() -> float:
         )
 
         if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
-            score = max(extract_score(result.stdout), extract_score(result.stderr))
-            return max(0.0, min(score, 10.0))
-
-        return 0.0
+            stdout_score = extract_score(result.stdout)
+            stderr_score = extract_score(result.stderr)
+            score = max(stdout_score, stderr_score)
+            
+        # Clamp score between 0-10
+        score = max(0.0, min(score, 10.0))
     except subprocess.TimeoutExpired:
-        return 0.0
+        pass  # Score remains 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
-        return 0.0
+
+    return score
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -63,17 +67,19 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    if json_match := re.search(r'{"\w+": \d+.*}', output):
-        try:
-            json_data = json.loads(json_match.group(0))
-            if not isinstance(json_data, dict):
-                raise ValueError("Invalid JSON structure")
-            _update_results_from_json(json_data, result)
-            return True
-        except (json.JSONDecodeError, AttributeError, ValueError) as e:
-            result["error"] = f"JSON parsing failed: {str(e)}"
-            return False
-    return False
+    json_match = re.search(r'{"\w+": \d+.*}', output)
+    if not json_match:
+        return False
+
+    try:
+        json_data = json.loads(json_match.group(0))
+        if not isinstance(json_data, dict):
+            raise ValueError("Invalid JSON structure")
+        _update_results_from_json(json_data, result)
+        return True
+    except (json.JSONDecodeError, AttributeError, ValueError) as e:
+        result["error"] = f"JSON parsing failed: {str(e)}"
+        return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
