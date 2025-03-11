@@ -34,7 +34,8 @@ def test_filesystem_errors(mock_resolve, caplog):
     with caplog.at_level(logging.DEBUG):
         with pytest.raises(PermissionError):
             count_lines_of_code()
-        assert "Mocked permission error" in caplog.text
+        assert any("Mocked permission error" in record.message for record in caplog.records), \
+            f"Expected error not found in logs: {caplog.text}"
     with pytest.raises(PermissionError):
         count_lines_of_code()
 

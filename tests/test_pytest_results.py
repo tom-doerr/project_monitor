@@ -36,7 +36,7 @@ def test_handles_invalid_pytest_output():
         )
         results = get_pytest_results()
         assert "error" in results, "Should have error key"
-        assert results["error"] == "Syntax error", "Should capture stderr content"
+        assert results["error"] == "Pytest exited with code 2: Syntax error", "Should capture stderr content"
         assert results.get("passed", -1) == 0, "Should default to 0 passed"
         assert results.get("failed", -1) == 0, "Should default to 0 failed"
 
