@@ -142,7 +142,14 @@ def test_windows_unc_paths(tmp_path):
 
 
 def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
-    """Verify case-insensitive detection of reserved names with various extensions"""
+    """Verify case-insensitive detection of reserved names with various extensions
+    Cases tested:
+    - Mixed case variations (CoN, lpT3)
+    - Multiple extensions (.config.txt, .CONFIG.TXT)
+    - Special device names (CONIN$, CONOUT$, CLOCK$)
+    - System files ($Mft, $LogFile)
+    - Case variants with numbers (COM1, com9)
+    """
     reserved_names = [
         "cOm1",
         "lPt9.TxT",

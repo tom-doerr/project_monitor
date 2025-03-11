@@ -215,11 +215,18 @@ def get_pytest_results() -> dict:
 
 
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
-    """Check if a file should be skipped during line counting."""
+    """Check if a file should be skipped during line counting.
+    Valid skip reasons:
+    - Already counted via inode tracking
+    - Path doesn't exist
+    - Not a Python file
+    - Windows reserved path name
+    - Contains null bytes
+    """
     try:
         real_path = path.resolve()
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        return any((
+        return any(
             file_id in counted,
             not real_path.exists(),
             real_path.suffix != ".py",
