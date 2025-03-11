@@ -1,5 +1,5 @@
 import logging
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 from project_watch.main import count_lines_of_code
 
