@@ -173,8 +173,7 @@ def test_windows_numeric_suffixes(tmp_path: Path):
     """Test COM/LPT numeric suffix handling"""
     _run_reserved_name_test(
         tmp_path,
-        reserved_names=["COM1", "LPT9", "COM0", "lPt3"],
-        valid_names=["COM10", "LPTS", "COMX"],
+        (["COM1", "LPT9", "COM0", "lPt3"], ["COM10", "LPTS", "COMX"]),
     )
 
 
@@ -182,8 +181,7 @@ def test_windows_case_variants(tmp_path: Path):
     """Test mixed case reserved name variants"""
     _run_reserved_name_test(
         tmp_path,
-        reserved_names=["CoM1", "nUl", "AuX", "pRn"],
-        valid_names=["Compass", "Nullify", "Auxiliary"],
+        (["CoM1", "nUl", "AuX", "pRn"], ["Compass", "Nullify", "Auxiliary"]),
     )
 
 
@@ -191,8 +189,7 @@ def test_windows_system_files(tmp_path: Path):
     """Test NTFS system file patterns"""
     _run_reserved_name_test(
         tmp_path,
-        reserved_names=["$Mft", "$LogFile", "$Volume"],
-        valid_names=["Mft", "LogFile", "Volume"],
+        (["$Mft", "$LogFile", "$Volume"], ["Mft", "LogFile", "Volume"]),
     )
 
 
@@ -207,8 +204,10 @@ def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):
     
     # Create test files and handle expected OSErrors
     for name in (*reserved_names, *valid_names):
-        (tmp_path / name).write_text("content") if name not in reserved_names \
-            else _attempt_reserved_file(tmp_path / name)
+        if name in reserved_names:
+            _attempt_reserved_file(tmp_path / name)
+        else:
+            (tmp_path / name).write_text("content")
 
     # Nested valid file should be excluded since COM2 is reserved
     (tmp_path / "COM2" / "valid_sub").mkdir(parents=True)
