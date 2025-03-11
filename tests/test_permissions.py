@@ -1,5 +1,5 @@
 import logging
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import pytest
 from project_watch.main import count_lines_of_code
 
@@ -57,9 +57,7 @@ ERROR_CASES = [
 ]
 
 
-from unittest.mock import MagicMock
-
-
+# pylint: disable=too-many-arguments,too-many-locals
 def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     """Test filesystem error handling with different exception types."""
 
@@ -67,7 +65,7 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         # Create mock that raises specific error with proper chaining
         monkeypatch.setattr(
             "project_watch.main._count_file_lines",
-            lambda *args, **kwargs: (_ for _ in ()).throw(exc_type(msg)),
+            lambda *args, _exc_type=exc_type, _msg=msg, **kwargs: (_ for _ in ()).throw(_exc_type(_msg)),
         )
         caplog.clear()
 
