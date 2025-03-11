@@ -137,7 +137,12 @@
 ## New Todos
 - [x] Add filesystem error simulation tests
 - [x] Fix Windows reserved name regex extensions
-- [x] Add symlink inode tracking
+- [x] Add symlink inode tracking  
+   - Fixed by tracking (inode, device) pairs instead of paths
+- [x] Fix Windows reserved name regex  
+   - Added COM0/LPT0 support and improved extension handling
+- [x] Fix pytest time parsing  
+   - Improved regex to handle decimal values consistently
 - [x] Improve Pylint error handling
 - [ ] Implement network filesystem timeout retries
 - [x] Add performance tests for large result parsing

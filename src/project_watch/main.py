@@ -148,7 +148,7 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
-    if match := re.search(r" in ([\d.]+)s", output):
+    if match := re.search(r" in (\d+\.?\d*)s", output):
         return float(match.group(1))
     return 0.0
 
@@ -230,12 +230,12 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """
     try:
         real_path = path.resolve(strict=True)
+        # Track by inode and device to handle symlinks/hardlinks
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
         if file_id in counted:
             return True
         return any(
             [
-                file_id in counted,
                 not real_path.exists(),
                 real_path.suffix != ".py",
                 not real_path.is_file(),
@@ -263,8 +263,9 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"CON|PRN|AUX|NUL|CLOCK\$|"
         r"COM[0-9]|LPT[0-9]|"  # COM0-COM9, LPT0-LPT9
         r"\$Mft|\$LogFile|\$Volume|"
-        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$"
-        r")(\..+)?$",  # Require at least 1 character after extension
+        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
+        r"CONFIG\$"
+        r")(\..*)?$",  # Allow any extension including none
         re.IGNORECASE,
     )
     return reserved_pattern.fullmatch(real_path.name) is not None
