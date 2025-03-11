@@ -44,7 +44,7 @@ def get_pylint_score() -> float:
             return max(extract_score(proc.stdout), extract_score(proc.stderr))
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
-    
+
     # Consolidate returns to avoid too-many-returns
     final_score = 0.0
     if proc and proc.returncode <= 31:
@@ -72,7 +72,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     success = False
     json_match = re.search(r'{"\w+": \d+.*}', output)
-    
+
     if json_match:
         try:
             json_data = json.loads(json_match.group(0))
@@ -81,7 +81,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
                 success = True
         except (json.JSONDecodeError, AttributeError, ValueError) as e:
             result["error"] = f"JSON parsing failed: {str(e)}"
-    
+
     return success
 
 
@@ -315,7 +315,6 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
-
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:

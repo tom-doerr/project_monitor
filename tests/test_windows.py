@@ -145,51 +145,56 @@ def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
     """Create test files with reserved and valid names."""
     reserved_names = [
         "cOm1",
-        "lPt9.TxT", 
+        "lPt9.TxT",
         "nUL.tar.gz",
         "CONFIG.ini",
         "COM2.log",
         "prn.png",
     ]
     valid_names = ["data.txt", "image.png", "document.pdf"]
-    
+
     # Create test files
     for name in reserved_names + valid_names:
         (tmp_path / name).touch()
-        
+
     return reserved_names, valid_names
+
 
 def test_windows_special_devices(tmp_path: Path):
     """Test special device name handling (CONIN$, CONOUT$, CLOCK$)"""
     _run_reserved_name_test(
         tmp_path,
         reserved_names=["CONIN$", "CONOUT$.log", "CLOCK$.tmp"],
-        valid_names=["CONFIG", "clock", "CONIN"]
+        valid_names=["CONFIG", "clock", "CONIN"],
     )
+
 
 def test_windows_numeric_suffixes(tmp_path: Path):
     """Test COM/LPT numeric suffix handling"""
     _run_reserved_name_test(
         tmp_path,
         reserved_names=["COM1", "LPT9", "COM0", "lPt3"],
-        valid_names=["COM10", "LPTS", "COMX"]
+        valid_names=["COM10", "LPTS", "COMX"],
     )
+
 
 def test_windows_case_variants(tmp_path: Path):
     """Test mixed case reserved name variants"""
     _run_reserved_name_test(
         tmp_path,
         reserved_names=["CoM1", "nUl", "AuX", "pRn"],
-        valid_names=["Compass", "Nullify", "Auxiliary"]
+        valid_names=["Compass", "Nullify", "Auxiliary"],
     )
+
 
 def test_windows_system_files(tmp_path: Path):
     """Test NTFS system file patterns"""
     _run_reserved_name_test(
         tmp_path,
         reserved_names=["$Mft", "$LogFile", "$Volume"],
-        valid_names=["Mft", "LogFile", "Volume"]
+        valid_names=["Mft", "LogFile", "Volume"],
     )
+
 
 def _run_reserved_name_test(tmp_path: Path, reserved_names: list, valid_names: list):
     """Helper to run reserved name test cases"""
