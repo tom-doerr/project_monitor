@@ -327,8 +327,9 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
 def _log_file_error(error: Exception, path: pathlib.Path) -> None:
     """Log file processing errors with appropriate level."""
     log_level = logging.WARNING if isinstance(error, PermissionError) else logging.DEBUG
-    path_str = str(path.resolve() if path.exists() else path)
-    logger.log(log_level, "Error counting %s: %s", path_str, error)
+    resolved_path = path.resolve() if path.exists() else path
+    error_msg = f"{error.__class__.__name__} processing {resolved_path}: {str(error)}"
+    logger.log(log_level, error_msg, extra={"path": str(resolved_path), "error_type": error.__class__.__name__})
 
 
 def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:
