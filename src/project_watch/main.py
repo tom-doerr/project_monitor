@@ -68,19 +68,19 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    json_match = re.search(r'{"\w+": \d+.*}', output)
-    if not json_match:
-        return False
+    def _validate_json_structure(data) -> bool:
+        return isinstance(data, dict) and "passed" in data
 
-    try:
-        json_data = json.loads(json_match.group(0))
-        if not isinstance(json_data, dict):
-            raise ValueError("Invalid JSON structure")
-        _update_results_from_json(json_data, result)
-        return True
-    except (json.JSONDecodeError, AttributeError, ValueError) as e:
-        result["error"] = f"JSON parsing failed: {str(e)}"
-        return False
+    json_match = re.search(r'{"\w+": \d+.*}', output)
+    if json_match:
+        try:
+            json_data = json.loads(json_match.group(0))
+            if _validate_json_structure(json_data):
+                _update_results_from_json(json_data, result)
+                return True
+        except (json.JSONDecodeError, AttributeError, ValueError) as e:
+            result["error"] = f"JSON parsing failed: {str(e)}"
+    return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -128,15 +128,13 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing for pytest output."""
-    patterns = [
+    patterns = (
         (r"(\d+) failed", "failed"),
-        (r"(\d+) passed", "passed"),
+        (r"(\d+) passed", "passed"), 
         (r"(\d+) warnings", "warnings"),
         (r"(\d+) errors", "errors"),
-        (r"(\d+) skipped", "skipped"),
-        (r"(\d+) deselected", "deselected"),
-        (r"(\d+) rerun", "rerun"),
-    ]
+        (r"(\d+) skipped", "skipped")
+    )
     # Try multiple patterns to handle different pytest output formats
     found = False
     for pattern, key in patterns:
@@ -220,18 +218,15 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve()
-        # Use (inode, device) tuple for better symlink/hardlink handling
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        if file_id in counted:
-            return True
-        return not real_path.exists() or any(
-            (
-                file_id in counted,
-                real_path.suffix != ".py",
-                not real_path.is_file(),
-                _is_windows_reserved_path(real_path),
-                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-            )
+        return any((
+            file_id in counted,
+            not real_path.exists(),
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            _is_windows_reserved_path(real_path),
+            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
+        ))
         )
     except OSError:
         return True
@@ -300,9 +295,7 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
     try:
-        if _should_skip_file(path, counted):
-            return 0
-        return _count_valid_file_lines(path, counted)
+        return 0 if _should_skip_file(path, counted) else _count_valid_file_lines(path, counted)
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
