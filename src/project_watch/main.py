@@ -65,17 +65,18 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
+    success = False
     json_match = re.search(r'{"\w+": \d+.*}', output)
-    if not json_match:
-        return False
-
-    try:
-        json_data = json.loads(json_match.group(0))
-        _update_results_from_json(json_data, result)
-        return True
-    except (json.JSONDecodeError, AttributeError) as e:
-        result["error"] = f"JSON error: {str(e)}"
-        return False
+    
+    if json_match:
+        try:
+            json_data = json.loads(json_match.group(0))
+            _update_results_from_json(json_data, result)
+            success = True
+        except (json.JSONDecodeError, AttributeError) as e:
+            result["error"] = f"JSON error: {str(e)}"
+    
+    return success
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -291,18 +292,21 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
+    line_count = 0
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
         
-        if real_path.is_file() and real_path.suffix == ".py" and file_id not in counted:
+        if (real_path.is_file() 
+            and real_path.suffix == ".py" 
+            and file_id not in counted):
             counted.add(file_id)
-            return _count_file_lines(real_path)
-        return 0
-
+            line_count = _count_file_lines(real_path)
+            
     except (OSError, PermissionError, FileNotFoundError) as e:
         logger.debug("File processing error: %s", str(e))
-        return 0
+    
+    return line_count
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
