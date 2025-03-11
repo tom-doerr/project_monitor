@@ -285,7 +285,7 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
     try:
         real_path = path.resolve(strict=True)
-        file_id = (real_path.stat().st_ino, real_path.device)
+        file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
 
         should_skip = (
             file_id in counted or not real_path.is_file() or real_path.suffix != ".py"

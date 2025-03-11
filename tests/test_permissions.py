@@ -60,19 +60,17 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         # POSIX-style errors
         (PermissionError, "Permission denied"),
         (FileNotFoundError, "No such file or directory"),
+        (PermissionError, "Mocked permission error"),
         (OSError, "Input/output error"),
-        # Encoding issues
         (UnicodeDecodeError, "UTF-8 decode error"),
-        # Special cases
-        (OSError, "Too many open files"),
+        (OSError, "Too many open files"), 
         (OSError, "No space left on device"),
     ]
 
-    for case in error_cases:
-        exc_type, msg = case  # Unpack here to avoid cell-var issues
-
+    for exc_type, msg in error_cases:
         def mock_open(*args, **kwargs):
-            raise exc_type(msg)  # Now uses local variables
+            # Capture current exc_type/msg in closure
+            raise exc_type(msg)
 
         monkeypatch.setattr("builtins.open", mock_open)
         with caplog.at_level(logging.ERROR):

@@ -9,8 +9,10 @@
 - Cleaned up Windows path handling
 - Fixed incorrect import paths from src.*
 - Added explicit error message validation
-- Fixed directory argument passing in permission tests
+- Fixed directory argument passing in permission tests  
 - Added dedicated JSON parsing error test
+- Fixed device attribute error in file tracking
+- Added explicit PermissionError test coverage
 - Configured Pylint for src package resolution
 - Added proper package setup with setup.py
 - Standardized test naming conventions
@@ -125,7 +127,8 @@
 - [x] Add long line validation
 - [x] Perform coverage gap analysis
 - [x] Add compressed file analysis
-- [x] Implement kernel-level file tracking
+- [x] Implement kernel-level file tracking  
+- [x] Add PermissionError validation to test coverage
 - [ ] Add filesystem event streaming
 - [ ] Improve network filesystem test reliability
 - [ ] Add Azure Fileshare validation
