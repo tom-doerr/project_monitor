@@ -1,6 +1,5 @@
 import tracemalloc
 import pytest
-from project_watch import count_lines_of_code
 
 @pytest.fixture(autouse=True)
 def memory_tracker():
@@ -11,10 +10,9 @@ def memory_tracker():
 def test_no_memory_leak_in_line_counting(tmp_path):
     # Setup: Create sample Python files
     sample_code = "print('test')\n" * 1000
-    [  # List comprehension reduces variables
+    # Create test files using loop instead of list comprehension
+    for _ in range(10):
         (tmp_path / f"test_{i}.py").write_text(sample_code)
-        for i in range(10)
-    ]
 
     # Combined snapshot and comparison logic
     top_stats = tracemalloc.take_snapshot().compare_to(
