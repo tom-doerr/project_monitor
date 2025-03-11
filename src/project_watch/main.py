@@ -7,9 +7,10 @@ import pathlib
 import re
 import subprocess
 import sys
+import pathlib
 from datetime import datetime
 
-# Third-party imports
+# Third-party imports 
 from watchdog.events import FileSystemEventHandler
 
 logger = logging.getLogger(__name__)
@@ -215,8 +216,9 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
 
 
 def _is_windows_reserved_path(path: pathlib.Path) -> bool:
-    """Check if path is a Windows reserved filename."""
-    return sys.platform == "win32" and _is_windows_reserved_name(path.resolve().lower())
+    """Check if path contains Windows reserved names."""
+    from .path_validation import is_windows_reserved_path
+    return is_windows_reserved_path(path)
 
 
 def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:

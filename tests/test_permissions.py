@@ -40,15 +40,32 @@ def test_filesystem_errors(mock_resolve, caplog):
 
 
 def test_filesystem_error_simulation(tmp_path, monkeypatch):
-    """Test simulated filesystem error handling"""
+    """Test filesystem error handling with different exception types.
+    Validates proper error handling for:
+    - Permission errors (read/write)
+    - Missing files
+    - I/O failures
+    - Decoding errors"""
     from project_watch.main import _process_code_path
 
     # Test various error scenarios
     error_cases = [
+        # Windows-style errors
+        (PermissionError, "Access is denied"),
+        (FileNotFoundError, "The system cannot find the path specified"),
+        (OSError, "Invalid argument"),
+        
+        # POSIX-style errors
         (PermissionError, "Permission denied"),
-        (FileNotFoundError, "File not found"),
+        (FileNotFoundError, "No such file or directory"),
         (OSError, "Input/output error"),
+        
+        # Encoding issues
         (UnicodeDecodeError, "UTF-8 decode error"),
+        
+        # Special cases
+        (OSError, "Too many open files"),
+        (OSError, "No space left on device")
     ]
 
     for exc_type, msg in error_cases:
