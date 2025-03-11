@@ -285,18 +285,16 @@ def test_mixed_case_files(tmp_path: Path):
     """Test case insensitivity for files"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-    
+
     test_files = [
         ("TESTFILE.PY", "x = 1\n"),
         ("subdir/MixedCase.Py", "y = 2\n"),
-        ("mixed/slashes.py", "a = 1\nb = 2\n")
+        ("mixed/slashes.py", "a = 1\nb = 2\n"),
     ]
-    
+
     for path, content in test_files:
         file_path = tmp_path / path
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(content)
-    
+
     assert count_lines_of_code(tmp_path) == 3
-
-

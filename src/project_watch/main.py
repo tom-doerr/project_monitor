@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         if match := re.search(r"rated at (\d+\.?\d*)/10", text):
@@ -38,7 +39,7 @@ def get_pylint_score() -> float:
             timeout=15,
             cwd=pathlib.Path(__file__).parent.parent,
         )
-        
+
         if getattr(proc, "returncode", 127) <= 31:  # Handle missing returncode
             return max(extract_score(proc.stdout), extract_score(proc.stderr))
     except subprocess.TimeoutExpired:
@@ -46,13 +47,19 @@ def get_pylint_score() -> float:
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
         return 0.0
-        
+
     return max(extract_score(proc.stdout), extract_score(proc.stderr))
 
 
 def _parse_pytest_output(output: str) -> dict:
     """Parse pytest output into structured results."""
-    result = {"passed": 0, "failed": 0, "time": 0.0, "output": output, "error": None}  # Initialize error as None
+    result = {
+        "passed": 0,
+        "failed": 0,
+        "time": 0.0,
+        "output": output,
+        "error": None,
+    }  # Initialize error as None
 
     if not _parse_pytest_json(output, result):
         _parse_pytest_text(output, result)
@@ -123,23 +130,16 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing for pytest output."""
     pattern_map = {
         "failed": r"(\d+) failed",
-        "passed": r"(\d+) passed", 
+        "passed": r"(\d+) passed",
         "warnings": r"(\d+) warnings",
         "errors": r"(\d+) errors",
-        "skipped": r"(\d+) skipped"
+        "skipped": r"(\d+) skipped",
     }
-    
-    matches = {
-        key: re.search(pattern, output)
-        for key, pattern in pattern_map.items()
-    }
-    
-    result.update({
-        key: int(match.group(1))
-        for key, match in matches.items()
-        if match
-    })
-    
+
+    matches = {key: re.search(pattern, output) for key, pattern in pattern_map.items()}
+
+    result.update({key: int(match.group(1)) for key, match in matches.items() if match})
+
     return any(matches.values())
 
 
@@ -203,12 +203,16 @@ def get_pytest_results() -> dict:
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
         # Include both stderr and stdout in error details
         error_details = []
-        if hasattr(e, 'stderr') and e.stderr.strip():
+        if hasattr(e, "stderr") and e.stderr.strip():
             error_details.append(e.stderr.strip())
-        if hasattr(e, 'stdout') and e.stdout.strip():
+        if hasattr(e, "stdout") and e.stdout.strip():
             error_details.append(e.stdout.strip())
-        
-        error_msg = f"Pytest error: {' | '.join(error_details)[:500]}" if error_details else str(e)
+
+        error_msg = (
+            f"Pytest error: {' | '.join(error_details)[:500]}"
+            if error_details
+            else str(e)
+        )
         return {"passed": 0, "failed": 0, "skipped": 0, "error": error_msg}
 
 
@@ -224,14 +228,16 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     try:
         real_path = path.resolve()
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        return any([
-            file_id in counted,
-            not real_path.exists(),
-            real_path.suffix != ".py",
-            not real_path.is_file(),
-            _is_windows_reserved_path(real_path),
-            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
-        ])
+        return any(
+            [
+                file_id in counted,
+                not real_path.exists(),
+                real_path.suffix != ".py",
+                not real_path.is_file(),
+                _is_windows_reserved_path(real_path),
+                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+            ]
+        )
     except OSError:
         return True
 
@@ -299,7 +305,11 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
     try:
-        return 0 if _should_skip_file(path, counted) else _count_valid_file_lines(path, counted)
+        return (
+            0
+            if _should_skip_file(path, counted)
+            else _count_valid_file_lines(path, counted)
+        )
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
