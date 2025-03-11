@@ -61,7 +61,9 @@ def is_windows_reserved_path(path: Path) -> bool:
     if sys.platform != "win32":
         return False
 
+    result = False
     try:
-        return any(_RESERVED_PATTERN.match(part) for part in path.resolve().parts)
+        result = any(_RESERVED_PATTERN.match(part) for part in path.resolve().parts)
     except OSError:
-        return False
+        pass  # Default to False on resolution errors
+    return result
