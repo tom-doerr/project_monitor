@@ -30,11 +30,15 @@ def test_handles_invalid_pytest_output():
     """Verify error handling for completely invalid output"""
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(
-            stdout="{invalid: json}", stderr="JSON parsing failed", returncode=1
+            stdout="invalid: output",  # No JSON structure at all
+            stderr="Syntax error",
+            returncode=2
         )
         results = get_pytest_results()
-        assert "error" in results
-        assert results.get("error", "").find("JSON") != -1
+        assert "error" in results, "Should have error key"
+        assert results["error"] == "Syntax error", "Should capture stderr content"
+        assert results.get("passed", -1) == 0, "Should default to 0 passed"
+        assert results.get("failed", -1) == 0, "Should default to 0 failed"
 
 
 def test_get_pytest_results_failure():

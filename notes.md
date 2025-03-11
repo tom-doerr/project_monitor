@@ -122,6 +122,9 @@
 ## New Todos
 - [x] Add filesystem error simulation tests
 - [x] Add performance tests for large result parsing
+- [x] Fix JSON parsing edge cases (invalid/malformed formats)
+- [x] Add explicit error message validation
+- [x] Resolve undefined mock_open in permission tests
 - [ ] Implement real-time coverage visualization
 - [ ] Add distributed processing support
 - [ ] Implement incremental scanning

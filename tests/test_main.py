@@ -88,10 +88,13 @@ def test_file_scanning_edge_cases(tmp_path):
 def test_handles_invalid_pytest_json():
     """Verify JSON parsing error handling"""
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value.stdout = '{"invalid": "json"'
-        mock_run.return_value.stderr = "JSON decoding error"
+        # Deliberately malformed JSON with unclosed string
+        mock_run.return_value.stdout = '{"passed": 3, "failed": "incomplete'
+        mock_run.return_value.stderr = ""
         mock_run.return_value.returncode = 0
+            
         results = get_pytest_results()
-        assert "error" in results
-        assert "JSON" in results["error"], "Should detect JSON parsing error"
-        assert "decoding error" in results["error"]
+        assert "error" in results, "Should have error key"
+        assert "JSON" in results["error"], f"Should detect JSON parsing error, got {results['error']}"
+        assert results.get("passed", 0) == 0  # Should fall back to text parsing
+        assert results.get("failed", 0) == 0  # Default values on parse failure
