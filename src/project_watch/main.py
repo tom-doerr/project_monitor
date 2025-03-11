@@ -261,9 +261,13 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
             real_path = path.resolve(strict=True)
             # Track by inode to handle symlinks/hardlinks
             file_id = (real_path.stat().st_ino, real_path.device)
-            if file_id in counted or not real_path.is_file() or real_path.suffix != ".py":
+            if (
+                file_id in counted
+                or not real_path.is_file()
+                or real_path.suffix != ".py"
+            ):
                 continue
-                
+
             counted.add(file_id)
             total += _count_file_lines(real_path)
         except (OSError, PermissionError, FileNotFoundError):

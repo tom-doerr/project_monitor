@@ -148,11 +148,25 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         pytest.skip("Windows-specific test")
 
     reserved_names = [
-        "COM1", "lpt9", "CON.TXT", "aux.json", "nul.txt",
-        "LPT5.csv", "PRN.png", "COM4.tar.gz", "NUL.LOG",
-        "AuX.yml", "CoM1", "lpt3.config.ini", "PRN.", 
-        "NUL..txt", "CON.tar.gz", "CONIN$", "CONOUT$",
-        "CLOCK$", "CaSeInSeNsItIvE"  # Test case folding
+        "COM1",
+        "lpt9",
+        "CON.TXT",
+        "aux.json",
+        "nul.txt",
+        "LPT5.csv",
+        "PRN.png",
+        "COM4.tar.gz",
+        "NUL.LOG",
+        "AuX.yml",
+        "CoM1",
+        "lpt3.config.ini",
+        "PRN.",
+        "NUL..txt",
+        "CON.tar.gz",
+        "CONIN$",
+        "CONOUT$",
+        "CLOCK$",
+        "CaSeInSeNsItIvE",  # Test case folding
     ]
     valid_names = [
         "COM10",  # Exceeds COM9 range
