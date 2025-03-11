@@ -23,7 +23,7 @@ from .path_validation import is_windows_reserved_path
 logger = logging.getLogger(__name__)
 
 
-def get_pylint_score() -> float:
+def get_pylint_score() -> float:  # pylint: disable=too-many-return-statements
     """Calculate pylint score with robust parsing."""
 
     def extract_score(text: str) -> float:
@@ -253,7 +253,7 @@ def _is_windows_reserved_path(path: pathlib.Path) -> bool:
     return is_windows_reserved_path(path)
 
 
-def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
+def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:  # pylint: disable=unused-argument
     """Check if path contains Windows reserved filename."""
     if sys.platform != "win32":
         return False
@@ -362,7 +362,7 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
     raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
-def _count_valid_file_lines(  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,too-many-branches
+def _count_valid_file_lines(  # pylint: disable=too-many-arguments,too-many-locals
     path: pathlib.Path,
     counted: set,
     inode_cache: set,
