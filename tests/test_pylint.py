@@ -1,7 +1,7 @@
 from unittest.mock import patch, ANY
 import subprocess
 from subprocess import CompletedProcess
-from project_watch.main import get_pylint_score  # pylint: disable=import-error
+from project_watch.main import get_pylint_score  # pylint: disable=no-name-in-module
 
 
 def test_get_pylint_score_success():
