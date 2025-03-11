@@ -131,7 +131,10 @@
 - [x] Add filesystem error simulation tests
 - [x] Add performance tests for large result parsing
 - [x] Fix JSON parsing edge cases (invalid/malformed formats)
-- [x] Improve Windows reserved name regex coverage
+- [x] Improve Windows reserved name regex coverage with extension handling
+- [x] Add test cases for special device names (CONIN$, CONOUT$) with extensions
+- [x] Enhanced error messages with detailed count mismatch info
+- [x] Validate regex pattern matches exact filenames with extensions
 - [x] Add inode-based file tracking
 - [x] Add explicit error message validation
 - [x] Fix exception type checking in error logger

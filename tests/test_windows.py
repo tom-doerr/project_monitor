@@ -32,6 +32,9 @@ def _test_reserved_names(test_dir):
         "COM1.old",
         "LPT2.new",
         "CON.final.py",
+        "CLOCK$.log",  # Special device names
+        "CONIN$.tmp",
+        "CONOUT$.data"
     ]
     valid_names = ["COM10", "LPTS", "CONTACT", "NULLIFY"]
 
