@@ -96,7 +96,6 @@ def _create_delayed_resolve(original):
                 if attempt == 1:  # Final error on penultimate attempt
                     raise OSError(errno.EHOSTUNREACH, "Final timeout") from e
                 time.sleep(0.5 * (attempt + 1))
-        return None
 
     return delayed_resolve
 

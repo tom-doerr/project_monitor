@@ -55,9 +55,7 @@ _RESERVED_PATTERN = re.compile(
 )
 
 
-def is_windows_reserved_path(
-    path: Path,
-) -> bool:  # pylint: disable=too-many-return-statements
+def is_windows_reserved_path(path: Path) -> bool:
     """Check if path contains Windows reserved names in any component.
     Handles case-insensitive matching and Unicode normalization.
 
