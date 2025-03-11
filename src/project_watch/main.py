@@ -23,31 +23,24 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
-        match = re.search(r"rated at (\d+\.?\d*)/10", text)
-        return float(match.group(1)) if match else 0.0
+        if match := re.search(r"rated at (\d+\.?\d*)/10", text):
+            return max(0.0, min(float(match.group(1)), 10.0)
+        return 0.0
 
-    score = 0.0
     try:
-        result = subprocess.run(
+        proc = subprocess.run(
             ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
             capture_output=True,
             text=True,
             check=False,
             timeout=15,
             cwd=pathlib.Path(__file__).parent.parent,
-            universal_newlines=True,
         )
-
-        if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
-            stdout_score = extract_score(result.stdout)
-            stderr_score = extract_score(result.stderr)
-            score = max(stdout_score, stderr_score)
-
-        # Clamp score between 0-10
-        score = max(0.0, min(score, 10.0))
+        
+        if getattr(proc, "returncode", 127) <= 31:  # Handle missing returncode
+            return max(extract_score(proc.stdout), extract_score(proc.stderr))
     except subprocess.TimeoutExpired:
         pass  # Score remains 0.0
     except Exception as e:  # pylint: disable=broad-except
