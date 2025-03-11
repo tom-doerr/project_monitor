@@ -135,11 +135,13 @@ def _extract_pytest_time(output: str) -> float:
     return 0.0
 
 
-def _match_pattern(pattern: str, groups: int, output: str, result: dict) -> bool:  # pylint: disable=too-many-arguments
+def _match_pattern(
+    pattern: str, groups: int, output: str, result: dict
+) -> bool:  # pylint: disable=too-many-arguments
     """Match a single output pattern and update results."""
     if not (match := re.search(pattern, output)):
         return False
-        
+
     result["passed"] = int(match.group(1))
     if groups >= 2:
         result["failed"] = int(match.group(2))
@@ -190,13 +192,15 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve()
-        return not real_path.exists() or any((
-            real_path in counted,
-            real_path.suffix != ".py",
-            not real_path.is_file(),
-            _is_windows_reserved_path(real_path),
-            any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-        ))
+        return not real_path.exists() or any(
+            (
+                real_path in counted,
+                real_path.suffix != ".py",
+                not real_path.is_file(),
+                _is_windows_reserved_path(real_path),
+                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+            )
+        )
     except OSError:
         return True
 
@@ -229,14 +233,16 @@ def _count_file_lines(path: pathlib.Path) -> int:
     try:
         with path.open(encoding="utf-8", errors="ignore") as f:
             return sum(
-                1 for line in f 
-                if line.strip() 
-                and len(line) <= 100000  # Match test case value
+                1
+                for line in f
+                if line.strip() and len(line) <= 100000  # Match test case value
             )
     except (PermissionError, UnicodeDecodeError, FileNotFoundError, OSError) as e:
         logger.log(
             logging.WARNING if isinstance(e, PermissionError) else logging.DEBUG,
-            "Error counting %s: %s", path, str(e)
+            "Error counting %s: %s",
+            path,
+            str(e),
         )
         return 0
 
@@ -263,7 +269,7 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         normalized_path = _normalize_path_case(path.resolve(strict=True))
         if not normalized_path.is_file() or _should_skip_file(normalized_path, counted):
             return 0
-            
+
         line_count = _count_file_lines(normalized_path)
         logger.debug("Counted %d lines in %s", line_count, normalized_path)
         return line_count
@@ -271,7 +277,9 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
     except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
         logger.log(
             logging.WARNING if isinstance(e, PermissionError) else logging.DEBUG,
-            "Error counting %s: %s", path, e
+            "Error counting %s: %s",
+            path,
+            e,
         )
         return 0
 

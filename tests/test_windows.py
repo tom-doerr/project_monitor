@@ -146,16 +146,17 @@ def test_windows_mixed_slashes(tmp_path):
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
+
 def test_mixed_case_paths(tmp_path: Path):
     """Test case insensitivity enforcement"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-        
+
     # Create mixed case files
     (tmp_path / "TESTFILE.PY").write_text("x = 1\n")
     (tmp_path / "subdir").mkdir()
     (tmp_path / "subdir" / "MixedCase.Py").write_text("y = 2\n")
-    
+
     # Should count all variations as single instance
     assert count_lines_of_code(tmp_path) == 2
     # Create file with normal Path operations
