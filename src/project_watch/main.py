@@ -67,7 +67,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     success = False
     json_match = re.search(r'{"\w+": \d+.*}', output)
-    
+
     if json_match:
         try:
             json_data = json.loads(json_match.group(0))
@@ -75,7 +75,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
             success = True
         except (json.JSONDecodeError, AttributeError) as e:
             result["error"] = f"JSON error: {str(e)}"
-    
+
     return success
 
 
@@ -296,16 +296,14 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        
-        if (real_path.is_file() 
-            and real_path.suffix == ".py" 
-            and file_id not in counted):
+
+        if real_path.is_file() and real_path.suffix == ".py" and file_id not in counted:
             counted.add(file_id)
             line_count = _count_file_lines(real_path)
-            
+
     except (OSError, PermissionError, FileNotFoundError) as e:
         logger.debug("File processing error: %s", str(e))
-    
+
     return line_count
 
 

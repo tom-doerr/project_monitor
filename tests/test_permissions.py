@@ -34,8 +34,9 @@ def test_filesystem_errors(mock_resolve, caplog):
     with caplog.at_level(logging.DEBUG):
         with pytest.raises(PermissionError):
             count_lines_of_code()
-        assert any("Mocked permission error" in record.message for record in caplog.records), \
-            f"Expected error not found in logs: {caplog.text}"
+        assert any(
+            "Mocked permission error" in record.message for record in caplog.records
+        ), f"Expected error not found in logs: {caplog.text}"
     with pytest.raises(PermissionError):
         count_lines_of_code()
 
@@ -65,7 +66,9 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         # Create mock that raises specific error with proper chaining
         monkeypatch.setattr(
             "project_watch.main._count_file_lines",
-            lambda *args, _exc_type=exc_type, _msg=msg, **kwargs: (_ for _ in ()).throw(_exc_type(_msg)),
+            lambda *args, _exc_type=exc_type, _msg=msg, **kwargs: (_ for _ in ()).throw(
+                _exc_type(_msg)
+            ),
         )
         caplog.clear()
 
