@@ -30,6 +30,7 @@ def get_pylint_score() -> float:
             return max(0.0, min(float(match.group(1)), 10.0))
         return 0.0
 
+    proc = None
     try:
         proc = subprocess.run(
             ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
@@ -228,8 +229,10 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     - Contains null bytes
     """
     try:
-        real_path = path.resolve()
+        real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
+        if file_id in counted:
+            return True
         return any(
             [
                 file_id in counted,
@@ -255,13 +258,15 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         return False
 
     # Case-insensitive match for reserved names with extensions and variants
-    reserved_pattern = (
-        r"^(CON|PRN|AUX|NUL|CLOCK\$|"
-        r"COM[0-9]|LPT[0-9]|"  # Include COM0/LPT0
+    reserved_pattern = re.compile(
+        r"^("
+        r"CON|PRN|AUX|NUL|CLOCK\$|"
+        r"COM[0-9]|LPT[0-9]|"  # COM0-COM9, LPT0-LPT9
         r"\$Mft|\$LogFile|\$Volume|"
-        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$)(\..*)?$"
+        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$"
+        r")(\..+)?$",  # Require at least 1 character after extension
+        re.IGNORECASE
     )
-    reserved_pattern = re.compile(reserved_pattern, re.IGNORECASE)
     return reserved_pattern.fullmatch(real_path.name) is not None
 
 

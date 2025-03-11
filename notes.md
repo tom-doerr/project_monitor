@@ -136,6 +136,10 @@
 
 ## New Todos
 - [x] Add filesystem error simulation tests
+- [x] Fix Windows reserved name regex extensions
+- [x] Add symlink inode tracking
+- [x] Improve Pylint error handling
+- [ ] Implement network filesystem timeout retries
 - [x] Add performance tests for large result parsing
 - [x] Fix JSON parsing edge cases (invalid/malformed formats)
 - [x] Improve Windows reserved name regex coverage with extension handling

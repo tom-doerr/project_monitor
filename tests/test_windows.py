@@ -164,8 +164,8 @@ def test_windows_special_devices(tmp_path: Path):
     """Test special device name handling (CONIN$, CONOUT$, CLOCK$)"""
     _run_reserved_name_test(
         tmp_path,
-        reserved_names=["CONIN$", "CONOUT$.log", "CLOCK$.tmp"],
-        valid_names=["CONFIG", "clock", "CONIN"],
+        reserved_names=["CONIN$", "CONOUT$.log", "CLOCK$.tmp", "COM1.txt", "LPT2.test"],
+        valid_names=["CONFIG", "clock", "CONIN", "com10", "lpt0"],
     )
 
 
