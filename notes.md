@@ -159,6 +159,9 @@
 - [x] Add filesystem error simulation tests
 - [x] Fix Windows reserved name regex extensions
 - [x] Add enhanced debug output for Windows path tests
+- [x] Fixed undefined inode_cache parameter errors
+- [x] Added proper inode tracking for hardlink detection
+- [x] Corrected error types in network filesystem tests
 - [x] Fix Pylint error return value
 - [x] Improve pytest time parsing regex
 - [x] Add exc_info to Pylint error logging

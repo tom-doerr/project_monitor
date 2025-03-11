@@ -370,8 +370,8 @@ def _resolve_with_retry(
     raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
-def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
-    """Count lines in valid, accessible files."""
+def _count_valid_file_lines(path: pathlib.Path, counted: set, inode_cache: set) -> int:
+    """Count lines in valid, accessible files with inode tracking."""
     try:
         resolved_path = _resolve_with_retry(path)
         file_stat = resolved_path.stat()
@@ -387,6 +387,10 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
             return 0
 
         try:
+            if file_stat.st_ino in inode_cache:
+                return 0
+                
+            inode_cache.add(file_stat.st_ino)
             line_count = _count_file_lines(normalized_path)
         except (OSError, UnicodeDecodeError, PermissionError) as e:
             _log_file_error(e, path)

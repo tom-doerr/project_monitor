@@ -60,13 +60,11 @@ def test_mixed_network_errors(tmp_path, monkeypatch):
     """Test handling of different error types across retries"""
     (tmp_path / "mixed_errors.py").touch()
 
-    error_sequence = iter(
-        [
-            OSError(errno.ETIMEDOUT, "Timeout"),
-            OSError(errno.EHOSTUNREACH, "Host unreachable"),
-            OSError(errno.EACCES, "Permission denied"),
-        ]
-    )
+    error_sequence = iter([
+        OSError(errno.ETIMEDOUT, "Timeout"),
+        OSError(errno.EHOSTUNREACH, "Host unreachable"),
+        PermissionError(errno.EACCES, "Permission denied"),
+    ])
 
     def resolve_with_errors(self):
         try:
