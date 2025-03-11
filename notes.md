@@ -190,6 +190,8 @@
 
 ## Fixed in This Batch
 - Fixed syntax error in file skipping logic (unmatched parenthesis)
+- Fixed Windows reserved name regex handling with extensions
+- Added comprehensive test coverage for multi-extension reserved names
 - Added missing validation for Windows reserved names with extensions
 - Improved pytest parallel execution output handling
 - Fixed UNC path case normalization edge cases

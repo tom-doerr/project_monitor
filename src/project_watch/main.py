@@ -26,7 +26,7 @@ def get_pylint_score() -> float:
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         if match := re.search(r"rated at (\d+\.?\d*)/10", text):
-            return max(0.0, min(float(match.group(1)), 10.0)
+            return max(0.0, min(float(match.group(1)), 10.0))
         return 0.0
 
     try:
@@ -218,13 +218,14 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     try:
         real_path = path.resolve()
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        return any(
+        return any([
             file_id in counted,
             not real_path.exists(),
             real_path.suffix != ".py",
             not real_path.is_file(),
             _is_windows_reserved_path(real_path),
             any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
+        ])
         )
     except OSError:
         return True
@@ -248,7 +249,7 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"CONIN\$|CONOUT\$)(\..*)?$"
     )
     reserved_pattern = re.compile(reserved_pattern, re.IGNORECASE)
-    return re.fullmatch(reserved_pattern, real_path.name, re.IGNORECASE) is not None
+    return reserved_pattern.fullmatch(real_path.name) is not None
 
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
