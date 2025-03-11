@@ -53,13 +53,7 @@ def get_pylint_score() -> float:
 
 def _parse_pytest_output(output: str) -> dict:
     """Parse pytest output into structured results."""
-    result = {
-        "passed": 0,
-        "failed": 0,
-        "time": 0.0,
-        "output": output,
-        "error": ""
-    }
+    result = {"passed": 0, "failed": 0, "time": 0.0, "output": output, "error": ""}
 
     if not _parse_pytest_json(output, result):
         _parse_pytest_text(output, result)
@@ -130,7 +124,7 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
         (r"(\d+) warnings", "warnings"),
         (r"(\d+) errors", "errors"),
         (r"(\d+) skipped", "skipped"),
-        (r"(\d+) deselected", "deselected"), 
+        (r"(\d+) deselected", "deselected"),
         (r"(\d+) rerun", "rerun"),
     ]
     # Try multiple patterns to handle different pytest output formats
