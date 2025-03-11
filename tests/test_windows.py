@@ -137,7 +137,6 @@ def test_long_path_handling(tmp_path):
         # Valid cases
         ("share", "test.py", 2, None),
         ("valid_dir", "data.csv", 3, None),
-        
         # Reserved name cases
         ("\\\\server\\CONIN$", None, None, "reserved Windows name"),
         ("\\\\Server\\ClOcK$", None, None, "reserved Windows name"),
@@ -146,7 +145,6 @@ def test_long_path_handling(tmp_path):
         ("CLOCK$", "time.txt", 1, None),
         ("CONFIG$", "settings.ini", None, "reserved Windows name"),
         ("LPT9", "output.txt", None, "reserved Windows name"),
-        
         # Edge cases
         ("very_long_directory_name" * 10, "long.txt", 1, None),
         ("mixED/case/Path", "file.txt", 1, None),
