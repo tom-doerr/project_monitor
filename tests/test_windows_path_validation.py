@@ -62,12 +62,18 @@ def test_reserved_names_with_extensions(tmp_path: Path):
         pytest.skip("Windows-specific test")
 
     reserved_files = [
-        "COM1.txt", "lpt2.tar.gz", "nul.config.ini",
-        "CONFIG.INI", "aux.backup.bak"
+        "COM1.txt",
+        "lpt2.tar.gz",
+        "nul.config.ini",
+        "CONFIG.INI",
+        "aux.backup.bak",
     ]
     valid_files = [
-        "COM10.log", "lpt10.zip", "nullfile.txt",
-        "config.ini", "auxiliary.bak"
+        "COM10.log",
+        "lpt10.zip",
+        "nullfile.txt",
+        "config.ini",
+        "auxiliary.bak",
     ]
 
     # Create test files with expected counts
