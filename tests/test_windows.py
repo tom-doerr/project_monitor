@@ -143,7 +143,13 @@ def test_windows_unc_paths(tmp_path):
 
 
 def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
-    """Test case-insensitive detection of reserved names with edge cases"""
+    """Test case-insensitive detection of reserved names including:
+    - Mixed case variations (CoN, lpT3)
+    - Multiple extensions (.config.txt, .CONFIG.TXT)
+    - Special device names (CONIN$, CONOUT$, CLOCK$)
+    - System files ($Mft, $LogFile)
+    - Case variants with numbers (COM1, com9)
+    """
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 

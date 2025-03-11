@@ -68,9 +68,13 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     ]
 
     for exc_type, msg in error_cases:
+        # Create local copies for closure capture
+        current_exc = exc_type
+        current_msg = msg
 
         def mock_open(*args, **kwargs):
-            # Capture current exc_type/msg in closure
+            # Raise the exception for this specific test case
+            raise current_exc(current_msg)
             raise exc_type(msg)
 
         monkeypatch.setattr("builtins.open", mock_open)
