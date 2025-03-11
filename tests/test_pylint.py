@@ -116,3 +116,10 @@ def test_get_pylint_score_multiple_matches():
             args=[], returncode=0, stdout="rated at 5/10\nrated at 8/10", stderr=""
         )
         assert get_pylint_score() == 8.0
+
+def test_pylint_timeout_handling():
+    with patch("subprocess.run") as mock_run, patch("logging.warning") as mock_warn:
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd=[], timeout=15)
+        score = get_pylint_score()
+        assert score == 0.0
+        mock_warn.assert_called_with("Pylint timed out after 15 seconds")
