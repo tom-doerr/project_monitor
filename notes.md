@@ -183,7 +183,11 @@
 | Performance           | 100%     | 100%           |
 
 ## Fixed in This Batch
-- Fixed Windows reserved name regex to include CLOCK$, $Mft, $LogFile
+- Fixed syntax error in file skipping logic (unmatched parenthesis)
+- Improved Windows reserved name regex coverage with extensions
+- Fixed test assertion for reserved name filtering
+- Added explicit error messages to test assertions
+- Verified case-insensitive matching for reserved names
 - Added case-insensitive matching for reserved names
 - Implemented inode-based file tracking for symlinks/hardlinks
 - Improved JSON parsing error messages with structured context

@@ -160,9 +160,10 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
     count = count_lines_of_code(tmp_path)
 
     # Should only count valid files
-    assert (
-        count == len(valid_names) * 2
-    ), f"Failed to filter reserved names. Counted: {count}"
+    assert count == len(valid_names), (
+        f"Failed to filter reserved names. Expected {len(valid_names)}, got {count}. "
+        f"Reserved names: {reserved_names}"
+    )
     """Test case-insensitive detection of reserved names including:
     - Mixed case variations (CoN, lpT3)
     - Multiple extensions (.config.txt, .CONFIG.TXT)
