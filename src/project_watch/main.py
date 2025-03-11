@@ -25,28 +25,17 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
-        # Find scores with word boundaries to avoid partial matches
-        matches = re.findall(r"\brated at (\d+\.?\d*)/10\b", text)
+        matches = re.findall(r"\brated at (\d+\.?\d*)/10\b", text) or re.findall(r"(\d+\.?\d*)/10", text)
         if not matches:
-            # Fallback to search without word boundaries
-            matches = re.findall(r"(\d+\.?\d*)/10", text)
-            if not matches:
-                return 0.0
+            return 0.0
 
-        # Validate all found scores and take highest valid one
-        valid_scores = []
-        for score_str in matches:
-            try:
-                score = float(score_str)
-                if 0.0 <= score <= 10.0:
-                    valid_scores.append(score)
-            except ValueError:
-                continue
-
-        return max(valid_scores) if valid_scores else 0.0
+        # Validate scores and return highest valid one
+        return max(
+            (float(m[0]) for m in matches
+            if 0.0 <= float(m[0]) <= 10.0
+        ), default=0.0)
 
     try:
         proc = subprocess.run(
@@ -84,17 +73,18 @@ def _parse_pytest_output(output: str) -> dict:
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     json_match = re.search(r'{"\w+": \d+.*}', output)
-    if json_match:
-        try:
-            json_data = json.loads(json_match.group(0))
-            if isinstance(json_data, dict) and "passed" in json_data:
-                _update_results_from_json(json_data, result)
-                return True
-            return False
-        except (json.JSONDecodeError, AttributeError, ValueError) as e:
-            result["error"] = f"JSON parsing failed: {str(e)}"
-            return False
-    return False
+    if not json_match:
+        return False
+        
+    try:
+        json_data = json.loads(json_match.group(0))
+        if isinstance(json_data, dict) and "passed" in json_data:
+            _update_results_from_json(json_data, result)
+            return True
+        return False
+    except (json.JSONDecodeError, AttributeError, ValueError) as e:
+        result["error"] = f"JSON parsing failed: {str(e)}"
+        return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -373,7 +363,7 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
     raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
-def _count_valid_file_lines(path: pathlib.Path, counted: set, inode_cache: set) -> int:
+def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
     """Count lines in valid, accessible files."""
     try:
         resolved_path = _resolve_with_retry(path)
@@ -397,7 +387,7 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set, inode_cache: set) 
 
         logger.debug("Counted %d lines in %s", line_count, normalized_path)
         return line_count
-    except Exception as e:
+    except (OSError, IOError, UnicodeDecodeError) as e:
         _log_file_error(e, path)
         return 0
 
