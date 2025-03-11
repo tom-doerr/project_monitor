@@ -60,12 +60,12 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     ]
 
     for exc_type, msg in error_cases:
-        # Use lambda to capture current values immediately
-        monkeypatch.setattr(
-            "builtins.open", lambda *_, **__: (_ for _ in ()).throw(exc_type(msg))
-        )
-
-        monkeypatch.setattr("builtins.open", mock_open)
+        # Create a mock that raises the specific exception
+        from unittest.mock import mock_open
+        def raise_exc(*args, **kwargs):
+            raise exc_type(msg)
+        
+        monkeypatch.setattr("builtins.open", mock_open(side_effect=raise_exc))
         with caplog.at_level(logging.ERROR):
             result = _process_code_path(tmp_path, set())
             assert result == 0, f"Failed to handle {exc_type.__name__}"
