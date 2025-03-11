@@ -32,6 +32,7 @@ def get_pylint_score() -> float:
         valid_scores = [float(m) for m in matches if 0.0 <= float(m) <= 10.0]
         return max(valid_scores) if valid_scores else 0.0
 
+    score = 0.0
     try:
         proc = subprocess.run(
             ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"),
@@ -42,8 +43,7 @@ def get_pylint_score() -> float:
             cwd=pathlib.Path(__file__).parent.parent,
         )
         if getattr(proc, "returncode", 127) <= 31:
-            return max(extract_score(proc.stdout), extract_score(proc.stderr))
-        return 0.0
+            score = max(extract_score(proc.stdout), extract_score(proc.stderr))
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e), exc_info=True)
         return 0.0
@@ -67,19 +67,18 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    if not (json_match := re.search(r'^{.*}', output, re.DOTALL)):
-        return False
-        
-    try:
-        json_data = json.loads(json_match.group())
-        if isinstance(json_data, dict) and "passed" in json_data:
-            _update_results_from_json(json_data, result)
-            return True
-        result["error"] = "Invalid JSON structure"
-        return False
-    except json.JSONDecodeError as e:
-        result["error"] = f"JSON error: {str(e)}"
-        return False
+    success = False
+    if (json_match := re.search(r'^{.*}', output, re.DOTALL)):
+        try:
+            json_data = json.loads(json_match.group())
+            if isinstance(json_data, dict) and "passed" in json_data:
+                _update_results_from_json(json_data, result)
+                success = True
+            else:
+                result["error"] = "Invalid JSON structure"
+        except json.JSONDecodeError as e:
+            result["error"] = f"JSON error: {str(e)}"
+    return success
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -268,8 +267,7 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     # Check for reserved UNC paths
     if len(real_path.parts) > 1 and real_path.parts[0].startswith("\\\\"):
         unc_root = "\\".join(real_path.parts[0].split("\\")[:4]).upper()
-        if any(reserved in unc_root for reserved in ("CONIN$", "CONOUT$", "CLOCK$")):
-            return True
+        return any(reserved in unc_root for reserved in ("CONIN$", "CONOUT$", "CLOCK$"))
 
     return reserved_pattern.fullmatch(real_path.name) is not None
 
@@ -363,8 +361,6 @@ def _count_valid_file_lines(  # pylint: disable=too-many-arguments,too-many-loca
     path: pathlib.Path,
     counted: set,
     inode_cache: set,
-    encoding: str = "utf-8",
-    errors: str = "replace",
 ) -> int:
     """Count lines in valid, accessible files with inode tracking."""
     try:
