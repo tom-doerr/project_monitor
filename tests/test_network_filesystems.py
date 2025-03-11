@@ -25,22 +25,20 @@ def test_network_timeout_handling(tmp_path, monkeypatch):
 
 
 def _create_delayed_resolve(original):
-    """Create resolve function with simulated latency"""
-
-    # Add retry logic for network filesystems
+    """Create resolve function with simulated timeout errors"""
+    import errno
+    
     def delayed_resolve(self, *args, **kwargs):
         for attempt in range(3):
             try:
-                time.sleep(0.5)  # Simulate network latency
+                if attempt < 2:  # Fail first two attempts
+                    raise OSError(errno.ETIMEDOUT, "Simulated network timeout")
                 return original(self, *args, **kwargs)
-            except FileNotFoundError as e:
+            except OSError as e:
                 if attempt == 2:
-                    raise FileNotFoundError(
-                        f"Network timeout after 3 attempts: {str(e)}"
-                    ) from e
-                time.sleep(1 * (attempt + 1))  # Exponential backoff
-                time.sleep(0.5 * attempt)
-        return None  # Explicit return for consistent-return
+                    raise OSError(errno.EHOSTUNREACH, "Final timeout") from e
+                time.sleep(0.5 * (attempt + 1))
+        return None
 
     return delayed_resolve
 

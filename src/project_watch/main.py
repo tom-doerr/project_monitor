@@ -314,10 +314,31 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
     try:
-        return _count_valid_file_lines(path, counted)
+        resolved_path = _resolve_with_retry(path)
+        return _count_valid_file_lines(resolved_path, counted)
     except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
         _log_file_error(e, path)
         return 0
+
+def _resolve_with_retry(path: pathlib.Path, retries: int = 3, delay: float = 1.5) -> pathlib.Path:
+    """Resolve path with retries for network filesystem timeouts."""
+    import errno
+    import time
+    
+    attempt = 0
+    last_err = None
+    
+    while attempt <= retries:
+        try:
+            return path.resolve(strict=True)
+        except OSError as e:
+            last_err = e
+            if e.errno not in (errno.ETIMEDOUT, errno.EHOSTUNREACH):
+                raise
+            time.sleep(delay * (2 ** attempt))
+            attempt += 1
+    
+    raise IOError(f"Path resolution failed after {retries} retries: {path}") from last_err
 
 
 def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
