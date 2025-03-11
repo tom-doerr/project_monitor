@@ -68,6 +68,8 @@
 ## New Test Coverage
 - Windows reserved filename handling (including subdirectory validation)
 - Special system device names (CONIN$, CONOUT$, CLOCK$)
+- Filesystem event stream validation (create/modify/delete)
+- Real-time monitoring latency thresholds
 - NTFS system file patterns ($Mft, $LogFile)
 - Case variants with numeric suffixes (COM1-COM9, LPT1-LPT9)
 - UNC path normalization edge cases  
@@ -193,8 +195,8 @@
 - [x] Fixed Python import order violations
 - [x] Added 15 new Windows path validation test cases
 - [x] Implemented extended pytest output pattern matching
-- [ ] Implement real-time monitoring prototype
-- [ ] Add filesystem event streaming tests
+- [x] Implement real-time monitoring prototype
+- [x] Add filesystem event streaming tests
 
 ## Critical Notes
 - Run tests: `python -m pytest tests/ --random-order`
