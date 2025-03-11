@@ -122,10 +122,11 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
     normalized_output = output.replace("\n", " ")
     result["time"] = _extract_pytest_time(normalized_output)
 
-    return any(
-        _match_pattern(pattern, groups, normalized_output, result)
+    params = [
+        PatternMatchParams(pattern, groups, normalized_output, result)
         for pattern, groups in patterns
-    ) or _handle_empty_results(normalized_output, result)
+    ]
+    return any(_match_pattern(p) for p in params) or _handle_empty_results(normalized_output, result)
 
 
 def _extract_pytest_time(output: str) -> float:
