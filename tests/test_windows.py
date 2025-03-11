@@ -141,40 +141,36 @@ def test_windows_unc_paths(tmp_path):
     assert count_lines_of_code(share_path) == 2
 
 
-def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
-    """Verify case-insensitive detection of reserved names with various extensions
-    Cases tested:
-    - Mixed case variations (CoN, lpT3)
-    - Multiple extensions (.config.txt, .CONFIG.TXT)
-    - Special device names (CONIN$, CONOUT$, CLOCK$)
-    - System files ($Mft, $LogFile)
-    - Case variants with numbers (COM1, com9)
-    """
+def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
+    """Create test files with reserved and valid names."""
     reserved_names = [
         "cOm1",
-        "lPt9.TxT",
+        "lPt9.TxT", 
         "nUL.tar.gz",
         "CONFIG.ini",
         "COM2.log",
         "prn.png",
     ]
     valid_names = ["data.txt", "image.png", "document.pdf"]
-
+    
     # Create test files
     for name in reserved_names + valid_names:
         (tmp_path / name).touch()
+        
+    return reserved_names, valid_names
 
+def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
+    """Verify case-insensitive detection of reserved names with various extensions"""
+    reserved_names, valid_names = _create_reserved_test_files(tmp_path)
     count = count_lines_of_code(tmp_path)
     
     # Debug output for test failures
-    print(f"\nFound files: {list(tmp_path.glob('*'))}")  # Add debug output
+    print(f"\nFound files: {list(tmp_path.glob('*'))}")
     
     # Should only count valid files
     assert count == len(valid_names), (
         f"Failed to filter {len(reserved_names)} reserved names. "
-        f"Expected {len(valid_names)} valid files, counted {count}. "
-        f"Reserved names: {reserved_names}"
-    )
+        f"Expected {len(valid_names)} valid files, counted {count}")
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
