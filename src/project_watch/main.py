@@ -58,8 +58,8 @@ def _parse_pytest_output(output: str) -> dict:
         "failed": 0,
         "time": 0.0,
         "output": output,
-        "error": None,
-    }  # Initialize error as None
+        "error": "",  # Initialize as empty string
+    }
 
     if not _parse_pytest_json(output, result):
         _parse_pytest_text(output, result)
@@ -257,7 +257,7 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"^(CON|PRN|AUX|NUL|CLOCK\$|"
         r"COM[0-9]|LPT[0-9]|"  # Include COM0/LPT0
         r"\$Mft|\$LogFile|\$Volume|"
-        r"CONIN\$|CONOUT\$|FAX\$)(\..*)?$"
+        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$)(\..*)?$"
     )
     reserved_pattern = re.compile(reserved_pattern, re.IGNORECASE)
     return reserved_pattern.fullmatch(real_path.name) is not None
@@ -313,6 +313,9 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
+
+    # Track both inode and device ID to handle cross-device symlinks
+    file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:

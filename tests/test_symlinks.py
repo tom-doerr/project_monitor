@@ -50,7 +50,7 @@ def test_nested_symlinks(tmp_path: Path):
 
 
 def test_nested_symlink_chain(tmp_path: Path):
-    """Test symlink chain resolution"""
+    """Test symlink chain resolution across multiple links"""
     # Create chain: linkA -> linkB -> linkC -> real_file
     real_file = tmp_path / "real.py"
     real_file.write_text("x = 1\n")

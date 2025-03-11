@@ -107,7 +107,10 @@
 - Real-time file change detection
 
 ## Recent Changes
-- Added missing pathlib import in main.py  
+- Added CONFIG$ to Windows reserved pattern
+- Improved symlink cross-device handling
+- Added debug output for Windows path tests
+- Clarified symlink test documentation
 - Fixed unmatched parenthesis syntax error in file skipping logic
 - Enhanced Windows reserved name regex coverage
 - Added test cases for mixed case and complex extensions

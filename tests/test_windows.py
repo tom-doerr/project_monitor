@@ -165,7 +165,10 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         (tmp_path / name).touch()
 
     count = count_lines_of_code(tmp_path)
-
+    
+    # Debug output for test failures
+    print(f"\nFound files: {list(tmp_path.glob('*'))}")  # Add debug output
+    
     # Should only count valid files
     assert count == len(valid_names), (
         f"Failed to filter {len(reserved_names)} reserved names. "
