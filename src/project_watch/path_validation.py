@@ -51,7 +51,7 @@ _RESERVED_PATTERN = re.compile(
     r"\$AttrDef|\$Bitmap|\$Boot|\$BadClus|"
     r"\$Secure|\$Upcase|\$Extend|"
     r"\$Quota|\$ObjId|\$Reparse)(\..*)?$",
-    flags=re.IGNORECASE
+    flags=re.IGNORECASE,
 )
 
 

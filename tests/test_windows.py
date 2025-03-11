@@ -144,20 +144,25 @@ def test_windows_unc_paths(tmp_path):
 def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
     """Verify case-insensitive detection of reserved names with various extensions"""
     reserved_names = [
-        "cOm1", "lPt9.TxT", "nUL.tar.gz", 
-        "CONFIG.ini", "COM2.log", "prn.png"
+        "cOm1",
+        "lPt9.TxT",
+        "nUL.tar.gz",
+        "CONFIG.ini",
+        "COM2.log",
+        "prn.png",
     ]
     valid_names = ["data.txt", "image.png", "document.pdf"]
-    
+
     # Create test files
     for name in reserved_names + valid_names:
         (tmp_path / name).touch()
 
     count = count_lines_of_code(tmp_path)
-    
+
     # Should only count valid files
-    assert count == len(valid_names) * 2, \
-        f"Failed to filter reserved names. Counted: {count}"
+    assert (
+        count == len(valid_names) * 2
+    ), f"Failed to filter reserved names. Counted: {count}"
     """Test case-insensitive detection of reserved names including:
     - Mixed case variations (CoN, lpT3)
     - Multiple extensions (.config.txt, .CONFIG.TXT)
