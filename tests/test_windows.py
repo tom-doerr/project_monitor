@@ -140,6 +140,24 @@ def test_windows_unc_paths(tmp_path):
     # Then verify Windows path handling
     assert count_lines_of_code(share_path) == 2
 
+def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
+    """Test case-insensitive detection of reserved names"""
+    if sys.platform != "win32":
+        pytest.skip("Windows-specific test")
+    
+    reserved_names = ["COM1", "lpt9", "CON.TXT", "aux.json"]
+    valid_names = ["COM10", "LPTS", "conventional.txt"]
+    
+    # Create test files
+    for name in reserved_names + valid_names:
+        (tmp_path / name).write_text("content")
+    
+    # Count lines - should skip reserved names regardless of case
+    result = count_lines_of_code(tmp_path)
+    
+    # Should only count the valid names
+    assert result == len(valid_names)
+
 
 def test_windows_mixed_slashes(tmp_path):
     """Test mixed forward/backward slashes"""
