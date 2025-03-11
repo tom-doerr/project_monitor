@@ -164,8 +164,8 @@ def test_windows_special_devices(tmp_path: Path):
     """Test special device name handling (CONIN$, CONOUT$, CLOCK$)"""
     _run_reserved_name_test(
         tmp_path,
-        reserved_names=["CONIN$", "CONOUT$.log", "CLOCK$.tmp", "COM1.txt", "LPT2.test"],
-        valid_names=["CONFIG", "clock", "CONIN", "com10", "lpt0"],
+        (["CONIN$", "CONOUT$.log", "CLOCK$.tmp", "COM1.txt", "LPT2.test"],
+         ["CONFIG", "clock", "CONIN", "com10", "lpt0"]),
     )
 
 
@@ -196,27 +196,37 @@ def test_windows_system_files(tmp_path: Path):
     )
 
 
-def _run_reserved_name_test(tmp_path: Path, reserved_names: list, valid_names: list):
-    """Helper to run reserved name test cases"""
-    # Setup test files
-    for name in reserved_names + valid_names:
-        try:
-            (tmp_path / name).write_text("content")
-        except OSError:
-            pass  # Expected to fail creating reserved names on Windows
+def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):
+    """Validate Windows reserved name handling.
+    
+    Args:
+        tmp_path: Temporary directory path
+        test_cases: Tuple of (reserved_names, valid_names) to test
+    """
+    reserved_names, valid_names = test_cases
+    
+    # Create test files and handle expected OSErrors
+    for name in (*reserved_names, *valid_names):
+        (tmp_path / name).write_text("content") if name not in reserved_names \
+            else _attempt_reserved_file(tmp_path / name)
 
-    # Create nested valid file
-    nested_dir = tmp_path / "COM2" / "valid_sub"
-    nested_dir.mkdir(parents=True)
-    (nested_dir / "valid.py").write_text("# Valid nested file\n")
+    # Nested valid file should be excluded since COM2 is reserved
+    (tmp_path / "COM2" / "valid_sub").mkdir(parents=True)
+    (tmp_path / "COM2" / "valid_sub" / "valid.py").write_text("# Excluded nested file\n")
 
-    # Count lines and verify
-    result = count_lines_of_code(tmp_path)
-    expected = len(valid_names)  # Nested file in reserved directory should be excluded
-    assert result == expected, (
-        f"Expected {expected} lines from {len(valid_names)} valid files, got {result}. "
-        f"Reserved files: {reserved_names}"
+    # Verify line count matches valid files only
+    valid_count = count_lines_of_code(tmp_path)
+    assert valid_count == len(valid_names), (
+        f"Expected {len(valid_names)} valid lines, got {valid_count}. "
+        f"Reserved: {reserved_names}"
     )
+
+def _attempt_reserved_file(path: Path) -> None:
+    """Attempt to create reserved file, ignoring expected OSError"""
+    try:
+        path.write_text("content")
+    except OSError:
+        pass
 
 
 def test_windows_mixed_slashes(tmp_path):
