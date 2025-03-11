@@ -25,10 +25,6 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-    cmd = ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src")
-    cwd = pathlib.Path(__file__).parent.parent
-    result = 0.0  # Initialize with default value
-    
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
@@ -36,20 +32,19 @@ def get_pylint_score() -> float:
 
     try:
         proc = subprocess.run(
-            cmd,
+            ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"),
             capture_output=True,
             text=True,
             check=False,
             timeout=15,
-            cwd=cwd,
+            cwd=pathlib.Path(__file__).parent.parent,
         )
         if getattr(proc, "returncode", 127) <= 31:
-            result = max(extract_score(proc.stdout), extract_score(proc.stderr))
+            return max(extract_score(proc.stdout), extract_score(proc.stderr))
+        return 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
         return 0.0
-    # Initialize result with default value to prevent E0606
-    return getattr(locals(), 'result', 0.0)
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -70,17 +65,17 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    if not (json_match := re.search(r'{"\w+": \d+.*}', output)):
-        return False
-
-    try:
-        json_data = json.loads(json_match.group(0))
-        if isinstance(json_data, dict) and "passed" in json_data:
-            _update_results_from_json(json_data, result)
-            return True
-    except (json.JSONDecodeError, AttributeError, ValueError) as e:
-        result["error"] = f"JSON parsing failed: {str(e)}"
-    
+    json_match = re.search(r'{"\w+": \d+.*}', output)
+    if json_match:
+        try:
+            json_data = json.loads(json_match.group(0))
+            if isinstance(json_data, dict) and "passed" in json_data:
+                _update_results_from_json(json_data, result)
+                return True
+            return False
+        except (json.JSONDecodeError, AttributeError, ValueError) as e:
+            result["error"] = f"JSON parsing failed: {str(e)}"
+            return False
     return False
 
 
@@ -192,34 +187,33 @@ def _handle_empty_results(output: str, result: dict) -> bool:
     return False
 
 
+def _handle_pytest_error(e: Exception) -> dict:
+    """Handle pytest errors and format response."""
+    error_details = []
+    if hasattr(e, "stderr") and e.stderr.strip():
+        error_details.append(e.stderr.strip())
+    if hasattr(e, "stdout") and e.stdout.strip():
+        error_details.append(e.stdout.strip())
+    return {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "error": f"Pytest error: {' | '.join(error_details)[:500]}" if error_details else str(e)
+    }
+
 def get_pytest_results() -> dict:
     """Run pytest and return results summary with error handling."""
-    def _handle_error(e: Exception) -> dict:
-        error_details = []
-        if hasattr(e, "stderr") and e.stderr.strip():
-            error_details.append(e.stderr.strip())
-        if hasattr(e, "stdout") and e.stdout.strip():
-            error_details.append(e.stdout.strip())
-        return {
-            "passed": 0,
-            "failed": 0,
-            "skipped": 0,
-            "error": f"Pytest error: {' | '.join(error_details)[:500]}" if error_details else str(e)
-        }
-
     try:
-        result = subprocess.run(
+        proc = subprocess.run(
             ["pytest", "--tb=no", "."],
             capture_output=True,
             text=True,
             check=False,
             timeout=30,
         )
-        results = _parse_pytest_output(result.stdout)
-        results.setdefault("error", "")
-        return results
+        return _parse_pytest_output(proc.stdout)
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
-        return _handle_error(e)
+        return _handle_pytest_error(e)
 
 
 def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
@@ -327,7 +321,9 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         return 0
 
 
-def _resolve_with_retry(path: pathlib.Path, retries: int = 3, delay: float = 1.5) -> pathlib.Path:
+def _resolve_with_retry(  # pylint: disable=too-many-arguments
+    path: pathlib.Path, retries: int = 3, delay: float = 1.5
+) -> pathlib.Path:
     """Resolve path with retries for network filesystem timeouts."""
     for attempt in range(retries + 1):
         try:
