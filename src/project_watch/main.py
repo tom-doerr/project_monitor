@@ -284,7 +284,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
     try:
-        normalized_path = _normalize_path_case(path.resolve(strict=True))
+        # Resolve path first to catch permission issues
+        resolved_path = path.resolve(strict=True)
+        normalized_path = _normalize_path_case(resolved_path)
         if not normalized_path.is_file() or _should_skip_file(normalized_path, counted):
             return 0
 
@@ -296,7 +298,7 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         logger.log(
             logging.WARNING if isinstance(e, PermissionError) else logging.DEBUG,
             "Error counting %s: %s",
-            path,
+            path.resolve() if path.exists() else path,
             e,
         )
         return 0

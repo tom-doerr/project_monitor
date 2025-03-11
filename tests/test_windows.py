@@ -262,7 +262,7 @@ def test_mixed_case_paths(tmp_path: Path):
     assert count_lines_of_code(file_path.parent) == 2
 
 
-def test_pytest_output_parsing_edge_cases():
+def test_pytest_output_parsing_edge_cases(tmp_path: Path):
     """Test edge cases in pytest output parsing"""
     # Test empty output
     assert _parse_pytest_output("") == {
@@ -272,6 +272,9 @@ def test_pytest_output_parsing_edge_cases():
         "output": "",
         "error": None,
     }
+    
+    # Use tmp_path for Windows compatibility
+    (tmp_path / "empty.txt").touch()
 
     # Test malformed JSON with valid text fallback
     malformed_json = '{"passed": 5, "failed": 1\n3 passed, 1 failed in 0.5s'
