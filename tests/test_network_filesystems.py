@@ -26,39 +26,40 @@ def test_network_timeout_handling(tmp_path, monkeypatch):
     assert result == 2
 
 
+class TrackedResolver:
+    def __init__(self):
+        self.resolve_times = []
+        self.original_resolve = pathlib.Path.resolve
+        
+    def __call__(self, path):
+        self.resolve_times.append(time.monotonic())
+        if len(self.resolve_times) < 3:
+            raise OSError(errno.ETIMEDOUT, "Simulated timeout")
+        return self.original_resolve(path)
+
 def test_network_retry_backoff(tmp_path, monkeypatch):
     """Validate exponential backoff timing between retries"""
-    test_file = tmp_path / "retry_test.py"
-    test_file.write_text("# Retry test file\n")
-
-    def create_tracked_resolver():
-        resolve_times = []
-        original_resolve = pathlib.Path.resolve
-        
-        def tracked_resolve(self):
-            resolve_times.append(time.monotonic())
-            if len(resolve_times) < 3:
-                raise OSError(errno.ETIMEDOUT, "Simulated timeout")
-            return original_resolve(self)
-            
-        return resolve_times, tracked_resolve
-
-    resolve_times, resolver = create_tracked_resolver()
+    (tmp_path / "retry_test.py").write_text("# Retry test file\n")
+    
+    resolver = TrackedResolver()
     monkeypatch.setattr(pathlib.Path, "resolve", resolver)
     
     start_time = time.monotonic()
-    count_lines_of_code(tmp_path)  # Trigger the retries
+    count_lines_of_code(tmp_path)  # Trigger retries
 
-    # Verify retry delays (should be ~1s and ~2s)
-    assert len(resolve_times) == 3
-    first_delay = resolve_times[1] - resolve_times[0]
-    second_delay = resolve_times[2] - resolve_times[1]
-
-    assert 0.9 < first_delay < 1.1, f"First delay was {first_delay}"
-    assert 1.9 < second_delay < 2.1, f"Second delay was {second_delay}"
-
+    # Calculate delays from resolver's timestamps
+    delays = [
+        resolver.resolve_times[i+1] - resolver.resolve_times[i]
+        for i in range(len(resolver.resolve_times)-1)
+    ]
+    
+    # Verify retry count and delays
+    assert len(resolver.resolve_times) == 3, "Expected 3 resolve attempts"
+    assert 0.9 < delays[0] < 1.1, f"First delay ({delays[0]:.2f}s) out of range"
+    assert 1.9 < delays[1] < 2.1, f"Second delay ({delays[1]:.2f}s) out of range"
+    
     total_time = time.monotonic() - start_time
-    assert 2.5 < total_time < 3.5, f"Total duration was {total_time}"
+    assert 2.5 < total_time < 3.5, f"Total duration ({total_time:.2f}s) unexpected"
 
 
 def test_mixed_network_errors(tmp_path, monkeypatch):
