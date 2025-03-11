@@ -42,7 +42,7 @@
 14. ✅ Implemented inode-based symlink tracking  
 15. ✅ Added Windows path case normalization
 16. ✅ Improved read-only file handling
-17. ◻️ Add memory leak detection
+17. ✅ Add memory leak detection
 
 ## Future Considerations
 - Add remote repository monitoring capability
@@ -81,6 +81,7 @@
 - Invalid UTF-8 byte sequences
 - Permission error propagation
 - Partial file read failures
+- Memory leak detection via tracemalloc
 
 ## Recent Changes
 - Fixed symlink handling in line counting
