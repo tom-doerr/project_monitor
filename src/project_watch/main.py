@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         pattern = r"(?:rated at |score: )(\d+\.?\d*)/10"
@@ -68,7 +69,7 @@ def _parse_pytest_output(output: str) -> dict:
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     success = False
-    if (json_match := re.search(r'^{.*}', output, re.DOTALL)):
+    if json_match := re.search(r"^{.*}", output, re.DOTALL):
         try:
             json_data = json.loads(json_match.group())
             if isinstance(json_data, dict) and "passed" in json_data:
@@ -260,8 +261,8 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     reserved_pattern = re.compile(
         r"^(?:(CON|PRN|AUX|NUL|CLOCK\$|COM[0-9]|LPT[0-9])(\..*)?|"
         r"\$(?:Mft|LogFile|Volume)|"
-        r"(?:CONIN|CONOUT|FAX|CONFIG)\$)$", 
-        re.IGNORECASE
+        r"(?:CONIN|CONOUT|FAX|CONFIG)\$)$",
+        re.IGNORECASE,
     )
 
     # Check for reserved UNC paths
@@ -314,7 +315,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     )
 
 
-def _process_file(path: pathlib.Path, counted: set, inode_cache: set) -> int:  # pylint: disable=too-many-arguments
+def _process_file(
+    path: pathlib.Path, counted: set, inode_cache: set
+) -> int:  # pylint: disable=too-many-arguments
     """Process individual files for line counting."""
     try:
         return (
@@ -327,7 +330,9 @@ def _process_file(path: pathlib.Path, counted: set, inode_cache: set) -> int:  #
         return 0
 
 
-def _process_code_path(path: pathlib.Path, counted: set, inode_cache: set) -> int:  # pylint: disable=too-many-arguments
+def _process_code_path(
+    path: pathlib.Path, counted: set, inode_cache: set
+) -> int:  # pylint: disable=too-many-arguments
     """Process a single path for line counting."""
     try:
         resolved_path = _resolve_with_retry(path)
@@ -380,7 +385,7 @@ def _count_valid_file_lines(  # pylint: disable=too-many-arguments,too-many-loca
         try:
             if file_stat.st_ino in inode_cache:
                 return 0
-                
+
             inode_cache.add(file_stat.st_ino)
             line_count = _count_file_lines(normalized_path)
         except (OSError, UnicodeDecodeError, PermissionError) as e:
