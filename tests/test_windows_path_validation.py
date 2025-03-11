@@ -13,13 +13,13 @@ def test_windows_special_device_names(tmp_path: Path):
 
     device_names = [
         "CONIN$",
-        "CONOUT$", 
+        "CONOUT$",
         "CLOCK$",
         "COM0",
         "LPT0",
         "nul.txt",
         "AUX.config",
-        "CLOCK$.log"  # Test with extension
+        "CLOCK$.log",  # Test with extension
     ]
     valid_names = ["CONFIG", "CLOCK", "COM10", "LPT10", "nullfile"]
 
