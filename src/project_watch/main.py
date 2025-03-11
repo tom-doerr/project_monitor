@@ -390,9 +390,14 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
         if not normalized_path.is_file():
             return 0
 
-    line_count = _count_file_lines(normalized_path)
-    logger.debug("Counted %d lines in %s", line_count, normalized_path)
-    return line_count
+        try:
+            line_count = _count_file_lines(normalized_path)
+        except (OSError, UnicodeDecodeError, PermissionError) as e:
+            _log_file_error(e, path)
+            return 0
+            
+        logger.debug("Counted %d lines in %s", line_count, normalized_path)
+        return line_count
 
 
 def _log_file_error(error: Exception, path: pathlib.Path) -> None:
