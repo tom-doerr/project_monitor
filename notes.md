@@ -154,10 +154,13 @@
 - [ ] Add filesystem event streaming
 - [ ] Improve network filesystem test reliability
 - [ ] Add Azure Fileshare validation
-- [x] Fixed undefined line_count error in file processing
-- [x] Cleaned up duplicate dataclass import 
+- [x] Fixed undefined line_count error in file processing  
+- [x] Cleaned up duplicate dataclass import
 - [x] Fixed Python import order violations
+- [x] Added 15 new Windows path validation test cases
+- [x] Implemented extended pytest output pattern matching
 - [ ] Implement real-time monitoring prototype
+- [ ] Add filesystem event streaming tests
 
 ## Critical Notes
 - Run tests: `python -m pytest tests/ --random-order`
@@ -187,6 +190,9 @@
 
 ## Fixed in This Batch
 - Fixed syntax error in file skipping logic (unmatched parenthesis)
+- Added missing validation for Windows reserved names with extensions
+- Improved pytest parallel execution output handling
+- Fixed UNC path case normalization edge cases
 - Improved Windows reserved name regex coverage with extensions
 - Fixed test assertion for reserved name filtering
 - Added explicit error messages to test assertions
@@ -278,8 +284,11 @@
 
 ## New Test Coverage
 - Nested symlink chains ✅
-- Mixed case Windows paths ✅  
+- Mixed case Windows paths ✅
 - Alternative pytest output formats ✅
+- Windows reserved names with multiple extensions (.test.txt) ✅
+- Case-insensitive UNC path validation ✅
+- Pytest output with parallel execution flags ✅
 - Directory symlink handling ✅
 - Network filesystem timeout retries ✅
 - Windows reserved name case insensitivity ✅
