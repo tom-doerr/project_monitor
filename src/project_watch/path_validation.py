@@ -25,13 +25,11 @@ def is_windows_reserved_path(path: Path) -> bool:
     Handles case-insensitive matching and Unicode normalization."""
     if sys.platform != "win32":
         return False
-
+        
     try:
-        normalized_path = path.resolve()
+        return any(
+            _RESERVED_PATTERN.match(part)
+            for part in path.resolve().parts
+        )
     except OSError:
         return False
-
-    return any(
-        _RESERVED_PATTERN.match(part) 
-        for part in normalized_path.parts
-    )

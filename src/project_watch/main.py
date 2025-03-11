@@ -3,14 +3,13 @@
 # Standard library imports
 import json
 import logging
-import pathlib
+import pathlib 
 import re
 import subprocess
 import sys
-import pathlib
 from datetime import datetime
 
-# Third-party imports 
+# Third-party imports
 from watchdog.events import FileSystemEventHandler
 
 logger = logging.getLogger(__name__)
@@ -215,9 +214,10 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
         return True
 
 
+from .path_validation import is_windows_reserved_path
+
 def _is_windows_reserved_path(path: pathlib.Path) -> bool:
     """Check if path contains Windows reserved names."""
-    from .path_validation import is_windows_reserved_path
     return is_windows_reserved_path(path)
 
 
@@ -282,10 +282,16 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.device)
-
-        if file_id in counted or not real_path.is_file() or real_path.suffix != ".py":
+        
+        should_skip = (
+            file_id in counted or 
+            not real_path.is_file() or 
+            real_path.suffix != ".py"
+        )
+        
+        if should_skip:
             return 0
-
+            
         counted.add(file_id)
         return _count_file_lines(real_path)
 

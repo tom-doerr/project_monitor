@@ -1,6 +1,6 @@
+import logging
 from unittest.mock import patch
 import pytest
-import logging
 from project_watch.main import count_lines_of_code
 
 
@@ -48,6 +48,8 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch):
     - Decoding errors"""
     from project_watch.main import _process_code_path
 
+    from project_watch.main import _process_code_path
+
     # Test various error scenarios
     error_cases = [
         # Windows-style errors
@@ -68,10 +70,11 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch):
         (OSError, "No space left on device")
     ]
 
-    for exc_type, msg in error_cases:
-
+    for case in error_cases:
+        exc_type, msg = case  # Unpack here to avoid cell-var issues
+        
         def mock_open(*args, **kwargs):
-            raise exc_type(msg)
+            raise exc_type(msg)  # Now uses local variables
 
         monkeypatch.setattr("builtins.open", mock_open)
         result = _process_code_path(tmp_path, set())
