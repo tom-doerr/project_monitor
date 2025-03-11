@@ -135,20 +135,27 @@ def _extract_pytest_time(output: str) -> float:
     return 0.0
 
 
-def _match_pattern(
-    pattern: str, groups: int, output: str, result: dict
-) -> bool:  # pylint: disable=too-many-arguments
+from dataclasses import dataclass
+
+@dataclass
+class PatternMatchParams:
+    pattern: str
+    groups: int
+    output: str
+    result: dict
+
+def _match_pattern(params: PatternMatchParams) -> bool:
     """Match a single output pattern and update results."""
-    if not (match := re.search(pattern, output)):
+    if not (match := re.search(params.pattern, params.output)):
         return False
 
-    result["passed"] = int(match.group(1))
-    if groups >= 2:
-        result["failed"] = int(match.group(2))
-    if groups >= 3:
-        result["warnings"] = int(match.group(3)) if groups == 4 else 0
-    if groups >= 4:
-        result["skipped"] = int(match.group(4))
+    params.result["passed"] = int(match.group(1))
+    if params.groups >= 2:
+        params.result["failed"] = int(match.group(2))
+    if params.groups >= 3:
+        params.result["warnings"] = int(match.group(3)) if params.groups == 4 else 0
+    if params.groups >= 4:
+        params.result["skipped"] = int(match.group(4))
     return True
 
 
@@ -257,51 +264,58 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     """Count total lines of Python code in the given directory."""
     counted = set()
     base_path = pathlib.Path(directory).resolve().absolute()
+    
     # Normalize Windows paths to lowercase
-    if sys.platform == "win32":
-        base_path = pathlib.Path(str(base_path).lower())
+    base_path = pathlib.Path(str(base_path).lower()) if sys.platform == "win32" else base_path
 
-    total = 0
-    for path in base_path.rglob("*"):
-        try:
-            real_path = path.resolve(strict=True)
-            # Track by inode to handle symlinks/hardlinks
-            file_id = (real_path.stat().st_ino, real_path.device)
-            if (
-                file_id in counted
-                or not real_path.is_file()
-                or real_path.suffix != ".py"
-            ):
-                continue
+    return sum(
+        _process_file(path, counted)
+        for path in base_path.rglob("*")
+    )
 
-            counted.add(file_id)
-            total += _count_file_lines(real_path)
-        except (OSError, PermissionError, FileNotFoundError):
-            continue
-    return total
+def _process_file(path: pathlib.Path, counted: set) -> int:
+    """Process individual files for line counting."""
+    try:
+        real_path = path.resolve(strict=True)
+        file_id = (real_path.stat().st_ino, real_path.device)
+        
+        if (file_id in counted or 
+            not real_path.is_file() or 
+            real_path.suffix != ".py"):
+            return 0
+            
+        counted.add(file_id)
+        return _count_file_lines(real_path)
+        
+    except (OSError, PermissionError, FileNotFoundError):
+        return 0
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
     """Process a single path for line counting."""
     try:
-        # Resolve path first to catch permission issues
-        resolved_path = path.resolve(strict=True)
-        normalized_path = _normalize_path_case(resolved_path)
-        if not normalized_path.is_file() or _should_skip_file(normalized_path, counted):
-            return 0
-
-        line_count = _count_file_lines(normalized_path)
-        logger.debug("Counted %d lines in %s", line_count, normalized_path)
-        return line_count
-
+        return _count_valid_file_lines(path, counted)
     except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
-        logger.log(
-            logging.WARNING if isinstance(e, PermissionError) else logging.DEBUG,
-            "Error counting %s: %s",
-            path.resolve() if path.exists() else path,
-            e,
-        )
+        _log_file_error(e, path)
         return 0
+
+def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
+    """Count lines in valid, accessible files."""
+    resolved_path = path.resolve(strict=True)
+    normalized_path = _normalize_path_case(resolved_path)
+    
+    if _should_skip_file(normalized_path, counted) or not normalized_path.is_file():
+        return 0
+        
+    line_count = _count_file_lines(normalized_path)
+    logger.debug("Counted %d lines in %s", line_count, normalized_path)
+    return line_count
+
+def _log_file_error(error: Exception, path: pathlib.Path) -> None:
+    """Log file processing errors with appropriate level."""
+    log_level = logging.WARNING if isinstance(error, PermissionError) else logging.DEBUG
+    path_str = str(path.resolve() if path.exists() else path)
+    logger.log(log_level, "Error counting %s: %s", path_str, error)
 
 
 def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:
