@@ -66,15 +66,18 @@ def is_windows_reserved_path(
     """
     if sys.platform != "win32":
         return False
-
-    result = False
+        
     try:
-        resolved = path.resolve()
-        result = any(
-            _RESERVED_PATTERN.fullmatch(part)
-            for part in resolved.parts
-            if part.split(".")[0]  # Handle extensions properly
-        )
+        normalized_path = path.resolve().as_posix().upper()
+        
+        # Check for reserved names with or without extensions
+        if re.search(r"(^|/)(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9]|CLOCK\$)(\..*)?(/|$)", normalized_path):
+            return True
+            
+        # Check for NTFS special files
+        if any(part.startswith("$") for part in path.parts):
+            return True
+            
+        return False
     except OSError:
-        pass
-    return result
+        return False

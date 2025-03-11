@@ -114,8 +114,10 @@
 - Real-time file change detection
 
 ## Recent Changes
-- Split large Windows test into focused test cases
-- Reduced return statements in pytest JSON parser
+- Fixed Windows reserved path regex to handle nested directories and extensions
+- Added debug logging for Windows path validation tests
+- Improved reserved name pattern matching with normalized paths
+- Added NTFS special file detection in path validation
 - Added helper function for Windows path tests
 - Improved test documentation
 - Fixed remaining Pylint warnings
