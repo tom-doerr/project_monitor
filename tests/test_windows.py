@@ -166,7 +166,7 @@ def test_windows_unc_paths(
     if path_suffix and expected_lines is not None:
         test_file = test_dir / path_suffix
         test_file.write_text("# Test content\n" * expected_lines)
-            
+
         # Verify file was actually created if no error expected
         if expected_error is None:
             assert test_file.exists(), f"Test file {test_file} was not created"

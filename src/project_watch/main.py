@@ -253,7 +253,9 @@ def _is_windows_reserved_path(path: pathlib.Path) -> bool:
     return is_windows_reserved_path(path)
 
 
-def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:  # pylint: disable=unused-argument
+def _is_windows_reserved_name(
+    real_path: pathlib.Path,
+) -> bool:  # pylint: disable=unused-argument
     """Check if path contains Windows reserved filename."""
     if sys.platform != "win32":
         return False
