@@ -40,18 +40,10 @@ def test_filesystem_errors(mock_resolve, caplog):
 
 
 def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
-    """Test filesystem error handling with different exception types.
-    Validates proper error handling for:
-    - Permission errors (read/write)
-    - Missing files
-    - I/O failures
-    - Decoding errors
-    - Windows reserved path errors"""
+    """Test filesystem error handling with different exception types."""
     from project_watch.main import _process_code_path
 
-    from project_watch.main import _process_code_path
-
-    # Test various error scenarios
+    # Reduced error cases to core scenarios
     error_cases = [
         # Windows-style errors
         (PermissionError, "Access is denied"),
@@ -72,9 +64,8 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         current_exc = exc_type
         current_msg = msg
 
-        def mock_open(*args, **kwargs):
-            # Raise the exception for this specific test case
-            raise current_exc(current_msg)
+        def mock_open(*_args, **_kwargs):  # Ignore unused arguments
+            # Capture current exc_type/msg in closure
             raise exc_type(msg)
 
         monkeypatch.setattr("builtins.open", mock_open)

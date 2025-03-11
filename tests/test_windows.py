@@ -1,5 +1,4 @@
 import sys
-import pytest
 from pathlib import Path
 import pytest
 from project_watch.main import (
@@ -245,11 +244,18 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         ).exists(), "Valid files in reserved-named directories should be accessible"
 
 
-def test_windows_mixed_slashes(tmp_path):  # pylint: disable=unused-argument
-    """Test mixed forward/backward slashes (TODO: Implement actual test logic)"""
+def test_windows_mixed_slashes(tmp_path):
+    """Test mixed forward/backward slashes in paths"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-    # TODO: Add actual test implementation here
+    
+    test_file = tmp_path / "mixed" / "slashes.py"
+    test_file.parent.mkdir()
+    test_file.write_text("x = 1\n")
+    
+    # Test with mixed slashes
+    mixed_path = Path(str(test_file).as_posix().replace("mixed/", "mixed\\")
+    assert count_lines_of_code(mixed_path) == 1
 
 
 def test_mixed_case_paths(tmp_path: Path):
