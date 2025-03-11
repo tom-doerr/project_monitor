@@ -45,8 +45,9 @@ def get_pylint_score() -> float:
         pass  # Score remains 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
-
-    return score
+        return 0.0
+        
+    return max(extract_score(proc.stdout), extract_score(proc.stderr))
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -61,18 +62,17 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    def _validate_json_structure(data) -> bool:
-        return isinstance(data, dict) and "passed" in data
-
     json_match = re.search(r'{"\w+": \d+.*}', output)
-    if json_match:
-        try:
-            json_data = json.loads(json_match.group(0))
-            if _validate_json_structure(json_data):
-                _update_results_from_json(json_data, result)
-                return True
-        except (json.JSONDecodeError, AttributeError, ValueError) as e:
-            result["error"] = f"JSON parsing failed: {str(e)}"
+    if not json_match:
+        return False
+
+    try:
+        json_data = json.loads(json_match.group(0))
+        if isinstance(json_data, dict) and "passed" in json_data:
+            _update_results_from_json(json_data, result)
+            return True
+    except (json.JSONDecodeError, AttributeError, ValueError) as e:
+        result["error"] = f"JSON parsing failed: {str(e)}"
     return False
 
 
@@ -129,12 +129,18 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
         "skipped": r"(\d+) skipped"
     }
     
-    found = False
-    for key, pattern in pattern_map.items():
-        if match := re.search(pattern, output):
-            result[key] = int(match.group(1))
-            found = True
-    return found
+    matches = {
+        key: re.search(pattern, output)
+        for key, pattern in pattern_map.items()
+    }
+    
+    result.update({
+        key: int(match.group(1))
+        for key, match in matches.items()
+        if match
+    })
+    
+    return any(matches.values())
 
 
 def _extract_pytest_time(output: str) -> float:
