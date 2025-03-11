@@ -72,8 +72,9 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
         try:
             _update_results_from_json(json.loads(json_match.group(0)), result)
             return True
-        except (json.JSONDecodeError, AttributeError):
-            pass
+        except (json.JSONDecodeError, AttributeError) as e:
+            result["error"] = f"JSON error: {str(e)}"
+            return False
     return False
 
 

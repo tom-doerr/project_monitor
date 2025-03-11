@@ -171,6 +171,10 @@
 
 ## Fixed in This Batch
 - Fixed pytest error message handling in test results
+- Added 30s timeout to Pylint subprocess
+- Optimized large file test generation to use 100MB chunks
+- Improved JSON error message formatting
+- Fixed error assertion in pytest output test
 - Improved subprocess error propagation in tests
 - Fixed filesystem error logging assertions
 - Added explicit error message format validation
