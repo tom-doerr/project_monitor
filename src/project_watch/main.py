@@ -1,5 +1,7 @@
 """Project monitoring core functionality with file system watching."""
 
+# pylint: disable=too-many-lines
+
 # Standard library imports
 import json
 import logging
@@ -7,12 +9,15 @@ import pathlib
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime
 
+# Third-party imports
 # Third-party imports
 from watchdog.events import FileSystemEventHandler
 
 # Local imports
+from .path_validation import is_windows_reserved_path
 
 logger = logging.getLogger(__name__)
 
@@ -285,21 +290,21 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
+    result = 0
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-
-        if not (
-            real_path.is_file() and real_path.suffix == ".py" and file_id not in counted
-        ):
-            return 0
-
-        counted.add(file_id)
-        return _count_file_lines(real_path)
+        
+        if (real_path.is_file() 
+            and real_path.suffix == ".py" 
+            and file_id not in counted):
+            counted.add(file_id)
+            result = _count_file_lines(real_path)
 
     except (OSError, PermissionError, FileNotFoundError) as e:
         logger.debug("File processing error: %s", str(e))
-        return 0
+    
+    return result
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
