@@ -308,6 +308,8 @@
 
 ## New Test Coverage
 - Nested symlink chains ✅
+- Pylint score boundary cases (0.0, 10.0, invalid outputs) ✅
+- Windows reserved name regex edge cases ✅
 - Mixed case Windows paths ✅
 - Alternative pytest output formats ✅
 - Windows reserved names with multiple extensions (.test.txt) ✅
