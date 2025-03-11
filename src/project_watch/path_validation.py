@@ -59,7 +59,11 @@ def is_windows_reserved_path(
     path: Path,
 ) -> bool:  # pylint: disable=too-many-return-statements
     """Check if path contains Windows reserved names in any component.
-    Handles case-insensitive matching and Unicode normalization."""
+    Handles case-insensitive matching and Unicode normalization.
+    
+    Returns:
+        bool: True if path contains reserved components, False otherwise
+    """
     if sys.platform != "win32":
         return False
 
