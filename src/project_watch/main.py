@@ -36,6 +36,7 @@ def get_pylint_score() -> float:
             check=False,
             timeout=15,
             cwd=pathlib.Path(__file__).parent.parent,
+            universal_newlines=True
         )
         # Check if returncode exists before comparison
         if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
@@ -77,7 +78,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
             _update_results_from_json(json_data, result)
             success = True
         except (json.JSONDecodeError, AttributeError) as e:
-            result["error"] = f"JSON error: {str(e)}"
+            result["error"] = f"JSON parsing failed: {str(e)}"
 
     return success
 
@@ -99,13 +100,16 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
     """Match pytest output patterns and update results."""
     patterns = (
         (
-            r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped.*? in ([\d.]+)s",
-            5,
+            r"^(?:=+ )?(\d+) failed(?:, | in |$)",
+            r"^(?:=+ )?(\d+) passed(?:, | in |$)", 
+            r"(\d+) warnings?\)?$",
+            r"(\d+) errors?\)?$",
+            r"(\d+) skipped\)?$"
         ),
-        (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors.*? in ([\d.]+)s", 4),
-        (r"(\d+) passed.*?(\d+) skipped.*? in ([\d.]+)s", 3),
-        (r"(\d+) failed.*? in ([\d.]+)s", 2),
     )
+    # Initialize required fields explicitly
+    result.setdefault("passed", 0)
+    result.setdefault("failed", 0)
 
     for pattern, _ in patterns:
         if match := re.search(pattern, normalized_output):
