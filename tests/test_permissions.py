@@ -66,7 +66,7 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         # Create mock that raises specific error with proper chaining
         monkeypatch.setattr(
             "project_watch.main._count_file_lines",
-            lambda *args, **kwargs: (_ for _ in ()).throw(exc_type(msg))
+            lambda *args, **kwargs: (_ for _ in ()).throw(exc_type(msg)),
         )
         caplog.clear()
 
@@ -74,7 +74,7 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         with caplog.at_level(logging.ERROR):
             result = count_lines_of_code(tmp_path)
             assert result == 0, f"Failed to handle {exc_type.__name__}"
-            
+
             # Verify error message contains both our custom message and the path
             assert any(
                 msg in record.message and str(tmp_path) in record.message

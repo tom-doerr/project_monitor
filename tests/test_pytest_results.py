@@ -32,7 +32,7 @@ def test_handles_invalid_pytest_output():
         mock_run.return_value = MagicMock(
             stdout="invalid: output",  # No JSON structure at all
             stderr="Syntax error",
-            returncode=2
+            returncode=2,
         )
         results = get_pytest_results()
         assert "error" in results, "Should have error key"
