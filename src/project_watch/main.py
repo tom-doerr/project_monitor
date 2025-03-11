@@ -3,12 +3,14 @@
 # pylint: disable=too-many-lines
 
 # Standard library imports
+import errno
 import json
 import logging
 import pathlib
-import re
+import re 
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -69,18 +71,18 @@ def _parse_pytest_output(output: str) -> dict:
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     json_match = re.search(r'{"\w+": \d+.*}', output)
-    if not json_match:
-        return False
+    success = False
+    
+    if json_match:
+        try:
+            json_data = json.loads(json_match.group(0))
+            if isinstance(json_data, dict) and "passed" in json_data:
+                _update_results_from_json(json_data, result)
+                success = True
+        except (json.JSONDecodeError, AttributeError, ValueError) as e:
+            result["error"] = f"JSON parsing failed: {str(e)}"
 
-    try:
-        json_data = json.loads(json_match.group(0))
-        if isinstance(json_data, dict) and "passed" in json_data:
-            _update_results_from_json(json_data, result)
-            return True
-    except (json.JSONDecodeError, AttributeError, ValueError) as e:
-        result["error"] = f"JSON parsing failed: {str(e)}"
-
-    return False
+    return success
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -225,18 +227,14 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        if file_id in counted:
-            return True
-
-        return any(
-            (
-                not real_path.exists(),
-                real_path.suffix != ".py",
-                not real_path.is_file(),
-                _is_windows_reserved_path(real_path),
-                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-            )
-        )
+        
+        return (file_id in counted) or any([
+            not real_path.exists(),
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            _is_windows_reserved_path(real_path),
+            any(b"\0" in chunk for chunk in _read_file_chunks(real_path))
+        ])
     except OSError:
         return True
 
@@ -328,12 +326,8 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         return 0
 
 
-def _resolve_with_retry(
-    path: pathlib.Path, retries: int = 3, delay: float = 1.5
-) -> pathlib.Path:
+def _resolve_with_retry(path: pathlib.Path, retries: int = 3, delay: float = 1.5) -> pathlib.Path:
     """Resolve path with retries for network filesystem timeouts."""
-    import errno
-    import time
 
     attempt = 0
     last_err = None

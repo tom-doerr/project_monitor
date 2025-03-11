@@ -55,7 +55,7 @@ _RESERVED_PATTERN = re.compile(
 )
 
 
-def is_windows_reserved_path(path: Path) -> bool:
+def is_windows_reserved_path(path: Path) -> bool:  # pylint: disable=too-many-return-statements
     """Check if path contains Windows reserved names in any component.
     Handles case-insensitive matching and Unicode normalization."""
     if sys.platform != "win32":
@@ -63,11 +63,10 @@ def is_windows_reserved_path(path: Path) -> bool:
 
     try:
         resolved = path.resolve()
-        # Check all path components against the reserved pattern
         return any(
             _RESERVED_PATTERN.fullmatch(part)
             for part in resolved.parts
             if part.split('.')[0]  # Handle extensions properly
         )
     except OSError:
-        return False  # Default to False on resolution errors
+        return False
