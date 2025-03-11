@@ -114,7 +114,10 @@
 - Real-time file change detection
 
 ## Recent Changes
-- Fixed Windows reserved path regex to handle nested directories and extensions
+- Fixed Windows reserved path regex to handle CONFIG$ and improve extension handling
+- Fixed undefined inode_cache errors in line counting
+- Addressed parameter passing inconsistencies
+- Removed redundant return statement in network tests
 - Added debug logging for Windows path validation tests
 - Improved reserved name pattern matching with normalized paths
 - Added NTFS special file detection in path validation
