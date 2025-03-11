@@ -288,12 +288,12 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        
-        if not (real_path.is_file() and 
-                real_path.suffix == ".py" and 
-                file_id not in counted):
+
+        if not (
+            real_path.is_file() and real_path.suffix == ".py" and file_id not in counted
+        ):
             return 0
-            
+
         counted.add(file_id)
         return _count_file_lines(real_path)
 
