@@ -153,9 +153,6 @@ def _extract_pytest_time(output: str) -> float:
     return 0.0
 
 
-from dataclasses import dataclass
-
-
 @dataclass
 class PatternMatchParams:
     pattern: str
@@ -234,9 +231,6 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
         return True
 
 
-from .path_validation import is_windows_reserved_path
-
-
 def _is_windows_reserved_path(path: pathlib.Path) -> bool:
     """Check if path contains Windows reserved names."""
     return is_windows_reserved_path(path)
@@ -301,7 +295,7 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
         if _should_skip_file(path, counted):
             return 0
         return _count_valid_file_lines(path, counted)
-    except Exception as e:
+    except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
 
