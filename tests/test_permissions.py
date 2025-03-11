@@ -56,9 +56,10 @@ ERROR_CASES = [
 ]
 
 
+from unittest.mock import MagicMock
+
 def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     """Test filesystem error handling with different exception types."""
-    from unittest.mock import MagicMock
 
     for exc_type, msg in ERROR_CASES:
         # Create mock that raises specific error

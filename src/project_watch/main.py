@@ -12,6 +12,8 @@ from datetime import datetime
 # Third-party imports
 from watchdog.events import FileSystemEventHandler
 
+# Local imports
+
 logger = logging.getLogger(__name__)
 
 
@@ -286,18 +288,17 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-
-        should_skip = (
-            file_id in counted or not real_path.is_file() or real_path.suffix != ".py"
-        )
-
-        if should_skip:
+        
+        if not (real_path.is_file() and 
+                real_path.suffix == ".py" and 
+                file_id not in counted):
             return 0
-
+            
         counted.add(file_id)
         return _count_file_lines(real_path)
 
-    except (OSError, PermissionError, FileNotFoundError):
+    except (OSError, PermissionError, FileNotFoundError) as e:
+        logger.debug("File processing error: %s", str(e))
         return 0
 
 
