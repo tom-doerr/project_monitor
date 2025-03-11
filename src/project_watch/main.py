@@ -56,7 +56,7 @@ def _parse_pytest_output(output: str) -> dict:
         "failed": 0,
         "time": 0.0,
         "output": output[-2000:],
-        "error": None,  # Initialize as None to match test expectations
+        "error": "",  # Initialize as empty string
     }
 
     if not _parse_pytest_json(output, result):
