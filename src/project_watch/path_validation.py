@@ -67,12 +67,14 @@ def is_windows_reserved_path(
     if sys.platform != "win32":
         return False
 
+    result = False
     try:
         resolved = path.resolve()
-        return any(
+        result = any(
             _RESERVED_PATTERN.fullmatch(part)
             for part in resolved.parts
             if part.split(".")[0]  # Handle extensions properly
         )
     except OSError:
-        return False
+        pass
+    return result
