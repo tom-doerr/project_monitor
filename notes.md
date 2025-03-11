@@ -171,6 +171,11 @@
 
 ## Fixed in This Batch
 - Fixed pytest error message handling in test results
+- Added explicit Windows reserved name validation with extensions
+- Improved JSON error message formatting
+- Enhanced pytest text pattern matching
+- Reduced Pylint timeout with better cleanup
+- Added universal_newlines for subprocess consistency
 - Added 30s timeout to Pylint subprocess
 - Optimized large file test generation to use 100MB chunks
 - Improved JSON error message formatting
