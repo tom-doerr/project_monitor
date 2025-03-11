@@ -149,8 +149,19 @@
 - [x] Fix Windows reserved name regex extensions
 - [x] Add symlink inode tracking  
    - Fixed by tracking (inode, device) pairs instead of paths
-- [x] Fix Windows reserved name regex  
-   - Added COM0/LPT0 support and improved extension handling
+- [x] Fix Windows reserved name regex:
+  - Added COM0/LPT0 support
+  - Added CLOCK$ special device
+  - Improved extension handling
+  - Fixed regex syntax error
+- [x] Improve Pylint score extraction:
+  - Added word boundary matching
+  - Added fallback pattern
+  - Fixed NoneType error
+- [x] Enhance pytest time parsing:
+  - Added support for 's'/'seconds' suffix
+  - Case-insensitive matching
+  - Added secondary fallback pattern
 - [x] Fix pytest time parsing  
    - Improved regex to handle decimal values consistently
 - [x] Improve Pylint error handling
