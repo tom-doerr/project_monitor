@@ -22,9 +22,12 @@ def test_10m_line_file(tmp_path: pathlib.Path):
 
 def test_1gb_file(tmp_path: pathlib.Path):
     test_file = tmp_path / "huge.bin"
-    # Write in single large chunk for better performance
+    chunk_size = 1024**3  # 1GB
     with test_file.open("wb") as f:
-        f.write(b"\0" * (1024**3))  # 1GB file
+        # Write in 1MB chunks to avoid memory issues
+        for _ in range(1024):
+            f.write(b"\0" * (1024**2))
+            f.flush()  # Ensure progress gets written
         f.flush()  # Ensure all data is written before continuing
     assert count_lines_of_code(tmp_path) == 0
 
