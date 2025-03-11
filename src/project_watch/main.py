@@ -57,8 +57,8 @@ def _parse_pytest_output(output: str) -> dict:
         "passed": 0,
         "failed": 0,
         "time": 0.0,
-        "output": output[-2000:],
-        "error": "",  # Initialize as empty string
+        "output": output,
+        "error": ""
     }
 
     if not _parse_pytest_json(output, result):
@@ -123,24 +123,24 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
-    """Fallback text parsing of pytest output."""
-    patterns = (
-        (r"(\d+) passed.*?(\d+) failed.*?(\d+) warnings.*?(\d+) skipped", 4),
-        (r"(\d+) passed.*?(\d+) failed.*?(\d+) errors", 3),
-        (r"(\d+) passed.*?(\d+) skipped", 2),
-        (r"(\d+) passed", 1),
-    )
-
-    normalized_output = output.replace("\n", " ")
-    result["time"] = _extract_pytest_time(normalized_output)
-
-    params = [
-        PatternMatchParams(pattern, groups, normalized_output, result)
-        for pattern, groups in patterns
+    """Fallback text parsing for pytest output."""
+    patterns = [
+        (r"(\d+) failed", "failed"),
+        (r"(\d+) passed", "passed"),
+        (r"(\d+) warnings", "warnings"),
+        (r"(\d+) errors", "errors"),
+        (r"(\d+) skipped", "skipped"),
+        (r"(\d+) deselected", "deselected"), 
+        (r"(\d+) rerun", "rerun"),
     ]
-    return any(_match_pattern(p) for p in params) or _handle_empty_results(
-        normalized_output, result
-    )
+    # Try multiple patterns to handle different pytest output formats
+    found = False
+    for pattern, key in patterns:
+        matches = re.search(pattern, output)
+        if matches:
+            result[key] = int(matches.group(1))
+            found = True
+    return found
 
 
 def _extract_pytest_time(output: str) -> float:
@@ -296,15 +296,11 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
     try:
-        real_path = path.resolve(strict=True)
-        file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-
-        if real_path.is_file() and real_path.suffix == ".py" and file_id not in counted:
-            counted.add(file_id)
-            return _count_file_lines(real_path)
-
-    except (OSError, PermissionError, FileNotFoundError) as e:
-        logger.debug("File processing error: %s", str(e))
+        if _should_skip_file(path, counted):
+            return 0
+        return _count_valid_file_lines(path, counted)
+    except Exception as e:
+        _log_file_error(e, path)
         return 0
 
 
@@ -331,15 +327,9 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
 
 
 def _log_file_error(error: Exception, path: pathlib.Path) -> None:
-    """Log file processing errors with appropriate level."""
-    log_level = logging.WARNING if isinstance(error, PermissionError) else logging.DEBUG
-    resolved_path = path.resolve() if path.exists() else path
-    error_msg = f"{error.__class__.__name__} processing {resolved_path}: {str(error)}"
-    logger.log(
-        log_level,
-        error_msg,
-        extra={"path": str(resolved_path), "error_type": error.__class__.__name__},
-    )
+    """Log file processing errors with path context."""
+    logging.debug(f"Error processing {path}: {str(error)}", exc_info=True)
+    logging.error(f"Failed to process {path}: {error}")
 
 
 def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:
