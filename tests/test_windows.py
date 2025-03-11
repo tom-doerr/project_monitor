@@ -134,14 +134,27 @@ def test_long_path_handling(tmp_path):
 @pytest.mark.parametrize(
     "unc_name,path_suffix,expected_lines,expected_error",
     [
+        # Valid cases
         ("share", "test.py", 2, None),
+        ("valid_dir", "data.csv", 3, None),
+        
+        # Reserved name cases
         ("\\\\server\\CONIN$", None, None, "reserved Windows name"),
         ("\\\\Server\\ClOcK$", None, None, "reserved Windows name"),
         ("COM1", "valid.txt", 1, None),
         ("CoM2", "file.txt", 1, None),
-        ("very_long_directory_name" * 10, "long.txt", 1, None),
         ("CLOCK$", "time.txt", 1, None),
-        ("LPT1", None, None, "reserved Windows name"),
+        ("CONFIG$", "settings.ini", None, "reserved Windows name"),
+        ("LPT9", "output.txt", None, "reserved Windows name"),
+        
+        # Edge cases
+        ("very_long_directory_name" * 10, "long.txt", 1, None),
+        ("mixED/case/Path", "file.txt", 1, None),
+        ("con", None, None, "reserved Windows name"),  # CON is reserved
+        ("aux.py", None, None, "reserved Windows name"),
+        ("nul.tar.gz", None, None, "reserved Windows name"),
+        ("COM0", "data.bin", None, "reserved Windows name"),  # COM0-COM9
+        ("lpt1.log", None, None, "reserved Windows name"),
     ],
 )
 def test_windows_unc_paths(

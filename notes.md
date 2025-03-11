@@ -1,9 +1,10 @@
 ## Test Improvements
-- Added 12 new parametrized test cases for Windows path validation
+- Added 15 new parametrized test cases for Windows path validation
 - Unified reserved name testing with pytest parametrization
-- Added coverage for COM0/LPT0 and mixed case reserved names
+- Added coverage for COM0/LPT0, CLOCK$, and mixed case reserved names
 - Added tests for reserved names with common extensions
 - Fixed NoneType errors in file processing
+- Added validation for special device names (CONIN$, CONOUT$)
 - Improved pytest output parsing with multiple fallback patterns
 - Added explicit error logging for file processing failures
 - Fixed error message formatting in test assertions
