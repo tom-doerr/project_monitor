@@ -1,7 +1,8 @@
 import contextlib
+import errno
 import time
 import pathlib
-from project_watch.main import count_lines_of_code
+from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
 
 def test_network_timeout_handling(tmp_path, monkeypatch):
@@ -30,12 +31,13 @@ def _create_delayed_resolve(original):
     
     def delayed_resolve(self, *args, **kwargs):
         for attempt in range(3):
-            try:
-                if attempt < 2:  # Fail first two attempts
-                    raise OSError(errno.ETIMEDOUT, "Simulated network timeout")
+            if attempt == 2:  # Success on final attempt
                 return original(self, *args, **kwargs)
+            
+            try:
+                raise OSError(errno.ETIMEDOUT, "Simulated network timeout")
             except OSError as e:
-                if attempt == 2:
+                if attempt == 1:  # Final error on penultimate attempt
                     raise OSError(errno.EHOSTUNREACH, "Final timeout") from e
                 time.sleep(0.5 * (attempt + 1))
         return None
