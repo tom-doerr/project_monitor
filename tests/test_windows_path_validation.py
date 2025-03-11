@@ -45,7 +45,17 @@ def test_reserved_name_variants(tmp_path: Path):
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
-    reserved_variants = ["CoM1", "lPt3", "nUl", "AUX", "COM0", "LPT0", "CLOCK$", "CONIN$", "CONOUT$"]
+    reserved_variants = [
+        "CoM1",
+        "lPt3",
+        "nUl",
+        "AUX",
+        "COM0",
+        "LPT0",
+        "CLOCK$",
+        "CONIN$",
+        "CONOUT$",
+    ]
     valid_names = ["COM10", "LPTS", "null", "auxiliary", "COM0valid", "LPT0file"]
 
     # Create test files
