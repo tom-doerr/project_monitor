@@ -277,6 +277,9 @@
 - Added Pylint test cleanup to ensure clean mock state
 - Added reserved names list to test error output for better debugging
 - Verified COM2 directory exclusion in Windows path validation
+- Added UNC path reserved name validation
+- Implemented case-insensitive UNC path checks
+- Added test coverage for UNC path edge cases
 - Added explicit error messages to test assertions
 - Verified case-insensitive matching for reserved names
 - Added case-insensitive matching for reserved names

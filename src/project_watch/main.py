@@ -275,6 +275,13 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r")$",
         re.IGNORECASE,
     )
+    
+    # Check for reserved UNC paths
+    if len(real_path.parts) > 1 and real_path.parts[0].startswith('\\\\'):
+        unc_root = '\\'.join(real_path.parts[0].split('\\')[:4]).upper()
+        if any(reserved in unc_root for reserved in ('CONIN$', 'CONOUT$', 'CLOCK$')):
+            return True
+
     return reserved_pattern.fullmatch(real_path.name) is not None
 
 
