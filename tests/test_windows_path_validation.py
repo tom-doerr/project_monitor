@@ -12,12 +12,17 @@ def test_windows_special_device_names(tmp_path: Path):
         pytest.skip("Windows-specific test")
 
     reserved_names = [
-        "COM1", "com2.txt", "LPT3.config", 
-        "CONIN$", "conout$.log", "CLOCK$.ini",
-        "COM0", "LPT0"  # Edge case numeric suffixes
+        "COM1",
+        "com2.txt",
+        "LPT3.config",
+        "CONIN$",
+        "conout$.log",
+        "CLOCK$.ini",
+        "COM0",
+        "LPT0",  # Edge case numeric suffixes
     ]
     valid_names = ["COM0file", "lpt10.data", "conventional.txt"]
-    
+
     # Create test files
     created = []
     for name in reserved_names + valid_names:
@@ -27,13 +32,14 @@ def test_windows_special_device_names(tmp_path: Path):
             created.append(path)
         except OSError:
             pass  # Expected for reserved names
-            
+
     count = count_lines_of_code(tmp_path)
-    
+
     # Only valid files should be counted
-    assert count == len(valid_names), \
-        f"Should reject {len(reserved_names)} reserved names. " \
+    assert count == len(valid_names), (
+        f"Should reject {len(reserved_names)} reserved names. "
         f"Got {count} valid files, expected {len(valid_names)}"
+    )
 
 
 def test_ntfs_system_files(tmp_path: Path):

@@ -50,7 +50,7 @@ _RESERVED_PATTERN = re.compile(
     r"\$Mft|\$MftMirr|\$LogFile|\$Volume|"
     r"\$AttrDef|\$Bitmap|\$Boot|\$BadClus|"
     r"\$Secure|\$Upcase|\$Extend|"
-    r"\$Quota|\$ObjId|\$Reparse)(\..*)?$", 
+    r"\$Quota|\$ObjId|\$Reparse)(\..*)?$",
     flags=re.IGNORECASE,
 )
 
