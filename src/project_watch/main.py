@@ -58,7 +58,7 @@ def get_pylint_score() -> float:
 
 def _parse_pytest_output(output: str) -> dict:
     """Parse pytest output into structured results."""
-    result = {"passed": 0, "failed": 0, "time": 0.0, "output": output, "error": ""}
+    result = {"passed": 0, "failed": 0, "time": 0.0, "output": output, "error": None}  # Initialize error as None
 
     if not _parse_pytest_json(output, result):
         _parse_pytest_text(output, result)
@@ -205,11 +205,14 @@ def get_pytest_results() -> dict:
         )
         return _parse_pytest_output(result.stdout)
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
-        error_msg = (
-            "pytest timed out after 30 seconds"
-            if isinstance(e, subprocess.TimeoutExpired)
-            else f"Subprocess error: {str(e)}"
-        )
+        # Include both stderr and stdout in error details
+        error_details = []
+        if hasattr(e, 'stderr') and e.stderr.strip():
+            error_details.append(e.stderr.strip())
+        if hasattr(e, 'stdout') and e.stdout.strip():
+            error_details.append(e.stdout.strip())
+        
+        error_msg = f"Pytest error: {' | '.join(error_details)[:500]}" if error_details else str(e)
         return {"passed": 0, "failed": 0, "skipped": 0, "error": error_msg}
 
 
@@ -217,8 +220,10 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve()
-        # Use inode + device to handle symlinks/hardlinks
+        # Use (inode, device) tuple for better symlink/hardlink handling
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
+        if file_id in counted:
+            return True
         return not real_path.exists() or any(
             (
                 file_id in counted,
@@ -244,10 +249,12 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
 
     # Case-insensitive match for reserved names with extensions
     reserved_pattern = (
-        r"^(?i)(CON|PRN|AUX|NUL|CLOCK\$|"
+        r"^(CON|PRN|AUX|NUL|CLOCK\$|"
         r"COM[1-9]|LPT[1-9]|"
-        r"\$Mft|\$LogFile|\$Volume)(\..*)?$"
+        r"\$Mft|\$LogFile|\$Volume|"
+        r"CONIN\$|CONOUT\$)(\..*)?$"
     )
+    reserved_pattern = re.compile(reserved_pattern, re.IGNORECASE)
     return re.fullmatch(reserved_pattern, real_path.name, re.IGNORECASE) is not None
 
 
