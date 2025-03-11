@@ -162,13 +162,23 @@ def test_windows_unc_paths(
     test_dir = tmp_path / unc_name
     test_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create test file if specified
-    if path_suffix:  # Only create file if suffix specified
-        (test_dir / path_suffix).write_text("# Test content\n" * expected_lines)
+    # Create test file if specified and expected_lines is set
+    if path_suffix and expected_lines is not None:
+        test_file = test_dir / path_suffix
+        test_file.write_text("# Test content\n" * expected_lines)
+            
+        # Verify file was actually created if no error expected
+        if expected_error is None:
+            assert test_file.exists(), f"Test file {test_file} was not created"
 
     # Validate expectations
     if expected_error:
-        with pytest.raises(ValueError, match=expected_error):
+        # Check if path validation catches the reserved name
+        if is_windows_reserved_path(test_dir):
+            with pytest.raises(ValueError, match=expected_error):
+                count_lines_of_code(test_dir)
+        else:
+            pytest.fail(f"Expected reserved path error for {test_dir}")
             count_lines_of_code(test_dir)
         return
 
