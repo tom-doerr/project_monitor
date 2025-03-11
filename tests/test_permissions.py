@@ -67,7 +67,7 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         mock_file.open.side_effect = _raise_exc
         monkeypatch.setattr("pathlib.Path", mock_file)
         with caplog.at_level(logging.ERROR):
-            result = _process_code_path(tmp_path, set())
+            result = count_lines_of_code(tmp_path)
             assert result == 0, f"Failed to handle {exc_type.__name__}"
             assert any(
                 msg in record.message for record in caplog.records
