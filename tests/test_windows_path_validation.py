@@ -72,6 +72,12 @@ def test_reserved_names_with_extensions(tmp_path: Path):
         "nul..config",  # Double extension
         "CLOCK$.log",  # Special device
         "CONFIG~.tmp",  # Temporary file pattern
+        "CONIN$.txt",  # Special device with extension
+        "LPT1.config.ini",  # Reserved name with multiple extensions
+        "ＣＯＮＩＮ＄.txt",  # Fullwidth Unicode homoglyph
+        "COM1. .txt",  # Space in extension
+        "LPT1..config",  # Double dot extension
+        "NUL.config..",  # Trailing double dot
     ]
     valid_files = [
         "COM10.log",
@@ -79,6 +85,9 @@ def test_reserved_names_with_extensions(tmp_path: Path):
         "nullfile.txt",
         "config.ini",
         "auxiliary.bak",
+        "conint.txt",  # Similar but not reserved
+        "lpt10.config.ini",  # Valid numeric suffix
+        "clock.log",  # Non-special device name
     ]
 
     # Create test files with expected counts
