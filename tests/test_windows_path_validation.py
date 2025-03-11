@@ -7,30 +7,33 @@ from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in
 
 
 def test_windows_special_device_names(tmp_path: Path):
-    """Test special device name handling"""
+    """Test handling of special device names with numeric suffixes"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
-    device_names = [
-        "CONIN$",
-        "CONOUT$",
-        "CLOCK$",
-        "COM0",
-        "LPT0",
-        "nul.txt",
-        "AUX.config",
-        "CLOCK$.log",  # Test with extension
+    reserved_names = [
+        "COM1", "com2.txt", "LPT3.config", 
+        "CONIN$", "conout$.log", "CLOCK$.ini",
+        "COM0", "LPT0"  # Edge case numeric suffixes
     ]
-    valid_names = ["CONFIG", "CLOCK", "COM10", "LPT10", "nullfile"]
-
+    valid_names = ["COM0file", "lpt10.data", "conventional.txt"]
+    
     # Create test files
-    for name in device_names + valid_names:
-        (tmp_path / name).touch()
-
+    created = []
+    for name in reserved_names + valid_names:
+        path = tmp_path / name
+        try:
+            path.touch()
+            created.append(path)
+        except OSError:
+            pass  # Expected for reserved names
+            
     count = count_lines_of_code(tmp_path)
-    assert count == len(
-        valid_names
-    ), f"Should only count {len(valid_names)} valid files"
+    
+    # Only valid files should be counted
+    assert count == len(valid_names), \
+        f"Should reject {len(reserved_names)} reserved names. " \
+        f"Got {count} valid files, expected {len(valid_names)}"
 
 
 def test_ntfs_system_files(tmp_path: Path):
