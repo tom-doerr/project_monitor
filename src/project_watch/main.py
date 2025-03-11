@@ -9,15 +9,12 @@ import pathlib
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
 from datetime import datetime
 
-# Third-party imports
 # Third-party imports
 from watchdog.events import FileSystemEventHandler
 
 # Local imports
-from .path_validation import is_windows_reserved_path
 
 logger = logging.getLogger(__name__)
 
@@ -68,14 +65,17 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    if json_match := re.search(r'{"\w+": \d+.*}', output):
-        try:
-            _update_results_from_json(json.loads(json_match.group(0)), result)
-            return True
-        except (json.JSONDecodeError, AttributeError) as e:
-            result["error"] = f"JSON error: {str(e)}"
-            return False
-    return False
+    json_match = re.search(r'{"\w+": \d+.*}', output)
+    if not json_match:
+        return False
+
+    try:
+        json_data = json.loads(json_match.group(0))
+        _update_results_from_json(json_data, result)
+        return True
+    except (json.JSONDecodeError, AttributeError) as e:
+        result["error"] = f"JSON error: {str(e)}"
+        return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -291,19 +291,18 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
-    result = 0
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-
+        
         if real_path.is_file() and real_path.suffix == ".py" and file_id not in counted:
             counted.add(file_id)
-            result = _count_file_lines(real_path)
+            return _count_file_lines(real_path)
+        return 0
 
     except (OSError, PermissionError, FileNotFoundError) as e:
         logger.debug("File processing error: %s", str(e))
-
-    return result
+        return 0
 
 
 def _process_code_path(path: pathlib.Path, counted: set) -> int:
