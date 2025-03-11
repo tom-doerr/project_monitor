@@ -181,7 +181,13 @@
 | Performance           | 100%     | 100%           |
 
 ## Fixed in This Batch
-- Fixed pytest error message handling in test results
+- Fixed Windows reserved name regex to include CLOCK$, $Mft, $LogFile
+- Added case-insensitive matching for reserved names
+- Implemented inode-based file tracking for symlinks/hardlinks
+- Improved JSON parsing error messages with structured context
+- Enhanced path normalization in error logging
+- Fixed pytest JSON validation with type checking
+- Added device ID tracking for cross-device hardlinks
 - Added explicit Windows reserved name validation with extensions
 - Improved JSON error message formatting
 - Enhanced pytest text pattern matching

@@ -65,9 +65,12 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
     if json_match := re.search(r'{"\w+": \d+.*}', output):
         try:
-            _update_results_from_json(json.loads(json_match.group(0)), result)
+            json_data = json.loads(json_match.group(0))
+            if not isinstance(json_data, dict):
+                raise ValueError("Invalid JSON structure")
+            _update_results_from_json(json_data, result)
             return True
-        except (json.JSONDecodeError, AttributeError) as e:
+        except (json.JSONDecodeError, AttributeError, ValueError) as e:
             result["error"] = f"JSON parsing failed: {str(e)}"
             return False
     return False
@@ -210,9 +213,11 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
     """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve()
+        # Use inode + device to handle symlinks/hardlinks
+        file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
         return not real_path.exists() or any(
             (
-                real_path in counted,
+                file_id in counted,
                 real_path.suffix != ".py",
                 not real_path.is_file(),
                 _is_windows_reserved_path(real_path),
@@ -236,14 +241,11 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     if sys.platform != "win32":
         return False
 
-    # Expanded pattern with all reserved names and case-insensitive match
+    # Case-insensitive match for reserved names with extensions
     reserved_pattern = (
-        r"^(CON|PRN|AUX|NUL|CLOCK\$|"
+        r"^(?i)(CON|PRN|AUX|NUL|CLOCK\$|"
         r"COM[1-9]|LPT[1-9]|"
-        r"\$Mft|\$MftMirr|\$LogFile|\$Volume|"
-        r"\$AttrDef|\$Bitmap|\$Boot|\$BadClus|"
-        r"\$Secure|\$Upcase|\$Extend|"
-        r"\$Quota|\$ObjId|\$Reparse)(\..*)?$"
+        r"\$Mft|\$LogFile|\$Volume)(\..*)?$"
     )
     return re.fullmatch(reserved_pattern, real_path.name, re.IGNORECASE) is not None
 
@@ -322,8 +324,9 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
 
 def _log_file_error(error: Exception, path: pathlib.Path) -> None:
     """Log file processing errors with path context."""
-    logging.debug(f"Error processing {path}: {str(error)}", exc_info=True)
-    logging.error(f"Failed to process {path}: {error}")
+    normalized_path = _normalize_path_case(path)
+    logging.debug("Error processing %s: %s", normalized_path, str(error), exc_info=True)
+    logging.error("Failed to process %s: %s", normalized_path, error)
 
 
 def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:
