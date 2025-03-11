@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
@@ -31,7 +32,7 @@ def get_pylint_score() -> float:
     cmd = ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"]
     cwd = pathlib.Path(__file__).parent.parent
     result = 0.0
-    
+
     try:
         proc = subprocess.run(
             cmd,
@@ -45,7 +46,7 @@ def get_pylint_score() -> float:
             result = max(extract_score(proc.stdout), extract_score(proc.stderr))
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
-    
+
     return result
 
 
@@ -78,7 +79,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
             return True
     except (json.JSONDecodeError, AttributeError, ValueError) as e:
         result["error"] = f"JSON parsing failed: {str(e)}"
-    
+
     return False
 
 
@@ -222,14 +223,16 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
         if file_id in counted:
             return True
-            
-        return any((
-            not real_path.exists(),
-            real_path.suffix != ".py",
-            not real_path.is_file(),
-            _is_windows_reserved_path(real_path),
-            any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-        ))
+
+        return any(
+            (
+                not real_path.exists(),
+                real_path.suffix != ".py",
+                not real_path.is_file(),
+                _is_windows_reserved_path(real_path),
+                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
+            )
+        )
     except OSError:
         return True
 
@@ -320,14 +323,17 @@ def _process_code_path(path: pathlib.Path, counted: set) -> int:
         _log_file_error(e, path)
         return 0
 
-def _resolve_with_retry(path: pathlib.Path, retries: int = 3, delay: float = 1.5) -> pathlib.Path:
+
+def _resolve_with_retry(
+    path: pathlib.Path, retries: int = 3, delay: float = 1.5
+) -> pathlib.Path:
     """Resolve path with retries for network filesystem timeouts."""
     import errno
     import time
-    
+
     attempt = 0
     last_err = None
-    
+
     while attempt <= retries:
         try:
             return path.resolve(strict=True)
@@ -335,10 +341,12 @@ def _resolve_with_retry(path: pathlib.Path, retries: int = 3, delay: float = 1.5
             last_err = e
             if e.errno not in (errno.ETIMEDOUT, errno.EHOSTUNREACH):
                 raise
-            time.sleep(delay * (2 ** attempt))
+            time.sleep(delay * (2**attempt))
             attempt += 1
-    
-    raise IOError(f"Path resolution failed after {retries} retries: {path}") from last_err
+
+    raise IOError(
+        f"Path resolution failed after {retries} retries: {path}"
+    ) from last_err
 
 
 def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
