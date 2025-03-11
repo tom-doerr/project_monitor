@@ -135,13 +135,14 @@ def test_windows_unc_paths(tmp_path):
     """Test UNC path handling including reserved names."""
     # Parametrized test cases: (unc_name, expected_lines)
     test_cases = [
-        ("share", 2),          # Valid UNC
+        ("share", 2),  # Valid UNC
         ("\\\\server\\CONIN$", 0),  # Reserved UNC
-        ("\\\\Server\\ClOcK$", 0)    # Case-insensitive reserved
+        ("\\\\Server\\ClOcK$", 0),  # Case-insensitive reserved
     ]
-    
+
     for unc_name, expected in test_cases:
         _test_unc_path(tmp_path, unc_name, expected)
+
 
 def _test_unc_path(tmp_path: Path, unc_name: str, expected_lines: int) -> None:
     """Helper to test a single UNC path scenario."""
