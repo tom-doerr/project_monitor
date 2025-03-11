@@ -37,16 +37,13 @@ def get_pylint_score() -> float:
             check=False,
             timeout=15,
             cwd=pathlib.Path(__file__).parent.parent,
-            universal_newlines=True
+            universal_newlines=True,
         )
-        
+
         if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
-            score = max(
-                extract_score(result.stdout),
-                extract_score(result.stderr)
-            )
+            score = max(extract_score(result.stdout), extract_score(result.stderr))
             return max(0.0, min(score, 10.0))
-            
+
         return 0.0
     except subprocess.TimeoutExpired:
         return 0.0
@@ -101,10 +98,10 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
     patterns = (
         (
             r"^(?:=+ )?(\d+) failed(?:, | in |$)",
-            r"^(?:=+ )?(\d+) passed(?:, | in |$)", 
+            r"^(?:=+ )?(\d+) passed(?:, | in |$)",
             r"(\d+) warnings?\)?$",
             r"(\d+) errors?\)?$",
-            r"(\d+) skipped\)?$"
+            r"(\d+) skipped\)?$",
         ),
     )
     # Initialize required fields explicitly
@@ -302,7 +299,7 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-        
+
         if real_path.is_file() and real_path.suffix == ".py" and file_id not in counted:
             counted.add(file_id)
             return _count_file_lines(real_path)
