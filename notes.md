@@ -109,6 +109,8 @@
 - [x] Fix test import paths
 - [x] Add Windows path resolution safety  
 - [x] Handle MagicMock configuration errors
+- [x] Add Windows NTFS special file patterns
+- [x] Improve reserved name false positive checks
 - [x] Improve pytest output parsing reliability
 - [x] Add network filesystem timeout tests
 - [x] Implement binary file detection improvements
