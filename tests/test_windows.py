@@ -164,8 +164,10 @@ def test_windows_special_devices(tmp_path: Path):
     """Test special device name handling (CONIN$, CONOUT$, CLOCK$)"""
     _run_reserved_name_test(
         tmp_path,
-        (["CONIN$", "CONOUT$.log", "CLOCK$.tmp", "COM1.txt", "LPT2.test"],
-         ["CONFIG", "clock", "CONIN", "com10", "lpt0"]),
+        (
+            ["CONIN$", "CONOUT$.log", "CLOCK$.tmp", "COM1.txt", "LPT2.test"],
+            ["CONFIG", "clock", "CONIN", "com10", "lpt0"],
+        ),
     )
 
 
@@ -195,13 +197,13 @@ def test_windows_system_files(tmp_path: Path):
 
 def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):
     """Validate Windows reserved name handling.
-    
+
     Args:
         tmp_path: Temporary directory path
         test_cases: Tuple of (reserved_names, valid_names) to test
     """
     reserved_names, valid_names = test_cases
-    
+
     # Create test files and handle expected OSErrors
     for name in (*reserved_names, *valid_names):
         if name in reserved_names:
@@ -211,7 +213,9 @@ def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):
 
     # Nested valid file should be excluded since COM2 is reserved
     (tmp_path / "COM2" / "valid_sub").mkdir(parents=True)
-    (tmp_path / "COM2" / "valid_sub" / "valid.py").write_text("# Excluded nested file\n")
+    (tmp_path / "COM2" / "valid_sub" / "valid.py").write_text(
+        "# Excluded nested file\n"
+    )
 
     # Verify line count matches valid files only
     valid_count = count_lines_of_code(tmp_path)
@@ -219,6 +223,7 @@ def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):
         f"Expected {len(valid_names)} valid lines, got {valid_count}. "
         f"Reserved: {reserved_names}"
     )
+
 
 def _attempt_reserved_file(path: Path) -> None:
     """Attempt to create reserved file, ignoring expected OSError"""

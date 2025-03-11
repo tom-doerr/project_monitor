@@ -115,14 +115,11 @@ def test_get_pylint_score_error(caplog):
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = Exception("Pylint failed")
         assert get_pylint_score() == 0.0
-        assert any("Pylint error: Pylint failed" in rec.message for rec in caplog.records)
+        assert any(
+            "Pylint error: Pylint failed" in rec.message for rec in caplog.records
+        )
         mock_run.assert_called_once_with(
-            ANY,
-            capture_output=True,
-            check=False,
-            cwd=ANY,
-            text=True,
-            timeout=15
+            ANY, capture_output=True, check=False, cwd=ANY, text=True, timeout=15
         )
 
 
@@ -147,12 +144,7 @@ def test_get_pylint_score_high_return_code():
         )
         assert get_pylint_score() == 0.0
         mock_run.assert_called_once_with(
-            ANY, 
-            capture_output=True,
-            check=False,
-            cwd=ANY,
-            text=True,
-            timeout=15
+            ANY, capture_output=True, check=False, cwd=ANY, text=True, timeout=15
         )
 
 

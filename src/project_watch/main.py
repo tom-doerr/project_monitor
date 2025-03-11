@@ -35,7 +35,7 @@ def get_pylint_score() -> float:
             matches = re.findall(r"(\d+\.?\d*)/10", text)
             if not matches:
                 return 0.0
-            
+
         # Validate all found scores and take highest valid one
         valid_scores = []
         for score_str in matches:
@@ -45,7 +45,7 @@ def get_pylint_score() -> float:
                     valid_scores.append(score)
             except ValueError:
                 continue
-                
+
         return max(valid_scores) if valid_scores else 0.0
 
     try:
@@ -164,7 +164,7 @@ def _extract_pytest_time(output: str) -> float:
     time_match = re.search(
         r"(\d+\.?\d*)\s*(?:s|sec|seconds?)\b",
         output.replace(",", ""),
-        flags=re.IGNORECASE
+        flags=re.IGNORECASE,
     )
     if not time_match:  # More robust fallback pattern
         time_match = re.search(r"\bin\s+(\d+\.\d+)\b", output)
@@ -328,7 +328,9 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
         pathlib.Path(str(base_path).lower()) if sys.platform == "win32" else base_path
     )
 
-    return sum(_process_file(path, counted, inode_cache) for path in base_path.rglob("*"))
+    return sum(
+        _process_file(path, counted, inode_cache) for path in base_path.rglob("*")
+    )
 
 
 def _process_file(path: pathlib.Path, counted: set, inode_cache: set) -> int:
@@ -380,10 +382,10 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set, inode_cache: set) 
         resolved_path = _resolve_with_retry(path)
         file_stat = resolved_path.stat()
         file_id = (file_stat.st_ino, file_stat.st_dev)
-        
+
         if file_id in inode_cache or _should_skip_file(resolved_path, counted):
             return 0
-            
+
         inode_cache.add(file_id)
         normalized_path = _normalize_path_case(resolved_path)
 
@@ -395,7 +397,7 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set, inode_cache: set) 
         except (OSError, UnicodeDecodeError, PermissionError) as e:
             _log_file_error(e, path)
             return 0
-            
+
         logger.debug("Counted %d lines in %s", line_count, normalized_path)
         return line_count
     except Exception as e:
