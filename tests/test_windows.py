@@ -172,7 +172,7 @@ def test_windows_special_devices(mock_platform, tmp_path: Path):
     )
 
 
-@patch("platform.system", return_value="Windows") 
+@patch("platform.system", return_value="Windows")
 def test_windows_numeric_suffixes(mock_platform, tmp_path: Path):
     """Test COM/LPT numeric suffix handling"""
     _run_reserved_name_test(
