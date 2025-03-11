@@ -1,7 +1,6 @@
 from unittest.mock import patch
-
 import pytest
-
+import logging
 from project_watch.main import count_lines_of_code
 
 
@@ -33,5 +32,8 @@ def test_no_read_permission(tmp_path):
 def test_filesystem_errors(mock_resolve, caplog):
     mock_resolve.side_effect = PermissionError("Mocked permission error")
     with caplog.at_level(logging.DEBUG):
+        with pytest.raises(PermissionError):
+            count_lines_of_code()
+        assert "Mocked permission error" in caplog.text
     with pytest.raises(PermissionError):
         count_lines_of_code()

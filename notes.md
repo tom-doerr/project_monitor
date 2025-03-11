@@ -106,24 +106,12 @@
 - Fixed coverage tracking edge cases
 
 ## New Todos
-- [x] Fix test import paths
-- [x] Add Windows path resolution safety  
-- [x] Handle MagicMock configuration errors
-- [x] Add Windows NTFS special file patterns
-- [x] Improve reserved name false positive checks
-- [x] Improve pytest output parsing reliability
-- [x] Add network filesystem timeout tests
-- [x] Implement binary file detection improvements
-- [x] Add fuzzing tests for edge cases
-- [x] Implement probabilistic file sampling
-- [x] Improve binary handler cleanup
-- [x] Enhance filesystem error logging
-- [ ] Add filesystem error simulation tests
-- [x] Add pathlib standardization checks
-- [x] Expand binary detection tests
-- [x] Implement timeout test cases
-- [x] Improve coverage tracking  
-- [ ] Add performance tests for large result parsing
+- [x] Add filesystem error simulation tests
+- [x] Add performance tests for large result parsing
+- [ ] Add parallel execution metrics
+- [ ] Implement real-time coverage visualization
+- [ ] Add distributed processing support
+- [ ] Implement incremental scanning
 - [ ] Add parallel execution metrics
 - [x] Complete Unicode path tests
 - [x] Implement symlink resolution checks
