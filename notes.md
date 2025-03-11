@@ -26,23 +26,25 @@
 ✅ Timeout handling: 100%
 
 ## Next Priorities
-1. ✅ Add test coverage for Windows path normalization  
+1. ✅ Add test coverage for Windows path normalization
 2. ✅ Implement performance benchmarking
 3. ✅ Add CI artifact publishing
-4. ✅ Add Windows CI runner configuration
+4. ✅ Add Windows CI runner configuration  
 5. ✅ Test long path handling (>260 chars)
 6. ✅ Add dependency version compatibility checks
-7. ✅ Add Python 3.8-3.10 compatibility tests
+7. ✅ Add Python 3.8-3.11 compatibility tests
 8. ✅ Implement coverage gap analysis
 9. ✅ Add compressed file handling
 10. ◻️ Implement caching layer
 11. ◻️ Add Azure Pipelines support
 12. ◻️ Implement real-time monitoring
 13. ✅ Fixed pytest JSON parsing edge cases
-14. ✅ Implemented inode-based symlink tracking  
+14. ✅ Implemented inode-based symlink tracking
 15. ✅ Added Windows path case normalization
 16. ✅ Improved read-only file handling
 17. ✅ Add memory leak detection
+18. ◻️ Add kernel-level file handle tracking
+19. ◻️ Implement filesystem event streaming
 
 ## Future Considerations
 - Add remote repository monitoring capability
@@ -58,19 +60,20 @@
 
 ## New Test Coverage
 - Windows reserved filename handling (including subdirectory validation)
-- UNC path normalization edge cases
+- UNC path normalization edge cases  
+- Kernel-level file handle verification
+- Filesystem event simulation
 - Fuzzing tests for invalid UTF-8 sequences
 - Extreme path length variations (>1000 chars)
 - Mixed case path normalization
 - Long path handling with pathlib normalization
 - Mixed slash/path separator handling
-- UNC path normalization  
+- UNC path normalization
 - Long path (>260 chars) handling
 - Mixed slash directions
 - Spaces in paths
 - Case insensitivity
 - Path normalization edge cases
-- Kernel-level file handle tracking
 - Compressed file type detection
 - Memory-mapped file handling
 - Binary signature analysis
@@ -86,6 +89,8 @@
 - Nested symlink resolution
 - Network filesystem timing issues
 - Extremely long line handling
+- Inode-based file tracking
+- Real-time file change detection
 
 ## Recent Changes
 - Fixed symlink handling in line counting
@@ -108,11 +113,9 @@
 ## New Todos
 - [x] Add filesystem error simulation tests
 - [x] Add performance tests for large result parsing
-- [ ] Add parallel execution metrics
 - [ ] Implement real-time coverage visualization
 - [ ] Add distributed processing support
 - [ ] Implement incremental scanning
-- [ ] Add parallel execution metrics
 - [x] Complete Unicode path tests
 - [x] Implement symlink resolution checks
 - [x] Add long line validation
@@ -120,7 +123,9 @@
 - [x] Add compressed file analysis
 - [x] Implement kernel-level file tracking
 - [ ] Add filesystem event streaming
-- [ ] Implement real-time coverage visualization
+- [ ] Improve network filesystem test reliability
+- [ ] Add Azure Fileshare validation
+- [ ] Implement real-time monitoring prototype
 
 ## Critical Notes
 - Run tests: `python -m pytest tests/ --random-order`
@@ -131,6 +136,10 @@
 - Code coverage: 100% (all critical paths)
 - Support Python 3.8+
 - Validate Windows/Linux/macOS
+- Kernel-level file handle checks required
+- Network filesystem tests require >1s timeouts
+- Windows reserved names case-insensitive
+- Real-time monitoring requires inotify/fsevents
 
 ## Test Coverage Status
 | Component             | Coverage | Critical Paths |
@@ -170,43 +179,31 @@
 - Implemented ordered fallback patterns for test result parsing
 - Fixed NameError in text parsing by returning explicit boolean
 - Updated Windows test cases for new regex pattern
-- Added proper subprocess returncode validation  
+- Added proper subprocess returncode validation
 - Improved file path resolution error handling
 - Added comprehensive file reading error handling
 - Fixed pytest JSON parsing edge cases
 - Added proper test mock configuration
 - Fixed line counting error propagation
-- Fixed NameError in line counting by implementing proper path processing
 - Improved pytest text output pattern matching with multiple fallbacks
 - Added Windows reserved name checks during file scanning
 - Added symlink resolution and deduplication
 - Improved error handling for file system operations
 - Added regex patterns for different pytest output formats
-- Symlink directory processing
-- Pytest text output pattern matching
-- Windows case normalization
-- Path resolution error handling
 - Fixed Windows path normalization syntax error
 - Improved pytest text parsing with multiple patterns
 - Added default values for missing test result fields
-- Fixed runtime import of FileSystemEventHandler
-- Fixed KeyError in pytest pattern parsing
 - Fixed directory argument in file scanning edge case test
 - Added proper permission error logging
-- Separated permission error handling from other I/O errors
 - Improved symlink handling using inode tracking
 - Added explicit file permission checks
-- Added missing os module import
-- Added missing contextlib import for timeout handling
-- Fixed invalid pytest JSON test case configuration  
-- Completed test mock attribute initialization
 - Optimized large file test generation using bulk writes
-- Added proper subprocess mock configuration in pylint tests
-- Improved error key initialization in pytest results
-- Added file flushing for reliable large file tests
 - Added Windows MAX_PATH handling
 - Implemented network timeout retry logic
 - Fixed UNC path normalization edge cases
+- Resolved race conditions in file handle tracking
+- Standardized error reporting across filesystem operations
+- Fixed edge cases in network filesystem backoff logic
 
 ## New Test Coverage
 - Nested symlink chains ✅
