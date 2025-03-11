@@ -200,10 +200,10 @@
 ## New Test Coverage
 - Nested symlink chains ✅
 - Mixed case Windows paths ✅  
-- Alternative pytest output formats
+- Alternative pytest output formats ✅
 - Directory symlink handling ✅
 - Network filesystem timeout retries ✅
-- Windows reserved name case insensitivity
+- Windows reserved name case insensitivity ✅
 - Network latency timeout handling ✅
 - Reserved name variant validation
 - Valid name false positive checks
