@@ -209,8 +209,8 @@
 - Network filesystem timeout retries ✅
 - Windows reserved name case insensitivity ✅
 - Network latency timeout handling ✅
-- Reserved name variant validation
-- Valid name false positive checks
+- Reserved name variant validation ✅  
+- Valid name false positive checks ✅
 - Symlink chain resolution ✅
 - Mixed slash directions ✅
 - Network filesystem backoff retries ✅
