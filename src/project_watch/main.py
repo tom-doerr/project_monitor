@@ -25,17 +25,19 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
-        matches = re.findall(r"\brated at (\d+\.?\d*)/10\b", text) or re.findall(r"(\d+\.?\d*)/10", text)
+        matches = re.findall(r"\brated at (\d+\.?\d*)/10\b", text) or re.findall(
+            r"(\d+\.?\d*)/10", text
+        )
         if not matches:
             return 0.0
 
         # Validate scores and return highest valid one
         return max(
-            (float(m[0]) for m in matches
-            if 0.0 <= float(m[0]) <= 10.0
-        ), default=0.0)
+            (float(m[0]) for m in matches if 0.0 <= float(m[0]) <= 10.0), default=0.0
+        )
 
     try:
         proc = subprocess.run(
@@ -75,7 +77,7 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
     json_match = re.search(r'{"\w+": \d+.*}', output)
     if not json_match:
         return False
-        
+
     try:
         json_data = json.loads(json_match.group(0))
         if isinstance(json_data, dict) and "passed" in json_data:
@@ -152,9 +154,7 @@ def _extract_pytest_time(output: str) -> float:
     # Handle multiple time formats: 0.12s, 1.23 seconds, 0.12
     normalized_output = output.replace(",", "")
     time_match = re.search(
-        r"(\d+\.\d+)\s?(?:s|seconds?)?\b",
-        normalized_output,
-        re.IGNORECASE
+        r"(\d+\.\d+)\s?(?:s|seconds?)?\b", normalized_output, re.IGNORECASE
     )
     if not time_match:  # More robust fallback pattern
         time_match = re.search(r"\bin\s+(\d+\.\d+)\b", output)
@@ -272,8 +272,8 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"(\..*)?|"  # Optional extension
         r"\$Mft|\$LogFile|\$Volume|"  # NTFS system files
         r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$"  # Special devices
-        r")$", 
-        re.IGNORECASE
+        r")$",
+        re.IGNORECASE,
     )
     return reserved_pattern.fullmatch(real_path.name) is not None
 
