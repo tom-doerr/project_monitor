@@ -227,6 +227,9 @@
 - Added explicit error message format validation
 - Increased test coverage for error conditions to 100%
 - Fixed syntax error in Windows path normalization
+- Fixed unmatched parenthesis in file skipping logic
+- Enhanced Windows reserved name regex to include COM0/LPT0 and FAX$
+- Added test cases for reserved names with extensions
 - Improved error simulation with proper exception chaining
 - Added explicit `from None` to avoid nested tracebacks
 - Validated 15+ edge cases for Windows reserved names

@@ -11,8 +11,8 @@ def test_windows_special_device_names(tmp_path: Path):
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
-    device_names = ["CONIN$", "CONOUT$", "CLOCK$"]
-    valid_names = ["CONFIG", "CLOCK"]
+    device_names = ["CONIN$", "CONOUT$", "CLOCK$", "COM0", "LPT0", "nul.txt", "AUX.config"]
+    valid_names = ["CONFIG", "CLOCK", "COM10", "LPT10", "nullfile"]
 
     # Create test files
     for name in device_names + valid_names:

@@ -241,12 +241,12 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     if sys.platform != "win32":
         return False
 
-    # Case-insensitive match for reserved names with extensions
+    # Case-insensitive match for reserved names with extensions and variants
     reserved_pattern = (
         r"^(CON|PRN|AUX|NUL|CLOCK\$|"
-        r"COM[1-9]|LPT[1-9]|"
+        r"COM[0-9]|LPT[0-9]|"  # Include COM0/LPT0
         r"\$Mft|\$LogFile|\$Volume|"
-        r"CONIN\$|CONOUT\$)(\..*)?$"
+        r"CONIN\$|CONOUT\$|FAX\$)(\..*)?$"
     )
     reserved_pattern = re.compile(reserved_pattern, re.IGNORECASE)
     return reserved_pattern.fullmatch(real_path.name) is not None
