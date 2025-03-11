@@ -1,7 +1,8 @@
+# pylint: disable=too-many-lines
 import sys
 from pathlib import Path
-import pytest
 from unittest.mock import patch
+import pytest
 from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
 
@@ -162,7 +163,7 @@ def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
 
 
 @patch("platform.system", return_value="Windows")
-def test_windows_special_devices(mock_platform, tmp_path: Path):
+def test_windows_special_devices(_mock_platform, tmp_path: Path):
     """Test special device name handling (CONIN$, CONOUT$, CLOCK$)"""
     _run_reserved_name_test(
         tmp_path,
@@ -174,7 +175,7 @@ def test_windows_special_devices(mock_platform, tmp_path: Path):
 
 
 @patch("platform.system", return_value="Windows")
-def test_windows_numeric_suffixes(mock_platform, tmp_path: Path):
+def test_windows_numeric_suffixes(_mock_platform, tmp_path: Path):
     """Test COM/LPT numeric suffix handling"""
     _run_reserved_name_test(
         tmp_path,
@@ -183,7 +184,7 @@ def test_windows_numeric_suffixes(mock_platform, tmp_path: Path):
 
 
 @patch("platform.system", return_value="Windows")
-def test_windows_case_variants(mock_platform, tmp_path: Path):
+def test_windows_case_variants(_mock_platform, tmp_path: Path):
     """Test mixed case reserved name variants"""
     _run_reserved_name_test(
         tmp_path,
@@ -192,7 +193,7 @@ def test_windows_case_variants(mock_platform, tmp_path: Path):
 
 
 @patch("platform.system", return_value="Windows")
-def test_windows_system_files(mock_platform, tmp_path: Path):
+def test_windows_system_files(_mock_platform, tmp_path: Path):
     """Test NTFS system file patterns"""
     _run_reserved_name_test(
         tmp_path,
@@ -200,7 +201,7 @@ def test_windows_system_files(mock_platform, tmp_path: Path):
     )
 
 
-def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):
+def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):  # pylint: disable=too-many-locals,too-many-statements
     """Validate Windows reserved name handling.
 
     Args:
