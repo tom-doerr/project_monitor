@@ -9,12 +9,14 @@ import pathlib
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime
 
 # Third-party imports
 from watchdog.events import FileSystemEventHandler
 
 # Local imports
+from .path_validation import is_windows_reserved_path
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,6 @@ def get_pylint_score() -> float:
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
         return float(match.group(1)) if match else 0.0
 
-    score = 0.0
     try:
         result = subprocess.run(
             ["pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"],
@@ -38,17 +39,20 @@ def get_pylint_score() -> float:
             cwd=pathlib.Path(__file__).parent.parent,
             universal_newlines=True
         )
-        # Check if returncode exists before comparison
+        
         if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
-            return max(extract_score(result.stdout), extract_score(result.stderr))
+            score = max(
+                extract_score(result.stdout),
+                extract_score(result.stderr)
+            )
+            return max(0.0, min(score, 10.0))
+            
         return 0.0
     except subprocess.TimeoutExpired:
         return 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
         return 0.0
-
-    return min(max(score, 0.0), 10.0)
 
 
 def _parse_pytest_output(output: str) -> dict:
@@ -69,18 +73,14 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    json_match = re.search(r'{"\w+": \d+.*}', output)
-    success = False
-
-    if json_match:
+    if json_match := re.search(r'{"\w+": \d+.*}', output):
         try:
-            json_data = json.loads(json_match.group(0))
-            _update_results_from_json(json_data, result)
-            success = True
+            _update_results_from_json(json.loads(json_match.group(0)), result)
+            return True
         except (json.JSONDecodeError, AttributeError) as e:
             result["error"] = f"JSON parsing failed: {str(e)}"
-
-    return success
+            return False
+    return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -300,13 +300,12 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
     try:
-        line_count = 0
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-
+        
         if real_path.is_file() and real_path.suffix == ".py" and file_id not in counted:
             counted.add(file_id)
-            line_count = _count_file_lines(real_path)
+            return _count_file_lines(real_path)
 
     except (OSError, PermissionError, FileNotFoundError) as e:
         logger.debug("File processing error: %s", str(e))
