@@ -52,6 +52,7 @@ def get_pylint_score() -> float:
             result = max(extract_score(proc.stdout), extract_score(proc.stderr))
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
+        return 0.0
 
     return result
 
