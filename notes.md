@@ -1,4 +1,8 @@
 ## Test Improvements
+- Added 12 new parametrized test cases for Windows path validation
+- Unified reserved name testing with pytest parametrization
+- Added coverage for COM0/LPT0 and mixed case reserved names
+- Added tests for reserved names with common extensions
 - Fixed NoneType errors in file processing
 - Improved pytest output parsing with multiple fallback patterns
 - Added explicit error logging for file processing failures
