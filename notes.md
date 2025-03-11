@@ -150,8 +150,10 @@
 
 ## Fixed in This Batch
 - Fixed Windows reserved name validation syntax error
-- Added 10+ reserved name variants with mixed cases/extensions
-- Tested 8+ valid name false positive scenarios
+- Added 20+ reserved name variants including $ suffixed system names
+- Tested 15+ valid name false positive scenarios
+- Verified case folding behavior with Unicode characters
+- Added CONIN$/CONOUT$/CLOCK$ special device testing
 - Verified nested valid files in reserved-named directories
 - Fixed extremely long line counting logic
 - Improved 1GB file test generation with chunked writes
