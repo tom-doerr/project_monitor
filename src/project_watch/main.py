@@ -28,9 +28,13 @@ def get_pylint_score() -> float:
 
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
-        matches = re.findall(r"rated at (\d+\.?\d*)/10", text)
+        # Find scores with word boundaries to avoid partial matches
+        matches = re.findall(r"\brated at (\d+\.?\d*)/10\b", text)
         if not matches:
-            return 0.0
+            # Fallback to search without word boundaries
+            matches = re.findall(r"(\d+\.?\d*)/10", text)
+            if not matches:
+                return 0.0
             
         # Validate all found scores and take highest valid one
         valid_scores = []
@@ -162,6 +166,8 @@ def _extract_pytest_time(output: str) -> float:
         output.replace(",", ""),
         flags=re.IGNORECASE
     )
+    if not time_match:  # More robust fallback pattern
+        time_match = re.search(r"\bin\s+(\d+\.\d+)\b", output)
     if not time_match:  # Fallback to looking for time format without unit
         time_match = re.search(r" in (\d+\.?\d*)", output)
     return float(time_match.group(1)) if time_match else 0.0
