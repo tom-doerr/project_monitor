@@ -46,7 +46,7 @@ _WINDOWS_RESERVED_NAMES = {
 
 _RESERVED_PATTERN = re.compile(
     r"^(CON|PRN|AUX|NUL|CLOCK\$|"
-    r"COM[1-9]|LPT[1-9]|CONIN\$|CONOUT\$|"
+    r"COM[0-9]|LPT[0-9]|CONIN\$|CONOUT\$|" 
     r"\$Mft|\$MftMirr|\$LogFile|\$Volume|"
     r"\$AttrDef|\$Bitmap|\$Boot|\$BadClus|"
     r"\$Secure|\$Upcase|\$Extend|"

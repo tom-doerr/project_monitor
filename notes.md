@@ -299,9 +299,11 @@
 - Pytest output with parallel execution flags ✅
 - Directory symlink handling ✅
 - Network filesystem timeout retries ✅
-- Windows reserved name case insensitivity ✅
-- Network latency timeout handling ✅
+- Windows reserved name case insensitivity ✅  
+- Network latency timeout handling ✅  
 - Reserved name variant validation ✅  
+- COM0/LPT0 device name validation ✅  
+- Case variants with numeric suffixes ✅  
 - Valid name false positive checks ✅
 - Symlink chain resolution ✅
 - Mixed slash directions ✅
