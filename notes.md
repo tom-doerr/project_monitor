@@ -61,6 +61,10 @@
 ## New Test Coverage
 - Windows reserved filename handling (including subdirectory validation)
 - UNC path normalization edge cases  
+- Reserved names with multiple extensions (.tar.gz, .config.ini)
+- Case variants (lowercase, mixed case, uppercase)
+- Special system device names (CONIN$, CONOUT$, CLOCK$)
+- NTFS system file patterns ($Mft)
 - Kernel-level file handle verification
 - Filesystem event simulation
 - Fuzzing tests for invalid UTF-8 sequences

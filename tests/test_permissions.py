@@ -39,13 +39,14 @@ def test_filesystem_errors(mock_resolve, caplog):
         count_lines_of_code()
 
 
-def test_filesystem_error_simulation(tmp_path, monkeypatch):
+def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     """Test filesystem error handling with different exception types.
     Validates proper error handling for:
     - Permission errors (read/write)
     - Missing files
     - I/O failures
-    - Decoding errors"""
+    - Decoding errors
+    - Windows reserved path errors"""
     from project_watch.main import _process_code_path
 
     from project_watch.main import _process_code_path
@@ -74,5 +75,8 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch):
             raise exc_type(msg)  # Now uses local variables
 
         monkeypatch.setattr("builtins.open", mock_open)
-        result = _process_code_path(tmp_path, set())
-        assert result == 0, f"Failed to handle {exc_type.__name__}"
+        with caplog.at_level(logging.ERROR):
+            result = _process_code_path(tmp_path, set())
+            assert result == 0, f"Failed to handle {exc_type.__name__}"
+            assert any(msg in record.message for record in caplog.records), \
+                f"Missing error log for {exc_type.__name__}"

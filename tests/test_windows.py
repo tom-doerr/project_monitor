@@ -166,12 +166,17 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         "CONIN$",
         "CONOUT$",
         "CLOCK$",
-        "CaSeInSeNsItIvE",  # Test case folding
-        "$Mft",  # NTFS system file
-        "CoM3",  # Mixed case reserved name
-        "lPt4.txt",  # Mixed case with extension
-        "nUl",  # All lowercase
-        "AUX",  # All uppercase
+        "CaSeInSeNsItIvE",
+        "$Mft",
+        "CoM3",
+        "lPt4.txt",
+        "nUl",
+        "AUX",
+        "COM1.old",  # Added more variants
+        "LPT2.new",
+        "CON.final.py",
+        "com1.log",  # Lowercase
+        "lPt9.md"  # Mixed case extension
     ]
     valid_names = [
         "CONFIG",
