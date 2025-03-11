@@ -262,6 +262,10 @@
 - Fixed UNC path case normalization edge cases
 - Improved Windows reserved name regex coverage with extensions
 - Fixed Windows test assertion logic that incorrectly counted nested files in reserved directories
+- Added platform.system() mocking to ensure Windows validation activates
+- Enhanced test error messages with valid/reserved name lists
+- Fixed pytest time regex to handle alternate formats
+- Added Pylint test cleanup to ensure clean mock state
 - Added reserved names list to test error output for better debugging
 - Verified COM2 directory exclusion in Windows path validation
 - Added explicit error messages to test assertions

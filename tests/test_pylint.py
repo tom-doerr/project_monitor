@@ -114,6 +114,7 @@ def test_get_pylint_score_at_lower_bound():
 def test_get_pylint_score_error(caplog):
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = Exception("Pylint failed")
+        mock_run.return_value = None  # Ensure clean state
         assert get_pylint_score() == 0.0
         assert any(
             "Pylint error: Pylint failed" in rec.message for rec in caplog.records

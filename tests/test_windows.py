@@ -160,7 +160,8 @@ def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
     return reserved_names, valid_names
 
 
-def test_windows_special_devices(tmp_path: Path):
+@patch("platform.system", return_value="Windows")
+def test_windows_special_devices(mock_platform, tmp_path: Path):
     """Test special device name handling (CONIN$, CONOUT$, CLOCK$)"""
     _run_reserved_name_test(
         tmp_path,
@@ -171,7 +172,8 @@ def test_windows_special_devices(tmp_path: Path):
     )
 
 
-def test_windows_numeric_suffixes(tmp_path: Path):
+@patch("platform.system", return_value="Windows") 
+def test_windows_numeric_suffixes(mock_platform, tmp_path: Path):
     """Test COM/LPT numeric suffix handling"""
     _run_reserved_name_test(
         tmp_path,
@@ -179,7 +181,8 @@ def test_windows_numeric_suffixes(tmp_path: Path):
     )
 
 
-def test_windows_case_variants(tmp_path: Path):
+@patch("platform.system", return_value="Windows")
+def test_windows_case_variants(mock_platform, tmp_path: Path):
     """Test mixed case reserved name variants"""
     _run_reserved_name_test(
         tmp_path,
@@ -187,7 +190,8 @@ def test_windows_case_variants(tmp_path: Path):
     )
 
 
-def test_windows_system_files(tmp_path: Path):
+@patch("platform.system", return_value="Windows")
+def test_windows_system_files(mock_platform, tmp_path: Path):
     """Test NTFS system file patterns"""
     _run_reserved_name_test(
         tmp_path,
@@ -220,8 +224,8 @@ def _run_reserved_name_test(tmp_path: Path, test_cases: tuple[list, list]):
     # Verify line count matches valid files only
     valid_count = count_lines_of_code(tmp_path)
     assert valid_count == len(valid_names), (
-        f"Expected {len(valid_names)} valid lines, got {valid_count}. "
-        f"Reserved: {reserved_names}"
+        f"Expected {len(valid_names)} valid lines, got {valid_count}. "  # nosec
+        f"Reserved: {reserved_names} | Valid: {valid_names}"
     )
 
 
