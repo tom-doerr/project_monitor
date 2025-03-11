@@ -45,6 +45,9 @@ def test_network_retry_backoff(tmp_path, monkeypatch):
 
     resolve_times, resolver = create_tracked_resolver()
     monkeypatch.setattr(pathlib.Path, "resolve", resolver)
+    
+    start_time = time.monotonic()
+    count_lines_of_code(tmp_path)  # Trigger the retries
 
     # Verify retry delays (should be ~1s and ~2s)
     assert len(resolve_times) == 3
@@ -69,9 +72,9 @@ def test_mixed_network_errors(tmp_path, monkeypatch):
     ])
 
     def resolve_with_errors(self):
-          try:
+        try:
             raise next(error_sequence)
-            except StopIteration:
+        except StopIteration:
             return pathlib.Path.resolve(self)
         return None  # Explicit fallback return
 
