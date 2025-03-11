@@ -1,7 +1,7 @@
 import logging
 from unittest.mock import patch
 import pytest
-from project_watch.main import count_lines_of_code
+from project_watch.main import count_lines_of_code, _process_code_path
 
 
 def test_read_only_file(tmp_path):
@@ -60,13 +60,9 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     ]
 
     for exc_type, msg in error_cases:
-        # Create local copies for closure capture
-        current_exc = exc_type
-        current_msg = msg
-
-        def mock_open(*_args, **_kwargs):
-            # Use lambda to capture current exc_type/msg values immediately
-            raise exc_type(current_msg) from None
+        # Use lambda to capture current values immediately
+        monkeypatch.setattr("builtins.open", 
+            lambda *_, **__: (_ for _ in ()).throw(exc_type(msg)))
 
         monkeypatch.setattr("builtins.open", mock_open)
         with caplog.at_level(logging.ERROR):

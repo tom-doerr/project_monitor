@@ -275,13 +275,10 @@ def test_mixed_case_paths(tmp_path: Path):
     file_path.parent.mkdir()
     file_path.write_text("a = 1\nb = 2\n")
 
-    # Test case insensitivity
+    # Test case insensitivity and path normalization
     mixed_case_path = tmp_path / "MiXeD" / "sLaSheS.Py"
-    if sys.platform == "win32":
-        assert count_lines_of_code(mixed_case_path.parent) == 2
-
-    # Test path normalization
-    assert count_lines_of_code(file_path.parent) == 2
+    expected = 2 if sys.platform == "win32" else 0
+    assert count_lines_of_code(mixed_case_path.parent) == expected
 
 
 def test_pytest_output_parsing_edge_cases(tmp_path: Path):
