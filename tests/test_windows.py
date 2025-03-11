@@ -1,10 +1,7 @@
 import sys
 from pathlib import Path
 import pytest
-from project_watch.main import (
-    count_lines_of_code,
-    _parse_pytest_output,
-)  # pylint: disable=no-name-in-module
+from project_watch.main import count_lines_of_code  # pylint: disable=no-name-in-module
 
 
 def _create_test_directory(tmp_path):
@@ -168,13 +165,6 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         f"Expected {len(valid_names)} valid files, counted {count}. "
         f"Reserved names: {reserved_names}"
     )
-    """Test case-insensitive detection of reserved names including:
-    - Mixed case variations (CoN, lpT3)
-    - Multiple extensions (.config.txt, .CONFIG.TXT)
-    - Special device names (CONIN$, CONOUT$, CLOCK$)
-    - System files ($Mft, $LogFile)
-    - Case variants with numbers (COM1, com9)
-    """
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
@@ -285,7 +275,11 @@ def test_windows_mixed_slashes(tmp_path):
 
 
 def test_mixed_case_paths(tmp_path: Path):
-    """Test case insensitivity enforcement"""
+    """Test case insensitivity enforcement
+    - Mixed case file names
+    - Mixed case directories
+    - Mixed case extensions
+    """
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
