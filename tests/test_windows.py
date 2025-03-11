@@ -248,11 +248,11 @@ def test_windows_mixed_slashes(tmp_path):
     """Test mixed forward/backward slashes in paths"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-    
+
     test_file = tmp_path / "mixed" / "slashes.py"
     test_file.parent.mkdir()
     test_file.write_text("x = 1\n")
-    
+
     # Test with mixed slashes
     mixed_path = Path(test_file.as_posix().replace("mixed/", "mixed\\"))
     assert count_lines_of_code(mixed_path) == 1
