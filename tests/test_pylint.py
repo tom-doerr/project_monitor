@@ -67,21 +67,43 @@ def test_get_pylint_score_above_max():
         mock_run.return_value = subprocess.CompletedProcess(
             args=[],
             returncode=0,
-            stdout="Your code has been rated at 12.0/10",
-            stderr="",
+            stdout="Your code has been rated at 12.0/10 (previous run: 9.09/10, +0.01)",
+            stderr="Rated at 15.0/10 in stderr",  # Test max of both outputs
         )
         assert get_pylint_score() == 10.0
-
+        mock_run.assert_called_once_with(ANY, capture_output=True, check=False, cwd=ANY, text=True, timeout=15)
 
 def test_get_pylint_score_below_min():
-    with patch("subprocess.run") as mock_run:
+    with patch("subprocess.run") as mock_run, patch("logging.debug") as mock_debug:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[],
             returncode=0,
             stdout="Your code has been rated at -5.0/10",
+            stderr="Rated at -2.5/10",  # Test min of both outputs
+        )
+        assert get_pylint_score() == 0.0
+        mock_debug.assert_called_with("Pylint error: %s", ANY)
+
+def test_get_pylint_score_at_upper_bound():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="Your code has been rated at 10.0/10",
+            stderr="",
+        )
+        assert get_pylint_score() == 10.0
+
+def test_get_pylint_score_at_lower_bound():
+    with patch("subprocess.run") as mock_run, patch("logging.debug") as mock_debug:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[],
+            returncode=32,  # Over threshold
+            stdout="Your code has been rated at 0.0/10",
             stderr="",
         )
         assert get_pylint_score() == 0.0
+        mock_debug.assert_called_with("Pylint error: %s", ANY)
 
 
 def test_get_pylint_score_error(caplog):
