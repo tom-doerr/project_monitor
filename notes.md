@@ -72,6 +72,11 @@
 - Case variants with numeric suffixes (COM1-COM9, LPT1-LPT9)
 - UNC path normalization edge cases  
 - Reserved names with multiple extensions (.tar.gz, .config.ini)
+- Pylint error conditions:
+  - Empty output handling
+  - Conflicting score matches
+  - Non-zero exit codes with valid scores
+  - Multiple score matches in output
 - Case variants (lowercase, mixed case, uppercase)
 - Special system device names (CONIN$, CONOUT$, CLOCK$)
 - NTFS system file patterns ($Mft)
@@ -220,6 +225,9 @@
 ## Fixed in This Batch
 - Fixed syntax error in file skipping logic (unmatched parenthesis)
 - Fixed Windows reserved name regex handling with extensions
+- Added CompletedProcess import for test clarity
+- Fixed subprocess mock return value typing
+- Improved Pylint score extraction error cases
 - Added comprehensive test coverage for multi-extension reserved names
 - Added missing validation for Windows reserved names with extensions
 - Improved pytest parallel execution output handling

@@ -1,5 +1,6 @@
 from unittest.mock import patch, ANY
 import subprocess
+from subprocess import CompletedProcess
 from project_watch.main import get_pylint_score  # pylint: disable=import-error
 
 
@@ -81,10 +82,40 @@ def test_get_pylint_score_from_stderr():
 
 def test_get_pylint_score_high_return_code():
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[],
+        mock_run.return_value = CompletedProcess(
+            args=[], 
             returncode=32,  # Above threshold
             stdout="Your code has been rated at 8.5/10",
             stderr="",
         )
         assert get_pylint_score() == 0.0
+
+def test_get_pylint_score_empty_output():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = CompletedProcess(
+            args=[], 
+            returncode=0,
+            stdout="", 
+            stderr=""
+        )
+        assert get_pylint_score() == 0.0
+
+def test_get_pylint_score_non_zero_exit_success_output():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = CompletedProcess(
+            args=[],
+            returncode=1,
+            stdout="Your code has been rated at 9.5/10",
+            stderr=""
+        )
+        assert get_pylint_score() == 9.5
+
+def test_get_pylint_score_multiple_matches():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="rated at 5/10\nrated at 8/10",
+            stderr=""
+        )
+        assert get_pylint_score() == 8.0
