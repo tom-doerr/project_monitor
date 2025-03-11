@@ -1,4 +1,4 @@
-import pytest
+import io
 import zipfile
 import tarfile
 from pathlib import Path
@@ -19,7 +19,7 @@ def create_tar_with_files(tmp_path: Path, content: str) -> Path:
         tf.addfile(info, io.BytesIO(content.encode()))
         
         info = tarfile.TarInfo("nested/file2.py")
-        info.size = len(content)
+        info.size = len(content.encode())  # Use encoded length
         tf.addfile(info, io.BytesIO(content.encode()))
     return tar_path
 
