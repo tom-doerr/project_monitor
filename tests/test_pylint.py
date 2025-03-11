@@ -1,8 +1,6 @@
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 import subprocess
-from project_watch.main import (
-    get_pylint_score,
-)  # pylint: disable=import-error,no-name-in-module
+from project_watch.main import get_pylint_score  # pylint: disable=import-error
 
 
 def test_get_pylint_score_success():
@@ -54,7 +52,7 @@ def test_get_pylint_score_malformed_number():
             stderr="",
         )
         assert get_pylint_score() == 0.0
-        mock_debug.assert_called_with("Invalid pylint score format: %s - %s", "9.5.0", mock.ANY)
+        mock_debug.assert_called_with("Invalid pylint score format: %s - %s", "9.5.0", ANY)
 
 def test_get_pylint_score_error():
     with patch("subprocess.run") as mock_run:
