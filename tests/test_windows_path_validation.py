@@ -67,6 +67,11 @@ def test_reserved_names_with_extensions(tmp_path: Path):
         "nul.config.ini",
         "CONFIG.INI",
         "aux.backup.bak",
+        "cOm1.TxT",  # Mixed case
+        "LPT4.config.yml",  # Numeric suffix
+        "nul..config",  # Double extension
+        "CLOCK$.log",  # Special device
+        "CONFIG~.tmp"  # Temporary file pattern
     ]
     valid_files = [
         "COM10.log",

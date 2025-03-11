@@ -107,7 +107,10 @@
 - Real-time file change detection
 
 ## Recent Changes
-- Added missing pathlib import in main.py
+- Added missing pathlib import in main.py  
+- Fixed unmatched parenthesis syntax error in file skipping logic
+- Enhanced Windows reserved name regex coverage
+- Added test cases for mixed case and complex extensions
 - Fixed PEP8 import ordering in test files
 - Removed unused MagicMock import
 - Fixed symlink handling in line counting
