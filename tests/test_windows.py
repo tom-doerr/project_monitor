@@ -176,7 +176,7 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         "LPT2.new",
         "CON.final.py",
         "com1.log",  # Lowercase
-        "lPt9.md"  # Mixed case extension
+        "lPt9.md",  # Mixed case extension
     ]
     valid_names = [
         "CONFIG",

@@ -63,11 +63,12 @@ def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
         (PermissionError, "Mocked permission error"),
         (OSError, "Input/output error"),
         (UnicodeDecodeError, "UTF-8 decode error"),
-        (OSError, "Too many open files"), 
+        (OSError, "Too many open files"),
         (OSError, "No space left on device"),
     ]
 
     for exc_type, msg in error_cases:
+
         def mock_open(*args, **kwargs):
             # Capture current exc_type/msg in closure
             raise exc_type(msg)
