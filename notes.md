@@ -200,8 +200,10 @@
    - Added Windows test case for CLOCK$ handling
 - [ ] Implement real-time monitoring prototype
 - [ ] Add Azure Fileshare validation
-- [x] Fixed undefined line_count error in file processing  
+- [x] Fixed undefined line_count error in file processing
 - [x] Cleaned up duplicate dataclass import
+- [x] Added enhanced error diagnostics to Windows path validation
+- [x] Expanded test cases for mixed-case reserved names
 - [x] Fixed pytest time parsing with multiple format support
 - [x] Expanded Windows reserved name regex (CLOCK$, COM0/LPT0)
 - [x] Added error field initialization in pytest results

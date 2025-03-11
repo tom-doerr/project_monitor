@@ -20,8 +20,18 @@ def test_windows_special_device_names(tmp_path: Path):
         "CLOCK$.ini",
         "COM0",
         "LPT0",  # Edge case numeric suffixes
+        "ＣＯＭ１",  # Full-width unicode
+        "COM¹",   # Superscript
+        "COMⅣ",   # Roman numeral
     ]
-    valid_names = ["COM0file", "lpt10.data", "conventional.txt"]
+    valid_names = [
+        "COM0file",
+        "lpt10.data", 
+        "conventional.txt",
+        "COM10",  # Valid numeric suffix
+        "LPTA",   # Non-numeric suffix
+        "CLOCK",  # Without $ suffix
+    ]
 
     # Create test files
     created = []
