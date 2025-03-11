@@ -110,7 +110,8 @@
 - [x] Add pathlib standardization checks
 - [x] Expand binary detection tests
 - [x] Implement timeout test cases
-- [x] Improve coverage tracking
+- [x] Improve coverage tracking  
+- [ ] Add performance tests for large result parsing
 - [ ] Add parallel execution metrics
 - [x] Complete Unicode path tests
 - [x] Implement symlink resolution checks
