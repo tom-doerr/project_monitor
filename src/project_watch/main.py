@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
@@ -44,7 +45,7 @@ def get_pylint_score() -> float:
             stdout_score = extract_score(result.stdout)
             stderr_score = extract_score(result.stderr)
             score = max(stdout_score, stderr_score)
-            
+
         # Clamp score between 0-10
         score = max(0.0, min(score, 10.0))
     except subprocess.TimeoutExpired:
