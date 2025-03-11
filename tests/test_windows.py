@@ -131,33 +131,40 @@ def test_long_path_handling(tmp_path):
     assert count_lines_of_code(long_path) == 2
 
 
-@pytest.mark.parametrize("unc_name,path_suffix,expected_lines,expected_error", [
-    ("share", "test.py", 2, None),
-    ("\\\\server\\CONIN$", None, None, "reserved Windows name"),
-    ("\\\\Server\\ClOcK$", None, None, "reserved Windows name"),
-    ("COM1", "valid.txt", 1, None),
-    ("CoM2", "file.txt", 1, None),
-    ("very_long_directory_name" * 10, "long.txt", 1, None),
-    ("CLOCK$", "time.txt", 1, None),
-    ("LPT1", None, None, "reserved Windows name"),
-])
-def test_windows_unc_paths(tmp_path, unc_name, path_suffix, expected_lines, expected_error):  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
+@pytest.mark.parametrize(
+    "unc_name,path_suffix,expected_lines,expected_error",
+    [
+        ("share", "test.py", 2, None),
+        ("\\\\server\\CONIN$", None, None, "reserved Windows name"),
+        ("\\\\Server\\ClOcK$", None, None, "reserved Windows name"),
+        ("COM1", "valid.txt", 1, None),
+        ("CoM2", "file.txt", 1, None),
+        ("very_long_directory_name" * 10, "long.txt", 1, None),
+        ("CLOCK$", "time.txt", 1, None),
+        ("LPT1", None, None, "reserved Windows name"),
+    ],
+)
+def test_windows_unc_paths(
+    tmp_path, unc_name, path_suffix, expected_lines, expected_error
+):  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
     """Test UNC path handling with various reserved names and cases."""
     test_dir = tmp_path / unc_name
     test_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Create test file if specified
     if path_suffix:  # Only create file if suffix specified
         (test_dir / path_suffix).write_text("# Test content\n" * expected_lines)
-    
+
     # Validate expectations
     if expected_error:
         with pytest.raises(ValueError, match=expected_error):
             count_lines_of_code(test_dir)
         return
-    
+
     result = count_lines_of_code(test_dir)
-    assert result == expected_lines, f"Expected {expected_lines}, got {result} for {unc_name}"
+    assert (
+        result == expected_lines
+    ), f"Expected {expected_lines}, got {result} for {unc_name}"
 
 
 def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
