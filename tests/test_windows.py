@@ -143,26 +143,16 @@ def test_windows_unc_paths(tmp_path):
 
 
 def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
-    """Test case-insensitive detection of reserved names"""
+    """Test case-insensitive detection of reserved names with edge cases"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
 
     reserved_names = [
-        "COM1",
-        "lpt9",
-        "CON.TXT",
-        "aux.json",
-        "nul.txt",
-        "LPT5.csv",
-        "PRN.png",
-        "COM4.tar.gz",
-        "NUL.LOG",
-        "AuX.yml",
-        "CoM1",  # Mixed case
-        "lpt3.config.ini",  # Multiple extensions
-        "PRN.",  # Empty extension
-        "NUL..txt",  # Double dot
-        "CON.tar.gz",  # Multiple extensions
+        "COM1", "lpt9", "CON.TXT", "aux.json", "nul.txt",
+        "LPT5.csv", "PRN.png", "COM4.tar.gz", "NUL.LOG",
+        "AuX.yml", "CoM1", "lpt3.config.ini", "PRN.", 
+        "NUL..txt", "CON.tar.gz", "CONIN$", "CONOUT$",
+        "CLOCK$", "CaSeInSeNsItIvE"  # Test case folding
     ]
     valid_names = [
         "COM10",  # Exceeds COM9 range
