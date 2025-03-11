@@ -403,8 +403,8 @@ def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
 def _log_file_error(error: Exception, path: pathlib.Path) -> None:
     """Log file processing errors with path context."""
     normalized_path = _normalize_path_case(path)
-    logging.debug("Error processing %s: %s", normalized_path, str(error), exc_info=True)
-    logging.error("Failed to process %s: %s", normalized_path, error)
+    logger.debug("Error processing %s: %s", normalized_path, str(error), exc_info=True)
+    logger.error("Failed to process %s: %s", normalized_path, error)
 
 
 def _normalize_path_case(path: pathlib.Path) -> pathlib.Path:

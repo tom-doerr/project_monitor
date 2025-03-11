@@ -59,6 +59,24 @@ ERROR_CASES = [
 
 
 # pylint: disable=too-many-arguments,too-many-locals
+def test_error_logging_contains_path_and_message(tmp_path, monkeypatch, caplog):
+    """Verify error logging contains both path and exception details."""
+    test_file = tmp_path / "test.py"
+    test_file.write_text("print('test')")
+    
+    def mock_count_lines(_):
+        raise PermissionError("Simulated permission error")
+    
+    monkeypatch.setattr("project_watch.main._count_file_lines", mock_count_lines)
+    
+    with caplog.at_level(logging.ERROR):
+        result = count_lines_of_code(tmp_path)
+        assert result == 0, "Should return 0 when errors occur"
+        
+        assert str(test_file.resolve()) in caplog.text
+        assert "Simulated permission error" in caplog.text
+        assert any(record.exc_info is not None for record in caplog.records)
+
 def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     """Test filesystem error handling with different exception types."""
 
