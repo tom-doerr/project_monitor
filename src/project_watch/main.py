@@ -145,11 +145,14 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
     # Handle different time formats with/without decimals and units
+    # Handle different time formats with/without decimals and units
     time_match = re.search(
-        r" in (\d+\.?\d*)\s*s(?:ec)?(?:onds?)?\b", output.replace(",", "")
+        r"(\d+\.?\d*)\s*(?:s|sec|seconds?)\b",
+        output.replace(",", ""),
+        flags=re.IGNORECASE
     )
-    if not time_match:  # Fallback to seconds keyword
-        time_match = re.search(r"(\d+\.\d+) seconds?", output)
+    if not time_match:  # Fallback to looking for time format without unit
+        time_match = re.search(r" in (\d+\.?\d*)", output)
     return float(time_match.group(1)) if time_match else 0.0
 
 
@@ -300,6 +303,7 @@ def _count_file_lines(path: pathlib.Path) -> int:
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
     counted = set()
+    inode_cache = set()
     base_path = pathlib.Path(directory).resolve().absolute()
 
     # Normalize Windows paths to lowercase
@@ -355,11 +359,19 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
 
 def _count_valid_file_lines(path: pathlib.Path, counted: set) -> int:
     """Count lines in valid, accessible files."""
-    resolved_path = path.resolve(strict=True)
-    normalized_path = _normalize_path_case(resolved_path)
+    try:
+        resolved_path = _resolve_with_retry(path)
+        file_stat = resolved_path.stat()
+        file_id = (file_stat.st_ino, file_stat.st_dev)
+        
+        if file_id in inode_cache or _should_skip_file(resolved_path, counted):
+            return 0
+            
+        inode_cache.add(file_id)
+        normalized_path = _normalize_path_case(resolved_path)
 
-    if _should_skip_file(normalized_path, counted) or not normalized_path.is_file():
-        return 0
+        if not normalized_path.is_file():
+            return 0
 
     line_count = _count_file_lines(normalized_path)
     logger.debug("Counted %d lines in %s", line_count, normalized_path)
