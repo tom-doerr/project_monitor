@@ -237,6 +237,7 @@ def _count_file_lines(path: pathlib.Path) -> int:
                 for line in f
                 if line.strip() and len(line) <= 100000  # Match test case value
             )
+        if not path.is_file() or not path.stat().st_size or not os.access(path, os.R_OK):
     except (PermissionError, UnicodeDecodeError, FileNotFoundError, OSError) as e:
         logger.log(
             logging.WARNING if isinstance(e, PermissionError) else logging.DEBUG,
