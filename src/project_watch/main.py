@@ -34,17 +34,18 @@ def get_pylint_score() -> float:
             capture_output=True,
             text=True,
             check=False,
-            timeout=15,  # Reduced timeout for test environments
+            timeout=15,
             cwd=pathlib.Path(__file__).parent.parent,
         )
-    except subprocess.TimeoutExpired:
-        return 0.0  # Return minimum score on timeout
-
         # Check if returncode exists before comparison
         if hasattr(result, "returncode") and 0 <= result.returncode <= 31:
-            score = max(extract_score(result.stdout), extract_score(result.stderr))
-    except (subprocess.SubprocessError, ValueError, AttributeError) as e:
+            return max(extract_score(result.stdout), extract_score(result.stderr))
+        return 0.0
+    except subprocess.TimeoutExpired:
+        return 0.0
+    except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e))
+        return 0.0
 
     return min(max(score, 0.0), 10.0)
 
@@ -67,8 +68,8 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    success = False
     json_match = re.search(r'{"\w+": \d+.*}', output)
+    success = False
 
     if json_match:
         try:
@@ -294,8 +295,8 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
-    line_count = 0
     try:
+        line_count = 0
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
 
