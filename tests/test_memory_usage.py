@@ -12,7 +12,7 @@ def test_no_memory_leak_in_line_counting(tmp_path):
     sample_code = "print('test')\n" * 1000
     # Create test files using loop instead of list comprehension
     for _ in range(10):
-        (tmp_path / f"test_{i}.py").write_text(sample_code)
+        (tmp_path / f"test_{_}.py").write_text(sample_code)
 
     # Combined snapshot and comparison logic
     top_stats = tracemalloc.take_snapshot().compare_to(
