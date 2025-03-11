@@ -1,7 +1,7 @@
 import logging
 from unittest.mock import patch
 import pytest
-from project_watch.main import count_lines_of_code, _process_code_path
+from project_watch.main import count_lines_of_code
 
 
 def test_read_only_file(tmp_path):
@@ -39,33 +39,32 @@ def test_filesystem_errors(mock_resolve, caplog):
         count_lines_of_code()
 
 
+# Error cases shared across tests
+ERROR_CASES = [
+    (PermissionError, "Access is denied"),
+    (FileNotFoundError, "The system cannot find the path specified"),
+    (OSError, "Invalid argument"),
+    (PermissionError, "Permission denied"),
+    (FileNotFoundError, "No such file or directory"),
+    (PermissionError, "Mocked permission error"),
+    (OSError, "Input/output error"),
+    (UnicodeDecodeError, "UTF-8 decode error"),
+    (OSError, "Too many open files"),
+    (OSError, "No space left on device"),
+]
+
 def test_filesystem_error_simulation(tmp_path, monkeypatch, caplog):
     """Test filesystem error handling with different exception types."""
-    from project_watch.main import _process_code_path
+    from unittest.mock import MagicMock
 
-    # Reduced error cases to core scenarios
-    error_cases = [
-        # Windows-style errors
-        (PermissionError, "Access is denied"),
-        (FileNotFoundError, "The system cannot find the path specified"),
-        (OSError, "Invalid argument"),
-        # POSIX-style errors
-        (PermissionError, "Permission denied"),
-        (FileNotFoundError, "No such file or directory"),
-        (PermissionError, "Mocked permission error"),
-        (OSError, "Input/output error"),
-        (UnicodeDecodeError, "UTF-8 decode error"),
-        (OSError, "Too many open files"),
-        (OSError, "No space left on device"),
-    ]
-
-    for exc_type, msg in error_cases:
-        # Create a mock that raises the specific exception
-        from unittest.mock import mock_open
-        def raise_exc(*args, **kwargs):
-            raise exc_type(msg)
+    for exc_type, msg in ERROR_CASES:
+        # Create mock that raises specific error
+        def _raise_exc(*args, _exc=exc_type, _msg=msg, **kwargs):
+            raise _exc(_msg)
         
-        monkeypatch.setattr("builtins.open", mock_open(side_effect=raise_exc))
+        mock_file = MagicMock()
+        mock_file.open.side_effect = _raise_exc
+        monkeypatch.setattr("pathlib.Path", mock_file)
         with caplog.at_level(logging.ERROR):
             result = _process_code_path(tmp_path, set())
             assert result == 0, f"Failed to handle {exc_type.__name__}"
