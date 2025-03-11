@@ -62,6 +62,9 @@
 
 ## New Test Coverage
 - Windows reserved filename handling (including subdirectory validation)
+- Special system device names (CONIN$, CONOUT$, CLOCK$)
+- NTFS system file patterns ($Mft, $LogFile)
+- Case variants with numeric suffixes (COM1-COM9, LPT1-LPT9)
 - UNC path normalization edge cases  
 - Reserved names with multiple extensions (.tar.gz, .config.ini)
 - Case variants (lowercase, mixed case, uppercase)
