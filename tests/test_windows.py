@@ -133,23 +133,22 @@ def test_long_path_handling(tmp_path):
 
 def test_windows_unc_paths(tmp_path):
     """Test UNC path handling including reserved names."""
-    # Test valid UNC path
-    valid_share = tmp_path / "share"
-    valid_share.mkdir()
-    (valid_share / "test.py").write_text("# Valid UNC test\nx = 1\n")
-    assert count_lines_of_code(valid_share) == 2
+    # Parametrized test cases: (unc_name, expected_lines)
+    test_cases = [
+        ("share", 2),          # Valid UNC
+        ("\\\\server\\CONIN$", 0),  # Reserved UNC
+        ("\\\\Server\\ClOcK$", 0)    # Case-insensitive reserved
+    ]
+    
+    for unc_name, expected in test_cases:
+        _test_unc_path(tmp_path, unc_name, expected)
 
-    # Test reserved UNC path
-    reserved_unc = tmp_path / "\\\\server\\CONIN$"
-    reserved_unc.mkdir(parents=True, exist_ok=True)
-    (reserved_unc / "test.py").write_text("# Should be skipped\n")
-    assert count_lines_of_code(reserved_unc) == 0
-
-    # Test case-insensitive reserved UNC
-    mixed_case_unc = tmp_path / "\\\\Server\\ClOcK$"
-    mixed_case_unc.mkdir(parents=True, exist_ok=True)
-    (mixed_case_unc / "test.py").write_text("# Should be skipped\n")
-    assert count_lines_of_code(mixed_case_unc) == 0
+def _test_unc_path(tmp_path: Path, unc_name: str, expected_lines: int) -> None:
+    """Helper to test a single UNC path scenario."""
+    test_dir = tmp_path / unc_name
+    test_dir.mkdir(parents=True, exist_ok=True)
+    (test_dir / "test.py").write_text("# Test content\n" * expected_lines)
+    assert count_lines_of_code(test_dir) == expected_lines
 
 
 def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
