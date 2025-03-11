@@ -38,22 +38,24 @@ def test_filesystem_errors(mock_resolve, caplog):
     with pytest.raises(PermissionError):
         count_lines_of_code()
 
+
 def test_filesystem_error_simulation(tmp_path, monkeypatch):
     """Test simulated filesystem error handling"""
     from project_watch.main import _process_code_path
-    
+
     # Test various error scenarios
     error_cases = [
         (PermissionError, "Permission denied"),
         (FileNotFoundError, "File not found"),
         (OSError, "Input/output error"),
-        (UnicodeDecodeError, "UTF-8 decode error")
+        (UnicodeDecodeError, "UTF-8 decode error"),
     ]
-    
+
     for exc_type, msg in error_cases:
+
         def mock_open(*args, **kwargs):
             raise exc_type(msg)
-            
+
         monkeypatch.setattr("builtins.open", mock_open)
         result = _process_code_path(tmp_path, set())
         assert result == 0, f"Failed to handle {exc_type.__name__}"
