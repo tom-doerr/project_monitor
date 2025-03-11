@@ -249,6 +249,7 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
         r"^("
         r"CON|PRN|AUX|NUL|CLOCK\$|"
         r"COM[0-9]|LPT[0-9]|"  # COM0-COM9, LPT0-LPT9
+        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
         r"\$Mft|\$LogFile|\$Volume|"
         r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
         r"CONFIG\$"
