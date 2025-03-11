@@ -37,7 +37,7 @@ def get_pylint_score() -> float:
     def extract_score(text: str) -> float:
         """Extract score from pylint output text."""
         match = re.search(r"rated at (\d+\.?\d*)/10", text)
-        return max(0.0, min(float(match.group(1), 10.0)) if match else 0.0  # Clamp score between 0-10
+        return max(0.0, min(float(match.group(1)), 10.0) if match else 0.0  # Clamp score between 0-10
 
     try:
         proc = subprocess.run(
