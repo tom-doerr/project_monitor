@@ -128,19 +128,18 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
     """Fallback text parsing for pytest output."""
-    patterns = (
-        (r"(\d+) failed", "failed"),
-        (r"(\d+) passed", "passed"), 
-        (r"(\d+) warnings", "warnings"),
-        (r"(\d+) errors", "errors"),
-        (r"(\d+) skipped", "skipped")
-    )
-    # Try multiple patterns to handle different pytest output formats
+    pattern_map = {
+        "failed": r"(\d+) failed",
+        "passed": r"(\d+) passed", 
+        "warnings": r"(\d+) warnings",
+        "errors": r"(\d+) errors",
+        "skipped": r"(\d+) skipped"
+    }
+    
     found = False
-    for pattern, key in patterns:
-        matches = re.search(pattern, output)
-        if matches:
-            result[key] = int(matches.group(1))
+    for key, pattern in pattern_map.items():
+        if match := re.search(pattern, output):
+            result[key] = int(match.group(1))
             found = True
     return found
 

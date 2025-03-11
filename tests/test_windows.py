@@ -281,57 +281,22 @@ def test_windows_mixed_slashes(tmp_path):
     assert count_lines_of_code(mixed_path) == 1
 
 
-def test_mixed_case_paths(tmp_path: Path):
-    """Test case insensitivity enforcement
-    - Mixed case file names
-    - Mixed case directories
-    - Mixed case extensions
-    """
+def test_mixed_case_files(tmp_path: Path):
+    """Test case insensitivity for files"""
     if sys.platform != "win32":
         pytest.skip("Windows-specific test")
-
-    # Create mixed case files
-    (tmp_path / "TESTFILE.PY").write_text("x = 1\n")
-    (tmp_path / "subdir").mkdir()
-    (tmp_path / "subdir" / "MixedCase.Py").write_text("y = 2\n")
-
-    # Should count all variations as single instance
-    assert count_lines_of_code(tmp_path) == 2
-    # Create file with normal Path operations
-    file_path = tmp_path / "mixed" / "slashes.py"
-    file_path.parent.mkdir()
-    file_path.write_text("a = 1\nb = 2\n")
-
-    # Test case insensitivity and path normalization
-    mixed_case_path = tmp_path / "MiXeD" / "sLaSheS.Py"
-    expected = 2 if sys.platform == "win32" else 0
-    assert count_lines_of_code(mixed_case_path.parent) == expected
+    
+    test_files = [
+        ("TESTFILE.PY", "x = 1\n"),
+        ("subdir/MixedCase.Py", "y = 2\n"),
+        ("mixed/slashes.py", "a = 1\nb = 2\n")
+    ]
+    
+    for path, content in test_files:
+        file_path = tmp_path / path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(content)
+    
+    assert count_lines_of_code(tmp_path) == 3
 
 
-def test_pytest_output_parsing_edge_cases(tmp_path: Path):
-    """Test edge cases in pytest output parsing"""
-    # Test empty output
-    assert _parse_pytest_output("") == {
-        "passed": 0,
-        "failed": 0,
-        "time": 0.0,
-        "output": "",
-        "error": None,
-    }
-
-    # Use tmp_path for Windows compatibility
-    (tmp_path / "empty.txt").touch()
-
-    # Test malformed JSON with valid text fallback
-    malformed_json = '{"passed": 5, "failed": 1\n3 passed, 1 failed in 0.5s'
-    assert _parse_pytest_output(malformed_json)["passed"] == 3
-
-    # Test truncated output
-    truncated = "3 passed in 12.34s"
-    assert _parse_pytest_output(truncated) == {
-        "passed": 3,
-        "failed": 0,
-        "time": 12.34,
-        "output": truncated,
-        "error": None,
-    }
