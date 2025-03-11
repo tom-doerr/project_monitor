@@ -115,8 +115,8 @@
 - [x] Add network filesystem timeout tests
 - [x] Implement binary file detection improvements
 - [x] Add fuzzing tests for edge cases
-- [ ] Implement probabilistic file sampling
-- [ ] Improve binary handler cleanup
+- [x] Implement probabilistic file sampling
+- [x] Improve binary handler cleanup
 - [ ] Enhance filesystem error logging
 - [x] Add pathlib standardization checks
 - [x] Expand binary detection tests
