@@ -50,7 +50,7 @@ def _parse_pytest_output(output: str) -> dict:
         "failed": 0,
         "time": 0.0,
         "output": output[-2000:],
-        "error": "",  # Initialize as empty string
+        "error": None,  # Initialize as None to match test expectations
     }
 
     if not _parse_pytest_json(output, result):
@@ -250,7 +250,10 @@ def _count_file_lines(path: pathlib.Path) -> int:
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
     counted = set()
-    base_path = pathlib.Path(directory).resolve()
+    base_path = pathlib.Path(directory).resolve().absolute()
+    # Normalize Windows paths to lowercase
+    if sys.platform == "win32":
+        base_path = pathlib.Path(str(base_path).lower())
 
     return sum(
         _count_file_lines(real_path)
