@@ -131,25 +131,32 @@ def test_long_path_handling(tmp_path):
     assert count_lines_of_code(long_path) == 2
 
 
-def test_windows_unc_paths(tmp_path):
-    """Test UNC path handling including reserved names."""
-    # Parametrized test cases: (unc_name, expected_lines)
-    test_cases = [
-        ("share", 2),  # Valid UNC
-        ("\\\\server\\CONIN$", 0),  # Reserved UNC
-        ("\\\\Server\\ClOcK$", 0),  # Case-insensitive reserved
-    ]
-
-    for unc_name, expected in test_cases:
-        _test_unc_path(tmp_path, unc_name, expected)
-
-
-def _test_unc_path(tmp_path: Path, unc_name: str, expected_lines: int) -> None:
-    """Helper to test a single UNC path scenario."""
+@pytest.mark.parametrize("unc_name,path_suffix,expected_lines,expected_error", [
+    ("share", "test.py", 2, None),
+    ("\\\\server\\CONIN$", None, None, "reserved Windows name"),
+    ("\\\\Server\\ClOcK$", None, None, "reserved Windows name"),
+    ("COM1", "valid.txt", 1, None),
+    ("CoM2", "file.txt", 1, None),
+    ("very_long_directory_name" * 10, "long.txt", 1, None),
+    ("CLOCK$", "time.txt", 1, None),
+    ("LPT1", None, None, "reserved Windows name"),
+])
+def test_windows_unc_paths(tmp_path, unc_name, path_suffix, expected_lines, expected_error):
+    """Test UNC path handling with various reserved names and cases."""
     test_dir = tmp_path / unc_name
     test_dir.mkdir(parents=True, exist_ok=True)
-    (test_dir / "test.py").write_text("# Test content\n" * expected_lines)
-    assert count_lines_of_code(test_dir) == expected_lines
+    
+    if path_suffix:
+        (test_dir / path_suffix).write_text("# Test content\n" * (expected_lines or 1))
+    
+    if expected_error:
+        with pytest.raises(ValueError, match=expected_error):
+            count_lines_of_code(test_dir)
+    else:
+        result = count_lines_of_code(test_dir)
+        assert result == expected_lines, (
+            f"Expected {expected_lines} lines, got {result} for {unc_name}"
+        )
 
 
 def _create_reserved_test_files(tmp_path: Path) -> tuple[list, list]:
