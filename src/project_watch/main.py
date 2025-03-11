@@ -155,7 +155,15 @@ def _match_pattern(pattern: str, groups: int, output: str, result: dict) -> bool
 def _handle_empty_results(output: str, result: dict) -> bool:
     """Check for empty test results."""
     if "no tests ran" in output.lower() or "collected 0 items" in output.lower():
-        result.update({"error": "No tests executed", "passed": 0, "failed": 0, "skipped": 0, "warnings": 0})
+        result.update(
+            {
+                "error": "No tests executed",
+                "passed": 0,
+                "failed": 0,
+                "skipped": 0,
+                "warnings": 0,
+            }
+        )
         return True
     return False
 
