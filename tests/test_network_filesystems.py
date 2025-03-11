@@ -28,12 +28,12 @@ def test_network_timeout_handling(tmp_path, monkeypatch):
 def _create_delayed_resolve(original):
     """Create resolve function with simulated timeout errors"""
     import errno
-    
+
     def delayed_resolve(self, *args, **kwargs):
         for attempt in range(3):
             if attempt == 2:  # Success on final attempt
                 return original(self, *args, **kwargs)
-            
+
             try:
                 raise OSError(errno.ETIMEDOUT, "Simulated network timeout")
             except OSError as e:
