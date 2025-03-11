@@ -41,7 +41,7 @@ def test_partial_read_failure(tmp_path: pathlib.Path, monkeypatch):
     # Test multiple read failure scenarios
     def mock_read(*args, **kwargs):
         raise IOError("Simulated partial read failure")
-        
+
     monkeypatch.setattr("builtins.open", mock_open(read_data=""))
     monkeypatch.setattr("pathlib.Path.read_bytes", mock_read)
     monkeypatch.setattr(_count_file_lines, "__code__", mock_read.__code__)
