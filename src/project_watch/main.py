@@ -61,7 +61,7 @@ def get_pylint_score() -> float:
             return max(extract_score(proc.stdout), extract_score(proc.stderr))
         return 0.0
     except Exception as e:  # pylint: disable=broad-except
-        logger.debug("Pylint error: %s", str(e))
+        logger.debug("Pylint error: %s", str(e), exc_info=True)
         return 0.0
 
 
@@ -159,11 +159,12 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
-    # Handle different time formats with/without decimals and units
+    # Handle multiple time formats: 0.12s, 1.23 seconds, 0.12
+    normalized_output = output.replace(",", "")
     time_match = re.search(
-        r"(\d+\.?\d*)\s*(?:s|sec|seconds?)\b",
-        output.replace(",", ""),
-        flags=re.IGNORECASE,
+        r"(\d+\.\d+)\s?(?:s|seconds?)?\b",
+        normalized_output,
+        re.IGNORECASE
     )
     if not time_match:  # More robust fallback pattern
         time_match = re.search(r"\bin\s+(\d+\.\d+)\b", output)
@@ -274,18 +275,15 @@ def _is_windows_reserved_name(real_path: pathlib.Path) -> bool:
     if sys.platform != "win32":
         return False
 
-    # Case-insensitive match for reserved names with extensions and variants
+    # Case-insensitive match for reserved names with extensions
     reserved_pattern = re.compile(
         r"^("
-        r"CON|PRN|AUX|NUL|CLOCK\$|"
-        r"COM[0-9]|LPT[0-9]|"  # COM0-COM9, LPT0-LPT9
-        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|CLOCK\$|"
-        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|CLOCK\$|"
-        r"\$Mft|\$LogFile|\$Volume|"
-        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$|"
-        r"CONFIG\$"
-        r")(\..*)?$",  # Allow any extension including none
-        re.IGNORECASE,
+        r"(CON|PRN|AUX|NUL|CLOCK\$|COM[0-9]|LPT[0-9])"  # Base names
+        r"(\..*)?|"  # Optional extension
+        r"\$Mft|\$LogFile|\$Volume|"  # NTFS system files
+        r"CONIN\$|CONOUT\$|FAX\$|CONFIG\$"  # Special devices
+        r")$", 
+        re.IGNORECASE
     )
     return reserved_pattern.fullmatch(real_path.name) is not None
 

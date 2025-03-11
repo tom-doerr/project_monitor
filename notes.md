@@ -155,6 +155,10 @@
 ## New Todos
 - [x] Add filesystem error simulation tests
 - [x] Fix Windows reserved name regex extensions
+- [x] Add enhanced debug output for Windows path tests
+- [x] Fix Pylint error return value
+- [x] Improve pytest time parsing regex
+- [x] Add exc_info to Pylint error logging
 - [x] Add symlink inode tracking  
    - Fixed by tracking (inode, device) pairs instead of paths
 - [x] Fix Windows reserved name regex:

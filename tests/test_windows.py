@@ -228,8 +228,9 @@ def _run_reserved_name_test(
     print(f"Actual count: {valid_count}")  # noqa: T201
 
     assert valid_count == len(valid_names), (
-        f"Expected {len(valid_names)} valid lines, got {valid_count}. "  # nosec
-        f"Reserved: {reserved_names} | Valid: {valid_names}"
+        f"Expected {len(valid_names)} valid lines, got {valid_count}.\n"
+        f"Reserved: {reserved_names}\nValid: {valid_names}\n"
+        "Check if any reserved files were actually created"  # nosec
     )
 
 
