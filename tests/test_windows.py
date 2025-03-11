@@ -167,7 +167,9 @@ def test_windows_reserved_name_case_insensitivity(tmp_path: Path):
         "CONOUT$",
         "CLOCK$",
         "CaSeInSeNsItIvE",  # Test case folding
+        "$Mft",  # NTFS system file
     ]
+    valid_names = ["CONFIG", "COM10", "LPT", "null.txt", "CLOCK", "Mft"]
     valid_names = [
         "COM10",  # Exceeds COM9 range
         "LPTS",  # Not LPT prefix
