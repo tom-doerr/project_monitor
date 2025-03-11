@@ -67,6 +67,7 @@ def test_get_pylint_score_error(caplog):
         assert get_pylint_score() == 0.0
         assert "Pylint error: Pylint failed" in caplog.text
 
+
 def test_get_pylint_score_from_stderr():
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = subprocess.CompletedProcess(
@@ -76,6 +77,7 @@ def test_get_pylint_score_from_stderr():
             stderr="Your code has been rated at 7.5/10",
         )
         assert get_pylint_score() == 7.5
+
 
 def test_get_pylint_score_high_return_code():
     with patch("subprocess.run") as mock_run:
