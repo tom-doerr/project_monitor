@@ -47,6 +47,7 @@ def test_get_pytest_results_failure():
     with patch("subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         mock_run.return_value.stdout = "2 failed, 1 error"
+        mock_run.return_value.stderr = ""
         result = get_pytest_results()
         assert result["failed"] == 2
         assert "error" in result

@@ -31,12 +31,13 @@ class DevMonitor:
         except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             return f"Error: {str(e)}"
             
-    def _get_section_output(self, section, header, command):  # pylint: disable=too-many-arguments
+    def _get_section_output(self, section, command):
         """Generate output for a specific section."""
-        if section in self.active_sections:
-            output = f"\n{header}\n{self.capture_command(command)}"
-            if output.strip():
-                return f"[{time.ctime()}] {output}"
+        if section not in self.active_sections:
+            return ""
+        output = self.capture_command(command)
+        if output.strip():
+            return f"[{time.ctime()}] \n{output}\n"
         return ""
             
     def _has_docker_compose(self):
@@ -54,14 +55,13 @@ class DevMonitor:
             
     def _build_output(self, sections):
         self.active_sections = set(sections)
-        available_sections = self._get_available_sections()
         output = f"============={time.ctime()}=============\n"
-        if "docker" in available_sections:
-            output += self._get_section_output("docker", "[DOCKER LOGS]", "docker compose logs --tail=40 --no-color")
-        if "pytest" in available_sections:
-            output += self._get_section_output("pytest", "[PYTEST OUTPUT]", "pytest --timeout=10")
-        if "pylint" in available_sections:
-            output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint --ignore=src/__init__.py .")
+        if "docker" in self.active_sections and self._has_docker_compose():
+            output += self._get_section_output("docker", "docker compose logs --tail=40 --no-color")
+        if "pytest" in self.active_sections:
+            output += self._get_section_output("pytest", "pytest --timeout=10")
+        if "pylint" in self.active_sections:
+            output += self._get_section_output("pylint", "pylint --ignore=src/__init__.py .")
         return output
             
     def run(self, sections):
