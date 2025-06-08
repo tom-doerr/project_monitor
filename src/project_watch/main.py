@@ -23,30 +23,30 @@ from .path_validation import is_windows_reserved_path
 logger = logging.getLogger(__name__)
 
 
+def _extract_pylint_score(text: str) -> float:
+    """Extract score from pylint output text."""
+    pattern = r"(?:rated at |score: )(\d+\.?\d*)/10"
+    matches = re.findall(pattern, text, re.IGNORECASE)
+    valid_scores = [float(m) for m in matches if 0.0 <= float(m) <= 10.0]
+    return max(valid_scores) if valid_scores else 0.0
+
+def _run_pylint() -> subprocess.CompletedProcess:
+    """Run pylint and return CompletedProcess."""
+    return subprocess.run(
+        ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+        cwd=pathlib.Path(__file__).parent.parent,
+    )
+
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
-
-    def extract_score(text: str) -> float:
-        """Extract score from pylint output text."""
-        pattern = r"(?:rated at |score: )(\d+\.?\d*)/10"
-        matches = re.findall(pattern, text, re.IGNORECASE)
-        valid_scores = [float(m) for m in matches if 0.0 <= float(m) <= 10.0]
-        return max(valid_scores) if valid_scores else 0.0
-
-    def run_pylint():
-        return subprocess.run(
-            ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"),
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=15,
-            cwd=pathlib.Path(__file__).parent.parent,
-        )
-
     try:
-        proc = run_pylint()
+        proc = _run_pylint()
         if getattr(proc, "returncode", 127) <= 31:
-            return max(extract_score(proc.stdout), extract_score(proc.stderr))
+            return max(_extract_pylint_score(proc.stdout), _extract_pylint_score(proc.stderr))
         return 0.0
     except subprocess.TimeoutExpired as e:
         logger.warning("Pylint timed out after %s seconds", e.timeout)
@@ -55,6 +55,13 @@ def get_pylint_score() -> float:
         logger.debug("Pylint error: %s", str(e), exc_info=True)
         return 0.0
 
+
+def _handle_pytest_error(result: dict, stderr: str, returncode: int) -> None:
+    """Set error message in result when parsers fail and returncode non-zero."""
+    stderr_msg = stderr.strip()
+    if len(stderr_msg) > 500:
+        stderr_msg = stderr_msg[:500] + "..."
+    result['error'] = f"Pytest exited with code {returncode} ({stderr_msg})"
 
 def _parse_pytest_output(stdout: str, stderr: str = "", returncode: int = 0) -> dict:
     """Parse pytest output into structured results."""
@@ -69,39 +76,31 @@ def _parse_pytest_output(stdout: str, stderr: str = "", returncode: int = 0) -> 
     text_success = False
     if not json_success:
         text_success = _parse_pytest_text(stdout, result)
-        # If text parsing succeeded, then clear any JSON error
         if text_success and 'error' in result:
             del result['error']
 
-    # If both parsers failed and the return code is non-zero, set the error from stderr
+    # If both parsers failed and returncode non-zero, set error from stderr
     if not json_success and not text_success and returncode != 0:
-        # Truncate long stderr
-        stderr_msg = stderr.strip()
-        if len(stderr_msg) > 500:
-            stderr_msg = stderr_msg[:500] + "..."
-        result['error'] = f"Pytest exited with code {returncode} ({stderr_msg})"
+        _handle_pytest_error(result, stderr, returncode)
 
     return result
 
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
+    success = False
     json_match = re.search(r"^{.*}", output, re.DOTALL)
-    if not json_match:
-        return False
-
-    try:
-        json_data = json.loads(json_match.group())
-    except json.JSONDecodeError as e:
-        result["error"] = f"JSON error: {str(e)}"
-        return False
-
-    if not isinstance(json_data, dict) or "passed" not in json_data:
-        result["error"] = "Invalid JSON structure"
-        return False
-
-    _update_results_from_json(json_data, result)
-    return True
+    if json_match:
+        try:
+            json_data = json.loads(json_match.group())
+            if isinstance(json_data, dict) and "passed" in json_data:
+                _update_results_from_json(json_data, result)
+                success = True
+            else:
+                result["error"] = "Invalid JSON structure"
+        except json.JSONDecodeError as e:
+            result["error"] = f"JSON error: {str(e)}"
+    return success
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -325,11 +324,8 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
             return 0
 
         count = _count_file_lines(path)
-
-        # Only add to counted after successfully processing
         if file_id is not None:
             counted.add(file_id)
-
         return count
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
@@ -356,16 +352,6 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
     raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
-def _count_valid_file_lines(path: pathlib.Path) -> int:
-    """Count lines in valid, accessible files."""
-    try:
-        resolved_path = _resolve_with_retry(path)
-        if not resolved_path.is_file():
-            return 0
-        return _count_file_lines(resolved_path)
-    except (OSError, IOError, UnicodeDecodeError) as e:
-        _log_file_error(e, path)
-        return 0
 
 
 def _log_file_error(error: Exception, path: pathlib.Path) -> None:
