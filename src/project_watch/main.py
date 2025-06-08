@@ -240,7 +240,7 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
                 not real_path.exists(),
                 real_path.suffix != ".py",
                 not real_path.is_file(),
-                _is_windows_reserved_path(real_path),
+                is_windows_reserved_path(real_path),
                 any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
             ]
         )

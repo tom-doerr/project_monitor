@@ -160,6 +160,9 @@ def test_windows_unc_paths(
     tmp_path, unc_name, path_suffix, expected_lines, expected_error
 ):  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
     """Test UNC path handling with various reserved names and cases."""
+    if sys.platform != "win32":
+        pytest.skip("Windows-specific test")
+
     test_dir = tmp_path / unc_name
     test_dir.mkdir(parents=True, exist_ok=True)
 
@@ -180,7 +183,6 @@ def test_windows_unc_paths(
                 count_lines_of_code(test_dir)
         else:
             pytest.fail(f"Expected reserved path error for {test_dir}")
-            count_lines_of_code(test_dir)
         return
 
     result = count_lines_of_code(test_dir)
