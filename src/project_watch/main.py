@@ -64,6 +64,9 @@ def _parse_pytest_output(output: str) -> dict:
 
     if not _parse_pytest_json(output, result):
         _parse_pytest_text(output, result)
+        # If text parsing didn't set time, try to extract it
+        if result['time'] == 0.0:
+            result['time'] = _extract_pytest_time(output)
 
     return result
 
@@ -149,14 +152,11 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
 def _extract_pytest_time(output: str) -> float:
     """Extract test execution time from output."""
     # Handle multiple time formats: 0.12s, 1.23 seconds, 0.12
-    normalized_output = output.replace(",", "")
     time_match = re.search(
-        r"(\d+\.\d+)\s?(?:s|seconds?)?\b", normalized_output, re.IGNORECASE
+        r"(\d+\.\d+)\s?(?:s|seconds?)?\b", output, re.IGNORECASE
     )
-    if not time_match:  # More robust fallback pattern
-        time_match = re.search(r"\bin\s+(\d+\.\d+)\b", output)
-    if not time_match:  # Fallback to looking for time format without unit
-        time_match = re.search(r" in ([\d\.]+)\s*(s|seconds?)", output, re.IGNORECASE)
+    if not time_match:  # Look for time in summary line
+        time_match = re.search(r"\bin\s+(\d+\.\d+)\s*(?:s|seconds?)?\b", output, re.IGNORECASE)
     return float(time_match.group(1)) if time_match else 0.0
 
 
