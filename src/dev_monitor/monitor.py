@@ -45,7 +45,7 @@ class DevMonitor:
         if "pytest" in sections:
             output += self._get_section_output("pytest", "[PYTEST OUTPUT]", "pytest --timeout=10")
         if "pylint" in sections:
-            output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint $(git ls-files '*.py')")
+            output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint src")
         return output
             
     def run(self, sections):

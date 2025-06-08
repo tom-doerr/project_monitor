@@ -5,10 +5,10 @@ from .monitor import DevMonitor
 def parse_args():
     parser = argparse.ArgumentParser(description="Development Environment Monitor")
     parser.add_argument("--log-dir", default="logs", help="Log directory")
-    parser.add_argument("--interval", type=int, default=15, help="Update interval (seconds)")
+    parser.add_argument("--interval", type=int, default=1, help="Update interval (seconds) [default: 1]")
     parser.add_argument("--sections", nargs="+", default=["docker", "pytest", "pylint"],
                         choices=["docker", "pytest", "pylint"],
-                        help="Sections to monitor")
+                        help="Sections to monitor [default: all]")
     return parser.parse_args()
 
 def print_startup_message(args):
