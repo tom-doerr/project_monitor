@@ -11,6 +11,13 @@ def parse_args():
                         help="Sections to monitor")
     return parser.parse_args()
 
+def print_startup_message(args):
+    """Print startup message with configuration details."""
+    print(f"Starting dev-monitor. Monitoring: {', '.join(args.sections)}")
+    print(f"Logs directory: {args.log_dir}")
+    print(f"Update interval: {args.interval}s")
+    print("Press Ctrl+C to exit...")
+
 def main():
     args = parse_args()
     monitor = DevMonitor(
@@ -18,10 +25,7 @@ def main():
         interval=args.interval
     )
     
-    print(f"Starting dev-monitor. Monitoring: {', '.join(args.sections)}")
-    print(f"Logs directory: {args.log_dir}")
-    print(f"Update interval: {args.interval}s")
-    print("Press Ctrl+C to exit...")
+    print_startup_message(args)
     
     try:
         monitor.run(args.sections)

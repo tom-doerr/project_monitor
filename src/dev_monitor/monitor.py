@@ -29,21 +29,22 @@ class DevMonitor:
             return '\n'.join(result.stdout.splitlines()[-max_lines:])
         except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             return f"Error: {str(e)}"
-        except Exception as e:
-            self.logger.exception("Unexpected error in capture_command")
-            return f"Error: {str(e)}"
+            
+    def _get_section_output(self, section, header, command):
+        """Generate output for a specific section."""
+        if section in self.active_sections:
+            return f"\n{header}\n{self.capture_command(command)}"
+        return ""
             
     def _build_output(self, sections):
+        self.active_sections = sections
         output = f"============={time.ctime()}=============\n"
         if "docker" in sections and self._has_docker_compose():
-            output += "\n[DOCKER LOGS]\n"
-            output += self.capture_command("docker compose logs --tail=40 --no-color")
+            output += self._get_section_output("docker", "[DOCKER LOGS]", "docker compose logs --tail=40 --no-color")
         if "pytest" in sections:
-            output += "\n[PYTEST OUTPUT]\n"
-            output += self.capture_command("pytest --timeout=10")
+            output += self._get_section_output("pytest", "[PYTEST OUTPUT]", "pytest --timeout=10")
         if "pylint" in sections:
-            output += "\n[PYLINT OUTPUT]\n"
-            output += self.capture_command("pylint $(git ls-files '*.py')")
+            output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint $(git ls-files '*.py')")
         return output
             
     def run(self, sections):
