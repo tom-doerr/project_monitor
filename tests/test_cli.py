@@ -1,6 +1,5 @@
 """Unit tests for dev_monitor.cli module."""
 import argparse
-import pytest
 from unittest.mock import patch, MagicMock
 from dev_monitor.cli import main, parse_args, print_startup_message
 
@@ -34,9 +33,8 @@ def test_print_startup_message(capsys):
     assert "Update interval: 30s" in captured.out
 
 @patch("dev_monitor.cli.DevMonitor")
-@patch("dev_monitor.cli.parse_args")
 @patch("builtins.print")
-def test_main_keyboard_interrupt(mock_print, mock_parse, mock_monitor):
+def test_main_keyboard_interrupt(mock_print, mock_monitor):
     """Test handling of KeyboardInterrupt in main loop."""
     mock_monitor_instance = MagicMock()
     mock_monitor.return_value = mock_monitor_instance
