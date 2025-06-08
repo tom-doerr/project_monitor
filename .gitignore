@@ -170,3 +170,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .aider*
+
+# Dev-monitor logs
+logs/
+context.txt
