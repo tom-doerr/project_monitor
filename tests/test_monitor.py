@@ -18,7 +18,7 @@ def test_capture_command_success(mock_subprocess_run, caplog):
     caplog.set_level(logging.INFO)
     monitor = DevMonitor()
     result = monitor.capture_command("test command", max_lines=2)
-    assert "Test output\nLines" in result
+    assert result == "Lines\nOf"
     mock_subprocess_run.assert_called_once()
 
 def test_capture_command_error(mock_subprocess_run):

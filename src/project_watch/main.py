@@ -63,7 +63,6 @@ def _parse_pytest_output(stdout: str, stderr: str = "", returncode: int = 0) -> 
         "failed": 0,
         "time": 0.0,
         "output": stdout,  # Use stdout as the output
-        "error": "",  # Initialize as empty string
     }
 
     json_success = _parse_pytest_json(stdout, result)
@@ -71,8 +70,8 @@ def _parse_pytest_output(stdout: str, stderr: str = "", returncode: int = 0) -> 
     if not json_success:
         text_success = _parse_pytest_text(stdout, result)
         # If text parsing succeeded, then clear any JSON error
-        if text_success:
-            result['error'] = ''
+        if text_success and 'error' in result:
+            del result['error']
 
     # If both parsers failed and the return code is non-zero, set the error from stderr
     if not json_success and not text_success and returncode != 0:
