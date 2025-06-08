@@ -317,9 +317,17 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
 def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
     try:
-        if _should_skip_file(path, counted):
+        skip, file_id = _should_skip_file(path, counted)
+        if skip:
             return 0
-        return _count_file_lines(path)
+
+        count = _count_file_lines(path)
+
+        # Only add to counted after successfully processing
+        if file_id is not None:
+            counted.add(file_id)
+
+        return count
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
