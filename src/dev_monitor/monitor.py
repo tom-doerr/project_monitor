@@ -34,18 +34,17 @@ class DevMonitor:
     def _get_section_output(self, section, header, command):  # pylint: disable=too-many-arguments
         """Generate output for a specific section."""
         if section in self.active_sections:
-            return f"\n{header}\n{self.capture_command(command)}"
+            output = f"\n{header}\n{self.capture_command(command)}"
+            if output.strip():
+                return f"[{time.ctime()}] {output}"
         return ""
             
     def _build_output(self, sections):
         self.active_sections = set(sections)
         output = f"============={time.ctime()}=============\n"
-        if "docker" in sections and self._has_docker_compose():
-            output += self._get_section_output("docker", "[DOCKER LOGS]", "docker compose logs --tail=40 --no-color")
-        if "pytest" in sections:
-            output += self._get_section_output("pytest", "[PYTEST OUTPUT]", "pytest --timeout=10")
-        if "pylint" in sections:
-            output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint --ignore=src/__init__.py src")
+        output += self._get_section_output("docker", "[DOCKER LOGS]", "docker compose logs --tail=40 --no-color")
+        output += self._get_section_output("pytest", "[PYTEST OUTPUT]", "pytest --timeout=10")
+        output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint --ignore=src/__init__.py .")
         return output
             
     def run(self, sections):
@@ -57,4 +56,7 @@ class DevMonitor:
             time.sleep(self.interval)
             
     def _has_docker_compose(self):
-        return os.path.exists("docker-compose.yml") or os.path.exists("docker-compose.yaml")
+        # Only check docker-compose when docker section is active
+        if "docker" in self.active_sections:
+            return os.path.exists("docker-compose.yml") or os.path.exists("docker-compose.yaml")
+        return False
