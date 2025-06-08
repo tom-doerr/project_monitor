@@ -1,5 +1,8 @@
 from setuptools import setup, find_packages
 
+with open("README.md", encoding="utf-8") as f:
+    long_description = f.read()
+
 setup(
     name="dev-monitor",
     version="0.1.0",
@@ -13,7 +16,7 @@ setup(
     },
     python_requires=">=3.11",
     description="Development environment monitoring tool",
-    long_description=open("README.md", encoding="utf-8").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     author="Your Name",
     author_email="your.email@example.com",

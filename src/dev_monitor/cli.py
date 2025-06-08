@@ -2,16 +2,17 @@
 import argparse
 from .monitor import DevMonitor
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser(description="Development Environment Monitor")
     parser.add_argument("--log-dir", default="logs", help="Log directory")
     parser.add_argument("--interval", type=int, default=15, help="Update interval (seconds)")
     parser.add_argument("--sections", nargs="+", default=["docker", "pytest", "pylint"],
                         choices=["docker", "pytest", "pylint"],
                         help="Sections to monitor")
-                        
-    args = parser.parse_args()
-    
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
     monitor = DevMonitor(
         log_dir=args.log_dir,
         interval=args.interval
