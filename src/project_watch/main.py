@@ -253,13 +253,16 @@ def get_pytest_results() -> dict:
         return _handle_pytest_error(e)
 
 
-def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
-    """Check if a file should be skipped during line counting."""
+def _should_skip_file(path: pathlib.Path, counted: set) -> tuple[bool, tuple | None]:
+    """Check if a file should be skipped during line counting.
+    Returns:
+        tuple: (skip, file_id) where skip is boolean and file_id is (inode, device) or None
+    """
     try:
         real_path = path.resolve(strict=True)
         file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
 
-        return (file_id in counted) or any(
+        skip = (file_id in counted) or any(
             [
                 not real_path.exists(),
                 real_path.suffix != ".py",
@@ -268,8 +271,9 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
                 any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
             ]
         )
+        return (skip, file_id)
     except OSError:
-        return True
+        return (True, None)
 
 
 
