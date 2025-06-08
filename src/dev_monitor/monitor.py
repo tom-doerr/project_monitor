@@ -39,12 +39,29 @@ class DevMonitor:
                 return f"[{time.ctime()}] {output}"
         return ""
             
+    def _has_docker_compose(self):
+        return os.path.exists("docker-compose.yml") or os.path.exists("docker-compose.yaml")
+            
+    def _get_available_sections(self):
+        sections = []
+        if "docker" in self.active_sections and self._has_docker_compose():
+            sections.append("docker")
+        if "pytest" in self.active_sections:
+            sections.append("pytest")
+        if "pylint" in self.active_sections:
+            sections.append("pylint")
+        return sections
+            
     def _build_output(self, sections):
         self.active_sections = set(sections)
+        available_sections = self._get_available_sections()
         output = f"============={time.ctime()}=============\n"
-        output += self._get_section_output("docker", "[DOCKER LOGS]", "docker compose logs --tail=40 --no-color")
-        output += self._get_section_output("pytest", "[PYTEST OUTPUT]", "pytest --timeout=10")
-        output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint --ignore=src/__init__.py .")
+        if "docker" in available_sections:
+            output += self._get_section_output("docker", "[DOCKER LOGS]", "docker compose logs --tail=40 --no-color")
+        if "pytest" in available_sections:
+            output += self._get_section_output("pytest", "[PYTEST OUTPUT]", "pytest --timeout=10")
+        if "pylint" in available_sections:
+            output += self._get_section_output("pylint", "[PYLINT OUTPUT]", "pylint --ignore=src/__init__.py .")
         return output
             
     def run(self, sections):
@@ -54,9 +71,3 @@ class DevMonitor:
             with open(self.log_dir / "context.txt", "w", encoding="utf-8") as f:
                 f.write(output)
             time.sleep(self.interval)
-            
-    def _has_docker_compose(self):
-        # Only check docker-compose when docker section is active
-        if "docker" in self.active_sections:
-            return os.path.exists("docker-compose.yml") or os.path.exists("docker-compose.yaml")
-        return False
