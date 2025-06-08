@@ -33,7 +33,6 @@ def get_pylint_score() -> float:  # pylint: disable=too-many-return-statements
         valid_scores = [float(m) for m in matches if 0.0 <= float(m) <= 10.0]
         return max(valid_scores) if valid_scores else 0.0
 
-    score = 0.0
     try:
         proc = subprocess.run(
             ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"),
@@ -44,7 +43,8 @@ def get_pylint_score() -> float:  # pylint: disable=too-many-return-statements
             cwd=pathlib.Path(__file__).parent.parent,
         )
         if getattr(proc, "returncode", 127) <= 31:
-            score = max(extract_score(proc.stdout), extract_score(proc.stderr))
+            return max(extract_score(proc.stdout), extract_score(proc.stderr))
+        return 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e), exc_info=True)
         return 0.0
@@ -253,26 +253,6 @@ def _is_windows_reserved_path(path: pathlib.Path) -> bool:
     return is_windows_reserved_path(path)
 
 
-def _is_windows_reserved_name(
-    real_path: pathlib.Path,
-) -> bool:  # pylint: disable=unused-argument
-    """Check if path contains Windows reserved filename."""
-    if sys.platform != "win32":
-        return False
-
-    reserved_pattern = re.compile(
-        r"^(?:(CON|PRN|AUX|NUL|CLOCK\$|COM[0-9]|LPT[0-9])(\..*)?|"
-        r"\$(?:Mft|LogFile|Volume)|"
-        r"(?:CONIN|CONOUT|FAX|CONFIG)\$)$",
-        re.IGNORECASE,
-    )
-
-    # Check for reserved UNC paths
-    if len(real_path.parts) > 1 and real_path.parts[0].startswith("\\\\"):
-        unc_root = "\\".join(real_path.parts[0].split("\\")[:4]).upper()
-        return any(reserved in unc_root for reserved in ("CONIN$", "CONOUT$", "CLOCK$"))
-
-    return reserved_pattern.fullmatch(real_path.name) is not None
 
 
 def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:

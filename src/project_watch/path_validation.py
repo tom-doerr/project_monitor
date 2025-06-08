@@ -1,6 +1,5 @@
 """Windows path validation and reserved name handling."""
 
-import re
 import sys
 from pathlib import Path
 
@@ -22,16 +21,10 @@ def is_windows_reserved_path(path: Path) -> bool:
         return False
 
     try:
-        # Check each component in the path
-        for part in path.parts:
-            # Skip empty parts
-            if not part:
-                continue
-                
-            # Remove extension for comparison
-            base_part = part.split('.')[0].upper()
-            if base_part in _WINDOWS_RESERVED_NAMES:
-                return True
-        return False
+        return any(
+            part.split('.')[0].upper() in _WINDOWS_RESERVED_NAMES
+            for part in path.parts
+            if part
+        )
     except OSError:
         return False
