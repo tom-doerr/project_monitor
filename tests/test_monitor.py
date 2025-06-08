@@ -1,8 +1,6 @@
 """Unit tests for dev_monitor.monitor module."""
-import os
 import time
 import logging
-import subprocess
 import pytest
 from unittest.mock import patch, MagicMock
 from dev_monitor.monitor import DevMonitor
@@ -34,6 +32,7 @@ def test_get_section_output_active():
     """Test output generation for active section."""
     monitor = DevMonitor()
     monitor.active_sections = {"test"}
+    # pylint: disable-next=protected-access
     output = monitor._get_section_output("test", "[HEADER]", "cmd")
     assert "[HEADER]" in output
     assert time.ctime() in output
@@ -42,14 +41,16 @@ def test_get_section_output_inactive():
     """Test no output for inactive section."""
     monitor = DevMonitor()
     monitor.active_sections = set()
+    # pylint: disable-next=protected-access
     output = monitor._get_section_output("test", "[HEADER]", "cmd")
     assert output == ""
 
 @patch("os.path.exists", return_value=True)
-def test_docker_section_output(mock_exists, mock_subprocess_run):
+def test_docker_section_output(mock_exists):
     """Test docker section output with compose file."""
     monitor = DevMonitor()
     test_sections = {"docker"}
+    # pylint: disable-next=protected-access
     output = monitor._build_output(test_sections)
     assert "[DOCKER LOGS]" in output
     mock_exists.assert_called_once()
@@ -59,5 +60,6 @@ def test_docker_section_skipped(mock_exists):
     """Test docker section skipped without compose file."""
     monitor = DevMonitor()
     test_sections = {"docker"}
+    # pylint: disable-next=protected-access
     output = monitor._build_output(test_sections)
     assert "[DOCKER LOGS]" not in output
