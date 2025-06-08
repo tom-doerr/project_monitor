@@ -14,3 +14,7 @@ dev-monitor = "dev_monitor.cli:main"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pylint."MASTER"]
+init-hook = "import sys; sys.path.insert(0, '.')"
+ignore = "__init__.py"
