@@ -48,23 +48,39 @@ def get_pylint_score() -> float:
         if getattr(proc, "returncode", 127) <= 31:
             return max(extract_score(proc.stdout), extract_score(proc.stderr))
         return 0.0
+    except subprocess.TimeoutExpired as e:
+        logger.warning("Pylint timed out after %s seconds", e.timeout)
+        return 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e), exc_info=True)
         return 0.0
 
 
-def _parse_pytest_output(output: str) -> dict:
+def _parse_pytest_output(stdout: str, stderr: str = "", returncode: int = 0) -> dict:
     """Parse pytest output into structured results."""
     result = {
         "passed": 0,
         "failed": 0,
         "time": 0.0,
-        "output": output,
+        "output": stdout,  # Use stdout as the output
         "error": "",  # Initialize as empty string
     }
 
-    if not _parse_pytest_json(output, result):
-        _parse_pytest_text(output, result)
+    json_success = _parse_pytest_json(stdout, result)
+    text_success = False
+    if not json_success:
+        text_success = _parse_pytest_text(stdout, result)
+        # If text parsing succeeded, then clear any JSON error
+        if text_success:
+            result['error'] = ''
+
+    # If both parsers failed and the return code is non-zero, set the error from stderr
+    if not json_success and not text_success and returncode != 0:
+        # Truncate long stderr
+        stderr_msg = stderr.strip()
+        if len(stderr_msg) > 500:
+            stderr_msg = stderr_msg[:500] + "..."
+        result['error'] = f"Pytest exited with code {returncode} ({stderr_msg})"
 
     return result
 
@@ -133,7 +149,7 @@ def _parse_pytest_patterns(normalized_output: str, result: dict) -> None:
 
 
 def _parse_pytest_text(output: str, result: dict) -> bool:
-    """Fallback text parsing for pytest output."""
+    """Fallback text parsing for pytest output. Returns True if any patterns matched."""
     pattern_map = {
         "failed": r"(\d+) failed",
         "passed": r"(\d+) passed",
@@ -143,13 +159,14 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
     }
 
     matches = {key: re.search(pattern, output) for key, pattern in pattern_map.items()}
-
-    result.update({key: int(match.group(1)) for key, match in matches.items() if match})
+    found = any(matches.values())
     
-    # Extract time from text output
-    result['time'] = _extract_pytest_time(output)
+    if found:
+        result.update({key: int(match.group(1)) for key, match in matches.items() if match})
+        # Extract time from text output
+        result['time'] = _extract_pytest_time(output)
     
-    return any(matches.values())
+    return found
 
 
 def _extract_pytest_time(output: str) -> float:
@@ -231,7 +248,7 @@ def get_pytest_results() -> dict:
             check=False,
             timeout=30,
         )
-        return _parse_pytest_output(proc.stdout)
+        return _parse_pytest_output(proc.stdout, proc.stderr, proc.returncode)
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
         return _handle_pytest_error(e)
 
