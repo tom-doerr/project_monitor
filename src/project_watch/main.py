@@ -43,20 +43,21 @@ def _run_pylint() -> subprocess.CompletedProcess:
 
 def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
+    result = 0.0
     try:
         proc = _run_pylint()
         if getattr(proc, "returncode", 127) <= 31:
-            return max(_extract_pylint_score(proc.stdout), _extract_pylint_score(proc.stderr))
-        return 0.0
+            stdout_score = _extract_pylint_score(proc.stdout)
+            stderr_score = _extract_pylint_score(proc.stderr)
+            result = max(stdout_score, stderr_score)
     except subprocess.TimeoutExpired as e:
         logger.warning("Pylint timed out after %s seconds", e.timeout)
-        return 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e), exc_info=True)
-        return 0.0
+    return result
 
 
-def _handle_pytest_error(result: dict, stderr: str, returncode: int) -> None:
+def _set_pytest_error(result: dict, stderr: str, returncode: int) -> None:
     """Set error message in result when parsers fail and returncode non-zero."""
     stderr_msg = stderr.strip()
     if len(stderr_msg) > 500:
@@ -81,26 +82,27 @@ def _parse_pytest_output(stdout: str, stderr: str = "", returncode: int = 0) -> 
 
     # If both parsers failed and returncode non-zero, set error from stderr
     if not json_success and not text_success and returncode != 0:
-        _handle_pytest_error(result, stderr, returncode)
+        _set_pytest_error(result, stderr, returncode)
 
     return result
 
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    success = False
     json_match = re.search(r"^{.*}", output, re.DOTALL)
-    if json_match:
-        try:
-            json_data = json.loads(json_match.group())
-            if isinstance(json_data, dict) and "passed" in json_data:
-                _update_results_from_json(json_data, result)
-                success = True
-            else:
-                result["error"] = "Invalid JSON structure"
-        except json.JSONDecodeError as e:
-            result["error"] = f"JSON error: {str(e)}"
-    return success
+    if not json_match:
+        return False
+
+    try:
+        json_data = json.loads(json_match.group())
+        if not isinstance(json_data, dict) or "passed" not in json_data:
+            result["error"] = "Invalid JSON structure"
+            return False
+        _update_results_from_json(json_data, result)
+        return True
+    except json.JSONDecodeError as e:
+        result["error"] = f"JSON error: {str(e)}"
+        return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -322,11 +324,10 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
         skip, file_id = _should_skip_file(path, counted)
         if skip:
             return 0
-
-        count = _count_file_lines(path)
+        line_count = _count_file_lines(path)
         if file_id is not None:
             counted.add(file_id)
-        return count
+        return line_count
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
