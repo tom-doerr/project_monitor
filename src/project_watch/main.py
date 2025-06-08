@@ -64,9 +64,6 @@ def _parse_pytest_output(output: str) -> dict:
 
     if not _parse_pytest_json(output, result):
         _parse_pytest_text(output, result)
-        # If text parsing didn't set time, try to extract it
-        if result['time'] == 0.0:
-            result['time'] = _extract_pytest_time(output)
 
     return result
 
@@ -145,7 +142,10 @@ def _parse_pytest_text(output: str, result: dict) -> bool:
     matches = {key: re.search(pattern, output) for key, pattern in pattern_map.items()}
 
     result.update({key: int(match.group(1)) for key, match in matches.items() if match})
-
+    
+    # Extract time from text output
+    result['time'] = _extract_pytest_time(output)
+    
     return any(matches.values())
 
 
