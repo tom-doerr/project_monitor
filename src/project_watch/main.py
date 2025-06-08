@@ -23,7 +23,7 @@ from .path_validation import is_windows_reserved_path
 logger = logging.getLogger(__name__)
 
 
-def get_pylint_score() -> float:  # pylint: disable=too-many-return-statements
+def get_pylint_score() -> float:
     """Calculate pylint score with robust parsing."""
 
     def extract_score(text: str) -> float:
@@ -43,8 +43,10 @@ def get_pylint_score() -> float:  # pylint: disable=too-many-return-statements
             cwd=pathlib.Path(__file__).parent.parent,
         )
         if getattr(proc, "returncode", 127) <= 31:
-            return max(extract_score(proc.stdout), extract_score(proc.stderr))
-        return 0.0
+            score = max(extract_score(proc.stdout), extract_score(proc.stderr))
+        else:
+            score = 0.0
+        return score
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e), exc_info=True)
         return 0.0
@@ -68,18 +70,20 @@ def _parse_pytest_output(output: str) -> dict:
 
 def _parse_pytest_json(output: str, result: dict) -> bool:
     """Attempt JSON parsing of pytest output, return True if successful."""
-    success = False
-    if json_match := re.search(r"^{.*}", output, re.DOTALL):
-        try:
-            json_data = json.loads(json_match.group())
-            if isinstance(json_data, dict) and "passed" in json_data:
-                _update_results_from_json(json_data, result)
-                success = True
-            else:
-                result["error"] = "Invalid JSON structure"
-        except json.JSONDecodeError as e:
-            result["error"] = f"JSON error: {str(e)}"
-    return success
+    json_match = re.search(r"^{.*}", output, re.DOTALL)
+    if not json_match:
+        return False
+
+    try:
+        json_data = json.loads(json_match.group())
+        if not isinstance(json_data, dict) or "passed" not in json_data:
+            result["error"] = "Invalid JSON structure"
+            return False
+        _update_results_from_json(json_data, result)
+        return True
+    except json.JSONDecodeError as e:
+        result["error"] = f"JSON error: {str(e)}"
+        return False
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -248,9 +252,6 @@ def _should_skip_file(path: pathlib.Path, counted: set) -> bool:
         return True
 
 
-def _is_windows_reserved_path(path: pathlib.Path) -> bool:
-    """Check if path contains Windows reserved names."""
-    return is_windows_reserved_path(path)
 
 
 
