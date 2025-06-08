@@ -256,39 +256,19 @@ def get_pytest_results() -> dict:
         return _handle_pytest_error(e)
 
 
-def _should_skip_file(path: pathlib.Path, counted: set) -> tuple[bool, tuple | None]:
-    """Check if a file should be skipped during line counting.
-    Returns:
-        tuple: (skip, file_id) where skip is boolean and file_id is (inode, device) or None
-    """
+def _should_skip_file(path: pathlib.Path) -> bool:
+    """Check if a file should be skipped during line counting."""
     try:
         real_path = path.resolve(strict=True)
-        file_id = (real_path.stat().st_ino, real_path.stat().st_dev)
-
-        skip = (file_id in counted) or any(
-            [
-                not real_path.exists(),
-                real_path.suffix != ".py",
-                not real_path.is_file(),
-                is_windows_reserved_path(real_path),
-                any(b"\0" in chunk for chunk in _read_file_chunks(real_path)),
-            ]
-        )
-        return (skip, file_id)
+        return any([
+            not real_path.exists(),
+            real_path.suffix != ".py",
+            not real_path.is_file(),
+            is_windows_reserved_path(real_path),
+            b"\0" in real_path.read_bytes()[:4096]  # Check first 4KB for null bytes
+        ])
     except OSError:
-        return (True, None)
-
-
-
-
-
-
-def _read_file_chunks(path: pathlib.Path, chunk_size: int = 1024) -> bytes:
-    """Read file in chunks using context manager."""
-    with open(path, "rb") as f:
-        while chunk := f.read(chunk_size):
-            yield chunk
-
+        return True
 
 def _count_file_lines(path: pathlib.Path) -> int:
     """Count non-empty lines in a file."""
@@ -308,31 +288,19 @@ def _count_file_lines(path: pathlib.Path) -> int:
         )
         return 0
 
-
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
-    counted = set()
     base_path = pathlib.Path(directory).resolve().absolute()
+    total = 0
 
     # Normalize Windows paths to lowercase
     if sys.platform == "win32":
         base_path = pathlib.Path(str(base_path).lower())
 
-    return sum(_count_file_lines(path) for path in base_path.rglob("*"))
-
-
-def _process_file(path: pathlib.Path, counted: set) -> int:
-    """Process individual files for line counting."""
-    result = 0
-    try:
-        skip, file_id = _should_skip_file(path, counted)
-        if not skip:
-            result = _count_file_lines(path)
-            if file_id is not None:
-                counted.add(file_id)
-    except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
-        _log_file_error(e, path)
-    return result
+    for path in base_path.rglob("*"):
+        if not _should_skip_file(path):
+            total += _count_file_lines(path)
+    return total
 
 
 def _resolve_with_retry(  # pylint: disable=too-many-arguments
