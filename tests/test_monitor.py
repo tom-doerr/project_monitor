@@ -1,8 +1,8 @@
 """Unit tests for dev_monitor.monitor module."""
 import time
 import logging
-import pytest
 from unittest.mock import patch, MagicMock
+import pytest
 from dev_monitor.monitor import DevMonitor
 
 @pytest.fixture
@@ -13,17 +13,17 @@ def mock_subprocess_run():
         mock_run.return_value = mock_process
         yield mock_run
 
-def test_capture_command_success(mock_subprocess_run, caplog):
+def test_capture_command_success(mock_run, caplog):
     """Test successful command execution."""
     caplog.set_level(logging.INFO)
     monitor = DevMonitor()
     result = monitor.capture_command("test command", max_lines=2)
     assert result == "Lines\nOf"
-    mock_subprocess_run.assert_called_once()
+    mock_run.assert_called_once()
 
-def test_capture_command_error(mock_subprocess_run):
+def test_capture_command_error(mock_run):
     """Test command execution error handling."""
-    mock_subprocess_run.side_effect = OSError("Test error")
+    mock_run.side_effect = OSError("Test error")
     monitor = DevMonitor()
     result = monitor.capture_command("failing command")
     assert "Error: Test error" in result
@@ -56,7 +56,7 @@ def test_docker_section_output(mock_exists):
     mock_exists.assert_called_once()
 
 @patch("os.path.exists", return_value=False)
-def test_docker_section_skipped(mock_exists):
+def test_docker_section_skipped():
     """Test docker section skipped without compose file."""
     monitor = DevMonitor()
     test_sections = {"docker"}

@@ -336,18 +336,6 @@ def _process_file(path: pathlib.Path, counted: set) -> int:
         return 0
 
 
-def _process_code_path(
-    path: pathlib.Path, counted: set, inode_cache: set
-) -> int:  # pylint: disable=too-many-arguments
-    """Process a single path for line counting."""
-    try:
-        resolved_path = _resolve_with_retry(path)
-        return _count_valid_file_lines(resolved_path, counted, inode_cache)
-    except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError) as e:
-        _log_file_error(e, path)
-        return 0
-
-
 def _resolve_with_retry(  # pylint: disable=too-many-arguments
     path: pathlib.Path, retries: int = 3, delay: float = 1.5
 ) -> pathlib.Path:
