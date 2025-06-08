@@ -256,12 +256,13 @@ def get_pytest_results() -> dict:
         return _handle_pytest_error(e)
 
 
-def _should_skip_file(path: pathlib.Path) -> bool:
-    """Check if a file should be skipped during line counting."""
+def _should_skip_file(real_path: pathlib.Path) -> bool:
+    """Check if a file should be skipped during line counting.
+    
+    Note: The real_path must be a resolved path (absolute and without symlinks).
+    """
     try:
-        real_path = path.resolve(strict=True)
         return any([
-            not real_path.exists(),
             real_path.suffix != ".py",
             not real_path.is_file(),
             is_windows_reserved_path(real_path),
@@ -292,14 +293,27 @@ def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> in
     """Count total lines of Python code in the given directory."""
     base_path = pathlib.Path(directory).resolve().absolute()
     total = 0
+    seen = set()
 
     # Normalize Windows paths to lowercase
     if sys.platform == "win32":
         base_path = pathlib.Path(str(base_path).lower())
 
     for path in base_path.rglob("*"):
-        if not _should_skip_file(path):
-            total += _count_file_lines(path)
+        try:
+            real_path = path.resolve(strict=True)
+        except OSError:
+            continue
+
+        # Skip if we've already seen this real_path (to avoid double-counting symlinks)
+        if real_path in seen:
+            continue
+
+        if _should_skip_file(real_path):
+            continue
+
+        seen.add(real_path)
+        total += _count_file_lines(real_path)
     return total
 
 
