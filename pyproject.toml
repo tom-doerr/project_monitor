@@ -1,35 +1,15 @@
 [tool.poetry]
-name = "project-watch"
+name = "dev-monitor"
 version = "0.1.0"
-description = "Real-time project monitoring with CLI and TUI interfaces"
-authors = ["Your Name <you@example.com>"]
+description = "Development environment monitoring tool"
+authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-rich = "^13.0.0"
-textual = "^0.34.0"
-watchdog = "^3.0.0"
-pytest = "*"
-pylint = "*"
+python = "^3.11"
 
 [tool.poetry.scripts]
-project-watch = "project_watch.cli:main"
-project-watch-tui = "project_watch.tui:main"
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
-addopts = "--cov=project_watch --cov-report=term-missing"
-
-[tool.coverage.run]
-source = ["project_watch"]
-branch = true
-omit = ["*/tests/*"]
-
-[tool.coverage.report]
-show_missing = true
-skip_covered = true
+dev-monitor = "dev_monitor.cli:main"
 
 [build-system]
 requires = ["poetry-core"]
