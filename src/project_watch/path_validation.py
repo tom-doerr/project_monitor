@@ -24,6 +24,10 @@ def is_windows_reserved_path(path: Path) -> bool:
     try:
         # Check each component in the path
         for part in path.parts:
+            # Skip empty parts
+            if not part:
+                continue
+                
             # Remove extension for comparison
             base_part = part.split('.')[0].upper()
             if base_part in _WINDOWS_RESERVED_NAMES:

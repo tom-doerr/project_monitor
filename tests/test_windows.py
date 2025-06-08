@@ -265,7 +265,7 @@ def _run_reserved_name_test(
         if name in reserved_names:
             _attempt_reserved_file(tmp_path / name)
         else:
-            (tmp_path / name).write_text("content")
+            (tmp_path / (name + ".py")).write_text("content")
 
     # Verify line count matches valid files only (should exclude all reserved names)
     valid_count = count_lines_of_code(tmp_path)
