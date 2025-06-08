@@ -33,8 +33,8 @@ def get_pylint_score() -> float:
         valid_scores = [float(m) for m in matches if 0.0 <= float(m) <= 10.0]
         return max(valid_scores) if valid_scores else 0.0
 
-    try:
-        proc = subprocess.run(
+    def run_pylint():
+        return subprocess.run(
             ("pylint", "--disable=all", "--enable=similarities", "--score=yes", "src"),
             capture_output=True,
             text=True,
@@ -42,11 +42,12 @@ def get_pylint_score() -> float:
             timeout=15,
             cwd=pathlib.Path(__file__).parent.parent,
         )
+
+    try:
+        proc = run_pylint()
         if getattr(proc, "returncode", 127) <= 31:
-            score = max(extract_score(proc.stdout), extract_score(proc.stderr))
-        else:
-            score = 0.0
-        return score
+            return max(extract_score(proc.stdout), extract_score(proc.stderr))
+        return 0.0
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("Pylint error: %s", str(e), exc_info=True)
         return 0.0
@@ -76,14 +77,16 @@ def _parse_pytest_json(output: str, result: dict) -> bool:
 
     try:
         json_data = json.loads(json_match.group())
-        if not isinstance(json_data, dict) or "passed" not in json_data:
-            result["error"] = "Invalid JSON structure"
-            return False
-        _update_results_from_json(json_data, result)
-        return True
     except json.JSONDecodeError as e:
         result["error"] = f"JSON error: {str(e)}"
         return False
+
+    if not isinstance(json_data, dict) or "passed" not in json_data:
+        result["error"] = "Invalid JSON structure"
+        return False
+
+    _update_results_from_json(json_data, result)
+    return True
 
 
 def _update_results_from_json(json_data: dict, result: dict) -> None:
@@ -285,29 +288,21 @@ def _count_file_lines(path: pathlib.Path) -> int:
 def count_lines_of_code(directory: str | pathlib.Path = pathlib.Path(".")) -> int:
     """Count total lines of Python code in the given directory."""
     counted = set()
-    inode_cache = set()
     base_path = pathlib.Path(directory).resolve().absolute()
 
     # Normalize Windows paths to lowercase
-    base_path = (
-        pathlib.Path(str(base_path).lower()) if sys.platform == "win32" else base_path
-    )
+    if sys.platform == "win32":
+        base_path = pathlib.Path(str(base_path).lower())
 
-    return sum(
-        _process_file(path, counted, inode_cache) for path in base_path.rglob("*")
-    )
+    return sum(_process_file(path, counted) for path in base_path.rglob("*"))
 
 
-def _process_file(
-    path: pathlib.Path, counted: set, inode_cache: set
-) -> int:  # pylint: disable=too-many-arguments
+def _process_file(path: pathlib.Path, counted: set) -> int:
     """Process individual files for line counting."""
     try:
-        return (
-            0
-            if _should_skip_file(path, counted)
-            else _count_valid_file_lines(path, counted, inode_cache)
-        )
+        if _should_skip_file(path, counted):
+            return 0
+        return _count_file_lines(path)
     except (OSError, IOError, UnicodeDecodeError, PermissionError) as e:
         _log_file_error(e, path)
         return 0
@@ -345,38 +340,13 @@ def _resolve_with_retry(  # pylint: disable=too-many-arguments
     raise IOError(f"Path resolution failed after {retries} retries: {path}")
 
 
-def _count_valid_file_lines(  # pylint: disable=too-many-arguments,too-many-locals
-    path: pathlib.Path,
-    counted: set,
-    inode_cache: set,
-) -> int:
-    """Count lines in valid, accessible files with inode tracking."""
+def _count_valid_file_lines(path: pathlib.Path) -> int:
+    """Count lines in valid, accessible files."""
     try:
         resolved_path = _resolve_with_retry(path)
-        file_stat = resolved_path.stat()
-        file_id = (file_stat.st_ino, file_stat.st_dev)
-
-        if file_id in inode_cache or _should_skip_file(resolved_path, counted):
+        if not resolved_path.is_file():
             return 0
-
-        inode_cache.add(file_id)
-        normalized_path = _normalize_path_case(resolved_path)
-
-        if not normalized_path.is_file():
-            return 0
-
-        try:
-            if file_stat.st_ino in inode_cache:
-                return 0
-
-            inode_cache.add(file_stat.st_ino)
-            line_count = _count_file_lines(normalized_path)
-        except (OSError, UnicodeDecodeError, PermissionError) as e:
-            _log_file_error(e, path)
-            return 0
-
-        logger.debug("Counted %d lines in %s", line_count, normalized_path)
-        return line_count
+        return _count_file_lines(resolved_path)
     except (OSError, IOError, UnicodeDecodeError) as e:
         _log_file_error(e, path)
         return 0
