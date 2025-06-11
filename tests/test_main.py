@@ -62,9 +62,9 @@ def test_handles_subprocess_failures_gracefully():
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = Exception("Subprocess failed")
         # Test both functions that use subprocess
-        assert get_pylint_score() == 0.0
-        assert get_pytest_results().get("error", "").startswith("Subprocess failed")
-        assert count_lines_of_code(inode_cache=set()) == 0
+        assert get_pylint_score(directory_path=".") == 0.0
+        assert get_pytest_results(directory_path=".").get("error", "").startswith("Subprocess failed")
+        assert count_lines_of_code(path=tmp_path, inode_cache=set()) == 0
 
 
 def test_file_scanning_edge_cases(tmp_path):
@@ -79,7 +79,7 @@ def test_file_scanning_edge_cases(tmp_path):
 
     # Verify counts while ignoring non-Python files
     assert (
-        count_lines_of_code(tmp_path, inode_cache=set()) == 10000
+        count_lines_of_code(path=tmp_path, inode_cache=set()) == 10000
     ), "Should count lines in Python files only"
 
 

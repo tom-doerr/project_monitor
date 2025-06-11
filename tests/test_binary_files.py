@@ -1,4 +1,4 @@
-from code_analysis import count_lines_of_code
+from project_watch.main import count_lines_of_code
 
 def test_mixed_content_files(tmp_path):
     mixed_file = tmp_path / "mixed.dat"

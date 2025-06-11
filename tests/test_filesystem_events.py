@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
 from watchdog.observers import Observer
-from project_watch.main import ProjectWatcher  # pylint: disable=no-name-in-module
+from project_watch.main import ProjectWatcher
 
 
 def test_file_event_streaming(tmp_path: Path):
