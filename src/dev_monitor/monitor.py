@@ -6,64 +6,75 @@ import logging
 from pathlib import Path
 
 class DevMonitor:
-    def __init__(self, log_dir="logs", interval=15):  # pylint: disable=too-many-arguments
-        self.log_dir = Path(log_dir)
-        self.interval = interval
+    SECTIONS = {
+        "docker": {
+            "command": "docker compose logs --tail=40 --no-color",
+            "condition": lambda self: self.has_docker_compose(),
+            "max_lines": 40,
+        },
+        "pytest": {
+            "command": "pytest --timeout=10",
+            "condition": lambda self: True,
+            "max_lines": 100,
+        },
+        "pylint": {
+            "command": "pylint --ignore=src/__init__.py .",
+            "condition": lambda self: True,
+            "max_lines": 100,
+        },
+    }
+
+    def __init__(self, **kwargs):
+        self.log_dir = Path(kwargs.get("log_dir", "logs"))
+        self.interval = kwargs.get("interval", 15)
         self.logger = logging.getLogger("dev_monitor")
         self.logger.setLevel(logging.INFO)
         self.active_sections = set()
-        
+
     def setup_logging(self):
         self.log_dir.mkdir(exist_ok=True, parents=True)
-        
-    def capture_command(self, cmd, max_lines=100):  # pylint: disable=too-many-arguments
+
+    def capture_command(self, command_config):
         try:
             result = subprocess.run(
-                cmd,
+                command_config["command"],
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 timeout=60,
-                check=False
+                check=False,
             )
-            return '\n'.join(result.stdout.splitlines()[-max_lines:])
+            return "\n".join(
+                result.stdout.splitlines()[-command_config.get("max_lines", 100):]
+            )
         except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError) as e:
             return f"Error: {str(e)}"
-            
-    def _get_section_output(self, section, command):
+
+    def _get_section_output(self, section):
         """Generate output for a specific section."""
-        if section not in self.active_sections:
-            return ""
-        output = self.capture_command(command)
-        if output.strip():
-            return f"[{time.ctime()}] \n{output}\n"
-        return ""
-            
-    def _has_docker_compose(self):
-        return os.path.exists("docker-compose.yml") or os.path.exists("docker-compose.yaml")
-            
-    def _get_available_sections(self):
-        sections = []
-        if "docker" in self.active_sections and self._has_docker_compose():
-            sections.append("docker")
-        if "pytest" in self.active_sections:
-            sections.append("pytest")
-        if "pylint" in self.active_sections:
-            sections.append("pylint")
-        return sections
-            
+        output_str = ""
+        section_config = self.SECTIONS.get(section)
+
+        if section_config and section_config["condition"](self):
+            output = self.capture_command(section_config)
+            if output.strip():
+                output_str = f"[{time.ctime()}] \n{output}\n"
+        return output_str
+
+    def has_docker_compose(self):
+        return os.path.exists("docker-compose.yml") or os.path.exists(
+            "docker-compose.yaml"
+        )
+
     def _build_output(self, sections):
         self.active_sections = set(sections)
-        output = f"============={time.ctime()}=============\n"
-        if "docker" in self.active_sections and self._has_docker_compose():
-            output += self._get_section_output("docker", "docker compose logs --tail=40 --no-color")
-        if "pytest" in self.active_sections:
-            output += self._get_section_output("pytest", "pytest --timeout=10")
-        if "pylint" in self.active_sections:
-            output += self._get_section_output("pylint", "pylint --ignore=src/__init__.py .")
-        return output
-            
+        output_parts = [f"============={time.ctime()}=============\n"]
+        for section in self.SECTIONS:
+            if section in self.active_sections:
+                output_parts.append(self._get_section_output(section))
+        return "".join(output_parts)
+
     def run(self, sections):
         self.setup_logging()
         while True:

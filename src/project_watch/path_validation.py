@@ -17,14 +17,14 @@ def is_windows_reserved_path(path: Path) -> bool:
     Returns:
         bool: True if path contains reserved components, False otherwise
     """
-    if sys.platform != "win32":
-        return False
-
-    try:
-        return any(
-            part.split('.')[0].upper() in _WINDOWS_RESERVED_NAMES
-            for part in path.parts
-            if part
-        )
-    except OSError:
-        return False
+    is_reserved = False
+    if sys.platform == "win32":
+        try:
+            is_reserved = any(
+                part.split('.')[0].upper() in _WINDOWS_RESERVED_NAMES
+                for part in path.parts
+                if part
+            )
+        except OSError:
+            is_reserved = True  # Assume reserved on error for safety
+    return is_reserved
